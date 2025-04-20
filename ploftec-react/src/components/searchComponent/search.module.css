@@ -1,0 +1,129 @@
+::selection {
+  color: #fff;
+  background: #664AFF;
+}
+
+.searchContainer {
+  margin-right: 10px;
+}
+
+.searchInput {
+  width: 100%;
+  border-radius: 5px;
+  position: relative;
+  box-shadow: 0px 1px 5px 3px rgba(0, 0, 0, 0.12);
+}
+
+.searchInput input {
+  color: white;
+  background-color: #1b1b1b;
+  height: 50px;
+  width: 100%;
+  outline: none;
+  border: none;
+  border-radius: 5px;
+  padding: 0 60px 0 20px;
+  font-size: 18px;
+  box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.1);
+}
+
+.searchInputActive input {
+  border-radius: 5px 5px 0 0;
+}
+
+.autocomBox {
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.searchInputActive .autocomBox {
+  padding: 10px 8px;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.autocomBox li {
+  list-style: none;
+  padding: 8px 12px;
+  display: none;
+  width: 100%;
+  cursor: default;
+  border-radius: 3px;
+}
+
+.searchInputActive .autocomBox li {
+  display: block;
+}
+
+.autocomBox li:hover {
+  background: #efefef;
+}
+
+.icon {
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  height: 50px;
+  width: 50px;
+  text-align: center;
+  line-height: 55px;
+  font-size: 20px;
+  color: #644bff;
+  cursor: pointer;
+}
+
+.searchModal {
+  position: absolute;
+  color: #fff;
+  background-color: #1b1b1b;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+  width: 100%;
+  z-index: 1000;
+  display: none;
+}
+
+.searchOptionsLeft {
+  float: left;
+  width: 50%;
+}
+
+.searchOptionsRight {
+  float: left;
+  width: 50%;
+}
+
+.searchOption {
+  margin: 5px;
+}
+
+.searchModal div {
+  font-size: 13px;
+}
+
+.icon i {
+  transition: transform 0.3s;
+}
+
+.icon i:hover {
+  transform: scale(1.1);
+}
+
+@media (max-width: 1024px) {
+  .searchInput input {
+    font-size: 13px;
+  }
+
+  input::placeholder {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 320px) {
+  .searchInput input {
+    font-size: 15px;
+  }
+}

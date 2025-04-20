@@ -1,0 +1,69 @@
+.buttonPloftec {
+    height: 45px;
+    border-radius: 5px;
+    cursor: pointer;
+    box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    overflow: hidden;
+}
+
+.buttonPloftec.bordered {
+    width: 45px;
+    border-radius: 55px;
+}
+
+.buttonPloftec.borderedWithoutRadius {
+    width: 45px;
+    border-radius: 5px;
+}
+
+.buttonPloftec.active {
+    height: 20px;
+    width: 500px;
+}
+
+.buttonPloftec.active::before {
+    animation: layer 6s ease-in-out forwards;
+}
+
+.buttonPloftec .contentPloftec {
+    height: 100%;
+    width: 100%;
+    align-items: center;
+    transition: all 0.2s ease;
+    transition-delay: 0.2s;
+    
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+}
+
+.iconButtonPloftec {
+    padding-left: 8px;
+    align-items: center;
+    display: flex;
+}
+
+.buttonPloftec .contentPloftec i {
+    font-size: 30px;
+}
+
+.buttonPloftec.active .contentPloftec {
+    transform: translateY(60px);
+}
+
+.buttonPloftec .contentPloftec i,
+.buttonPloftec .contentPloftec .buttonPloftecText {
+    color: #fff;
+}
+
+.buttonPloftec .contentPloftec .buttonPloftecText {
+    font-size: 16px;
+    padding-left:4px;
+}
+
+@keyframes layer {
+    100% {
+        left: 0%;
+    }
+}

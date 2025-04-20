@@ -1,0 +1,351 @@
+.card-skeleton {
+    width: 100%;
+    padding-bottom: 2%;
+    padding-left: 10px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+}
+
+.card-skeleton .header-skeleton {
+    display: flex;
+    align-items: center;
+}
+
+.avatar-skeleton-container {
+    padding-top: 30px;
+    width: 50px;
+}
+
+.header-skeleton .avatar-skeleton {
+    height: 35px;
+    width: 35px;
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+}
+
+.header-skeleton .details {
+    margin-top: 10px;
+    width: 100%;
+}
+
+.details span {
+    display: block;
+    overflow: hidden;
+    position: relative;
+}
+
+.details .title-skeleton {
+    height: 18px;
+    width: 90%;
+    margin-top: 10px;
+}
+
+.details .content-skeleton {
+    height: 13px;
+    width: 335px;
+    margin-top: 15px;
+}
+
+.details .tag-skeleton {
+    height: 22px;
+    width: 35px;
+    margin-top: 15px;
+    margin-right: 10px;
+    border-radius: 20px;
+}
+
+.tag-skeleton-container{
+    display:flex;
+}
+
+.card-skeleton .description {
+    margin: 25px 0;
+}
+
+.description .line {
+    background: #d9d9d9;
+    border-radius: 10px;
+    height: 13px;
+    margin: 10px 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.description .line-1 {
+    width: calc(100% - 15%);
+}
+
+.description .line-3 {
+    width: calc(100% - 40%);
+}
+
+.card-skeleton .btns {
+    display: flex;
+}
+
+.card-skeleton .btns .btn {
+    height: 45px;
+    width: 100%;
+    background: #d9d9d9;
+    border-radius: 25px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btns .btn-1 {
+    margin-right: 8px;
+}
+
+.btns .btn-2 {
+    margin-left: 8px;
+}
+
+.header-skeleton .avatar-skeleton::before,
+.details span::before,
+.description .line::before,
+.btns .btn::before {
+    position: absolute;
+    content: "";
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, rgba(190, 190, 190, 0.2) 25%, rgba(129, 129, 129, 0.24) 37%, rgba(190, 190, 190, 0.2) 63%);
+    background-size: 1450px 950px;
+    animation: shimmer 1.5s linear infinite;
+}
+
+.details span::before {
+    animation-delay: 0.2s;
+}
+
+.btns .btn-2::before {
+    animation-delay: 0.22s;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -650px 0;
+    }
+
+    100% {
+        background-position: 750px 0;
+    }
+}
+
+
+@media only screen and (max-width: 768px) {
+    .details .content-skeleton {
+        width: 290px;
+    }
+}
+
+@media (max-width: 480px) {
+    .details .content-skeleton {
+        width: 200px;
+    }
+}
+
+@media (max-width: 320px) {
+    .details .content-skeleton {
+        width: 100px;
+    }
+}
+
+
+
+
+/*----------------------------------------------------------------*/
+
+
+.top-user-skeleton {
+    border-bottom: 4px dotted #212121;
+    align-items: start;
+    text-align: left;
+    color: #fff;
+    display: flex;
+}
+
+.top-user-last-skeleton {
+    align-items: start;
+    text-align: left;
+    color: #fff;
+    display: flex;
+}
+
+.top-user-points-skeleton {
+    align-items: center;
+    align-self: flex-end;
+    margin-right: 10px;
+    display: flex;
+}
+
+.card-skeleton-topUser {
+    width: 100%;
+    padding-bottom: 10px;
+    border-radius: 10px;
+}
+
+.card-skeleton-topUser .header-skeleton {
+    display: flex;
+    align-items: center;
+}
+
+.avatar-skeleton-topUser-container {
+    padding-top: 30px;
+    width: 50px;
+}
+
+.header-skeleton .avatar-skeleton {
+    height: 35px;
+    width: 35px;
+    border-radius: 50%;
+    position: relative;
+    overflow: hidden;
+}
+
+.header-skeleton .details {
+    margin-top: 10px;
+    width: 100%;
+    flex-direction: column;
+}
+
+.details span,
+.top-user-skeleton span,
+.top-user-last-skeleton span {
+    display: block;
+    overflow: hidden;
+    position: relative;
+}
+
+.details .avatar-title-skeleton {
+    height: 18px;
+    width: 120px;
+    margin-top: 10px;
+}
+
+.details .avatar-content-skeleton {
+    height: 13px;
+    width: 90px;
+    margin-top: 15px;
+}
+
+.points-skeleton {
+    height: 13px;
+    width: 30px;
+}
+
+.details .tag-skeleton {
+    height: 22px;
+    width: 35px;
+    margin-top: 15px;
+    margin-right: 10px;
+    border-radius: 20px;
+}
+
+.tag-skeleton-container {
+    display: flex;
+}
+
+.card-skeleton-topUser .description {
+    margin: 25px 0;
+}
+
+.description .line {
+    background: #d9d9d9;
+    border-radius: 10px;
+    height: 13px;
+    margin: 10px 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.description .line-1 {
+    width: calc(100% - 15%);
+}
+
+.description .line-3 {
+    width: calc(100% - 40%);
+}
+
+.card-skeleton .btns {
+    display: flex;
+}
+
+.card-skeleton .btns .btn {
+    height: 45px;
+    width: 100%;
+    background: #d9d9d9;
+    border-radius: 25px;
+    position: relative;
+    overflow: hidden;
+}
+
+.btns .btn-1 {
+    margin-right: 8px;
+}
+
+.btns .btn-2 {
+    margin-left: 8px;
+}
+
+.header-skeleton .avatar-skeleton::before,
+.details span::before,
+.description .line::before,
+.btns .btn::before,
+.top-user-points-skeleton span:nth-child(2)::before {
+    position: absolute;
+    content: "";
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, rgba(190, 190, 190, 0.2) 25%, rgba(129, 129, 129, 0.24) 37%, rgba(190, 190, 190, 0.2) 63%);
+    background-size: 1450px 950px;
+    animation: shimmer 1.5s linear infinite;
+}
+
+.details span::before {
+    animation-delay: 0.2s;
+}
+
+.btns .btn-2::before {
+    animation-delay: 0.22s;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -650px 0;
+    }
+
+    100% {
+        background-position: 750px 0;
+    }
+}
+
+@media (max-width: 1200px) {
+    .top-user-points-skeleton {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .details .avatar-title-skeleton {
+        width: 90px;
+    }
+
+    .details .avatar-content-skeleton {
+        width: 65px;
+    }
+
+    .points-skeleton {
+        width: 20px;
+    }
+
+    .top-user-points-skeleton{
+        margin-top: 5px;
+    }
+}
+
+@media (max-width: 720px) {
+
+    .points-skeleton {
+        font-size: 14px;
+    }
+}

@@ -1,0 +1,93 @@
+.avatarUser {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-family: sans-serif;
+    color: #fff;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.avatarUser img {
+    vertical-align: middle;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+}
+
+.containerAvatar {
+    display: flex;
+}
+
+.containerAvatar:hover,
+.avatarUser:hover{
+    cursor: pointer;
+}
+
+.contentAvatar {
+    position: fixed;
+    bottom: 475px;
+    padding: 20px;
+    min-width: 400px;
+    background-color: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: 0.5s;
+    cursor: auto;
+    z-index: 9998;
+}
+
+.contentAvatar .header {
+    display: flex;
+    align-items: center;
+}
+
+.contentAvatar .header img {
+    grid-column: 1/2;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.contentAvatar .header .infos {
+    margin-left: 1em;
+}
+
+.contentAvatar .header .infos .name {
+    font-size: 1.25em;
+    color: #333;
+    letter-spacing: 1px;
+    font-size: 18;
+}
+
+.contentAvatar .header .infos .title {
+    font-size: 0.9em;
+    color: #969696;
+    font-weight: 500;
+}
+
+.contentAvatar .body {
+    padding: 1em;
+}
+
+.contentAvatar .body p {
+    font-size: 0.95em;
+    color: #272727;
+    line-height: 1.5;
+    font-family: "Open Sans", sans-serif;
+    font-weight: normal;
+}
+
+.profile:hover .contentAvatar {
+    visibility: visible;
+    opacity: 1;
+    /*transform: translateY(0);*/
+    transform: translateX(-15%) translateY(0);
+}

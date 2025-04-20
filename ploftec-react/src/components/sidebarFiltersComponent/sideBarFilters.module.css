@@ -1,0 +1,75 @@
+.sidebarFilters {
+  position: fixed;
+  height: 100vh;
+  width: 45%;
+  background: #111;
+  right: -100%;
+  display: block;
+  transition: right 0.5s ease;
+  top: 80px;
+  z-index: 32;
+}
+
+.active {
+  right: 0;
+}
+
+.sidebarFiltersContainer {
+  padding: 20px;
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+.sidebarFiltersPanel {
+  width: 100%;
+  flex-direction: column;
+  display: flex;
+  gap: 20px;
+}
+
+.sidebarFiltersHeadboard {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.sidebarFiltersRows {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.sidebarFiltersRow {
+  display: flex;
+  gap: 20px;
+  justify-content: flex-start;
+}
+
+.filterColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.filterColumn .buttonPloftecContainer {
+  margin-right: 10px;
+}
+
+.filterColumn button,
+.filterColumn input {
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  .sidebarFiltersRow {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebarFilters {
+    width: 100%;
+  }
+}
