@@ -42,7 +42,7 @@ export default function LoginRegister() {
       const response = await login({ username, password });
       console.log(response);
       if (response != null) {
-        router.push("/forum");
+        router.push("/forum/publications");
       } else {
         setErrorMessage("Usuario o contraseña inválido");
         setErrorVisible(true);

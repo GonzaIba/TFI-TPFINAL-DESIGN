@@ -55,7 +55,7 @@ export default function PublicationsPage() {
       try {
         const result = await publicacionesService.obtenerPublicaciones()
         const topUsers = await usuariosForoService.obtenerTopUsuariosUltimaSemana()
-
+        console.log(result);
         setPublicaciones(result ?? [])
         setUsuariosTop(topUsers ?? [])
       } catch (error) {
@@ -88,7 +88,13 @@ export default function PublicationsPage() {
           ) : (
             publicaciones.length > 0 ? (
               publicaciones.map(pub => (
-                <PublicationCard key={pub.codigoPublicacion} publication={pub} onClickTitle={onClickTitle} onClickUser={onClickUser} onToggleSave={onToggleSave} />
+                <PublicationCard 
+                    key={`${pub.codigoPublicacion}-${pub.codigoUsuario}`}                  
+                    publication={pub} 
+                    onClickTitle={onClickTitle} 
+                    onClickUser={onClickUser} 
+                    onToggleSave={onToggleSave} 
+                />
               ))
             ) : (
               <p>
@@ -123,7 +129,7 @@ export default function PublicationsPage() {
                       usuariosTop.length > 0 ? (
                         usuariosTop.map((usuario, i) => (
                           <TopUserCard
-                            //key={usuario.codigoUsuario}
+                            key={usuario.fechaDesde}
                             image={usuario.image}
                             initials={usuario.iniciales}
                             shortDescription={usuario.descripcionCorta}

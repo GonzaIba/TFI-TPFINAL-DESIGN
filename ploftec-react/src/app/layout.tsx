@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "@/styles/auth/login.css";
 import "@/styles/pages/forum.css";
 import "@/styles/components/grid.css";
@@ -71,14 +72,17 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css"
         />
+
+        <Script
+            src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"
+            strategy="beforeInteractive"
+        />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
       </body>
-
-      <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
     </html>
   );
 }
