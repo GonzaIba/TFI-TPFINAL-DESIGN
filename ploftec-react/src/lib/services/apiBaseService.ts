@@ -12,14 +12,31 @@ export type ApiRequest<T> = {
   forceLogoutIfException?: boolean;
 };
 
+// Servicio externo para obtener IP pública
+const getIpAddress = async (): Promise<string | null> => {
+  try {
+    const res = await fetch("https://api.ipify.org?format=json");
+    const data = await res.json();
+    return data.ip;
+  } catch {
+    return null;
+  }
+};
+
 export const apiBaseService = {
   async execute<EntityResponse, T>(req: ApiRequest<T>): Promise<GenericApiResponse<EntityResponse>> {
     try {
+
+      const userAgent = navigator.userAgent;
+      const ip = await getIpAddress();
+
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/${req.url}`, {
         method: req.method,
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
+          "User-Agent": userAgent,
+          "X-Client-IP": ip ?? "",
         },
         body: req.body ? JSON.stringify(req.body) : undefined,
       });
