@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import styles from "./button.module.css";
+import { Save } from 'lucide-react'
 
 interface ButtonProps {
   executeFunction?: () => Promise<void>;
@@ -64,10 +65,14 @@ export default function ButtonPloftec({
   }`;
 
   const containerStyle = {
-    background: transparentContainer ? "transparent" : colorBackground,
+    "--bg-color": transparentContainer ? "transparent" : colorBackground,
+    "--bg-color-hover": transparentContainer
+      ? "rgba(255, 255, 255, 0.1)"
+      : "rgba(100, 75, 255, 0.8)", // o cualquier color más claro
     border: bordered || borderedWithoutRadius ? "2px solid #644bff" : "none",
     width,
-  };
+  } as React.CSSProperties;
+  
 
   return (
     <div className={styles.buttonPloftecContainer}>
@@ -78,6 +83,7 @@ export default function ButtonPloftec({
         >
           {useIcon && (
             <div className={styles.iconButtonPloftec}>
+              {/*<i className={currentIcon} style={{ color: iconColor }}></i>*/}
               <i className={currentIcon} style={{ color: iconColor }}></i>
             </div>
           )}

@@ -40,7 +40,6 @@ export default function LoginRegister() {
   
     try {
       const response = await login({ username, password });
-      console.log(response);
       if (response != null) {
         router.push("/forum/publications");
       } else {
