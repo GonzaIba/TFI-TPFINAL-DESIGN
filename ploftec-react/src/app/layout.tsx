@@ -9,6 +9,8 @@ import "@/styles/components/skeleton.css";
 //import "@/styles/components/avatarUser.css";
 import "@/styles/site.css";
 import "./globals.css";
+import { QueryProvider } from "@/providers/queryProvider";
+import { AuthProvider } from "@/providers/authProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -74,14 +76,19 @@ export default function RootLayout({
         />
 
         <Script
-            src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"
-            strategy="beforeInteractive"
+          src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"
+          strategy="beforeInteractive"
         />
+
+        <Script src="https://code.jquery.com/jquery-3.5.1.min.js"></Script>
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <QueryProvider>
+          {/* <AuthProvider>
+            {children}
+          </AuthProvider> */}
+          {children}
+        </QueryProvider>
       </body>
     </html>
   );

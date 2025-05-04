@@ -4,32 +4,61 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import SkeletonAvatarAndName from '@/components/skeletonComponent/skeletonAvatarAndName'
 import SkeletonPublication from '@/components/skeletonComponent/skeletonPublication'
 import PublicationCard from '@/components/forum/publicationCard/publicationCard'
+import PublicationDetailCard from '@/components/forum/publicationDetail/publicationDetail'
+import AnswerCard from '@/components/forum/answerCard/answerCard'
 import TopUserCard from '@/components/forum/topUserCard/topUserCard'
+import Button from '@/components/buttonComponent/button'
 import { publicacionesService } from '@/lib/services/forum/publicacionesService'
 import { usuariosForoService } from '@/lib/services/forum/usuariosForoService'
-import { PublicationResponse, UsersForumPreviewResponse } from '@/lib/types/forum'
+import { PublicationResponse, UsersForumPreviewResponse, PublicationDetailResponse } from '@/lib/types/forum'
 import { AvatarCrownEnum } from '@/lib/types/enum'
-import Button from '@/components/buttonComponent/button'
-import SkeletonAvatarAndName from '@/components/skeletonComponent/skeletonAvatarAndName'
+import { Add, Bookmark, BookmarkBorder, BorderColor, BorderColorOutlined } from '@mui/icons-material';
+import { Colors } from '@/theme/colors'
 
 export default function PublicationsPage() {
   const router = useRouter()
   const [publicaciones, setPublicaciones] = useState<PublicationResponse[]>([])
   const [usuariosTop, setUsuariosTop] = useState<UsersForumPreviewResponse[]>([])
   const [loading, setLoading] = useState<boolean>(true)
+  const [showPublicationDetail, setShowPublicationDetail] = useState(false)
+  const [currentPublication, setCurrentPublication] = useState<PublicationDetailResponse>()
+  const [showSaved, setShowSaved] = useState(false);
+  const [showCreated, setChowCreated] = useState(false);
+
 
   const onNewPublication = async () => {
     // lógica para abrir modal o redireccionar
   }
 
   const onShowSaved = async () => {
-    // lógica para ver publicaciones guardadas
+    setShowSaved(!showSaved)
+    setLoading(true);
+
+    let publicationsSaved: PublicationResponse[];
+    if(!showSaved)
+      publicationsSaved = await publicacionesService.obtenerPublicacionesGuardadas();
+    else
+      publicationsSaved = await publicacionesService.obtenerPublicaciones();
+
+    setPublicaciones(publicationsSaved);
+    setLoading(false);
   }
 
   const onShowCreated = async () => {
-    // lógica para ver publicaciones creadas
+    setChowCreated(!showCreated)
+    setLoading(true);
+
+    let publicationsSaved: PublicationResponse[];
+    if(!showCreated)
+      publicationsSaved = await publicacionesService.obtenerPublicacionesCreadas();
+    else
+      publicationsSaved = await publicacionesService.obtenerPublicaciones();
+
+    setPublicaciones(publicationsSaved);
+    setLoading(false);
   }
 
   const onSeeTopUser = async () => {
@@ -38,24 +67,46 @@ export default function PublicationsPage() {
 
 
 
-  const onClickTitle = async () => {
-    // lógica para ver publicaciones guardadas
-  }
-
   const onClickUser = async () => {
     // lógica para ver publicaciones creadas
   }
 
-  const onToggleSave = async () => {
+  const onToggleSave = async (codePub: number, isSaved: boolean) => {
     // lógica para redirigir al perfil del usuario top
+    //revisar casuistica cuando falla el guardado de la publi
+    setLoading(true);
+    let result: any;
+    if (isSaved) {
+      result = await publicacionesService.eliminarPublicacionGuardada(codePub);
+    } else {
+      result = await publicacionesService.guardarPublicacion(codePub);
+    }
+
+    if(result){
+      setPublicaciones(await publicacionesService.obtenerPublicaciones());
+    }
+    setLoading(false);
   }
+
+  const onClickTitle = async (codigoPublicacion: number) => {
+    try {
+      setShowPublicationDetail(true)
+      setLoading(true)
+      const detail = await publicacionesService.obtenerDetallePublicacion(codigoPublicacion)
+      setCurrentPublication(detail)
+    } catch (error) {
+      console.error('Error al obtener detalle de publicación:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const result = await publicacionesService.obtenerPublicaciones()
         const topUsers = await usuariosForoService.obtenerTopUsuariosUltimaSemana()
-        console.log(result);
         setPublicaciones(result ?? [])
         setUsuariosTop(topUsers ?? [])
       } catch (error) {
@@ -68,43 +119,70 @@ export default function PublicationsPage() {
     fetchData()
   }, [])
 
+  const handleBackToPublications = async () => {
+    setShowPublicationDetail(false)
+    //setCurrentPublication(null)
+    //await fetchPublications()
+  }
+
   return (
     <div className="slider__contents">
+      {!showPublicationDetail ? (
       <div className="forumContainer">
         <div className="forum-left">
-          <div className="question-create open-modal">
-            <Button executeFunction={onNewPublication} width="200px" displayText='Crear Publicación' iconClass="bx bx-plus" />
-            <Button transparentContainer useIcon executeFunction={onShowSaved} width="47px" iconClass="bx bx-bookmark" displayText='' />
-            <Button transparentContainer useIcon executeFunction={onShowCreated} width="47px" iconClass="bx bx-highlight" displayText='' />
-          </div>
-
-          {loading ? (
-            <>
-              <SkeletonPublication />
-              <SkeletonPublication />
-              <SkeletonPublication />
-              <SkeletonPublication />
-            </>
-          ) : (
-            publicaciones.length > 0 ? (
-              publicaciones.map(pub => (
-                <PublicationCard 
-                    key={`${pub.codigoPublicacion}-${pub.codigoUsuario}`}                  
-                    publication={pub} 
-                    onClickTitle={onClickTitle} 
-                    onClickUser={onClickUser} 
-                    onToggleSave={onToggleSave} 
-                />
-              ))
-            ) : (
-              <p>
-                Aún no hay publicaciones cargadas...
-                <br />
-                ¡Se el primero y gana puntos!
-              </p>
-            )
-          )}
-        </div>
+        <div className="question-create open-modal">
+        <Button
+          text="Crear Publicación"
+          onClick={onNewPublication}
+          icon={<Add fontSize='medium' />}
+          width="200px"
+        />
+        <Button
+          onClick={onShowSaved}
+          icon={showSaved ? <Bookmark sx={{ color: Colors.primary }} fontSize='medium' /> : <BookmarkBorder sx={{ color: Colors.white }} fontSize='medium' />}
+          transparent
+          width="40px"
+        />
+        <Button
+          onClick={onShowCreated}
+          icon={showCreated ? <BorderColor sx={{ color: Colors.primary }} fontSize='medium' /> : <BorderColorOutlined sx={{ color: Colors.white }} fontSize='medium' />}
+          transparent
+          width="40px"
+        />
+      </div>
+      {loading ? (
+        <>
+          <SkeletonPublication />
+          <SkeletonPublication />
+          <SkeletonPublication />
+          <SkeletonPublication />
+        </>
+      ) : (
+        publicaciones.length > 0 ? (
+          publicaciones.map(pub => (
+            <PublicationCard 
+              key={`${pub.codigoPublicacion}-${pub.codigoUsuario}`}                  
+              publication={pub} 
+              onClickTitle={async () => onClickTitle(pub.codigoPublicacion)} 
+              onClickUser={onClickUser}
+              onToggleSave={async () => onToggleSave(pub.codigoPublicacion, pub.estaGuardado)} 
+            />
+          ))
+        ) : showCreated ? (
+          <p>
+          Aún no tenes publicaciones creadas
+          <br />
+          Crealo y gana puntos!
+        </p>
+        ) :(
+          <p>
+            Aún no hay publicaciones cargadas...
+            <br />
+            ¡Se el primero y gana puntos!
+          </p>
+        )
+      )}
+      </div>
 
         <div className="forum-right">
           <div className="top-users">
@@ -180,6 +258,16 @@ export default function PublicationsPage() {
           </div>
         </div>
       </div>
+      ) : (
+        currentPublication && (
+          <PublicationDetailCard
+            publication={currentPublication}
+            onBack={handleBackToPublications}
+            onAddAnswer={async () => {}}
+            onVotePublication={async () => {}}
+          />
+        )
+      )}
     </div>
   )
 }

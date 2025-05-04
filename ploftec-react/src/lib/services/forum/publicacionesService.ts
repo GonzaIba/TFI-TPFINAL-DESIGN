@@ -16,13 +16,22 @@ export const publicacionesService = {
     return response.data ?? [];
   },
 
-  async obtenerDetallePublicacion(code: number): Promise<PublicationDetailResponse | null> {
+  async obtenerDetallePublicacion(code: number): Promise<PublicationDetailResponse> {
     const response = await apiBaseService.execute<PublicationDetailResponse, undefined>({
       method: "GET",
       url: `ApiForum/ObtenerDetallePublicacion?codePublication=${code}`,
       requireCredentials: false,
     });
-    return response.data ?? null;
+    return response?.data ?? {};
+  },
+
+  async obtenerPublicacionesCreadas(): Promise<PublicationResponse[]> {
+    const response = await apiBaseService.execute<PublicationResponse[], undefined>({
+      method: "GET",
+      url: "ApiForum/ObtenerPublicacionesCreadasPorUsuario",
+      requireCredentials: true,
+    });
+    return response.data ?? [];
   },
 
   async obtenerPublicacionesGuardadas(): Promise<PublicationResponse[]> {
@@ -30,6 +39,7 @@ export const publicacionesService = {
       method: "GET",
       url: "ApiForum/ObtenerPublicacionesGuardadas",
       requireCredentials: true,
+      forceLogoutIfException: true,
     });
     return response.data ?? [];
   },

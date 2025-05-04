@@ -108,82 +108,90 @@ export default function LoginRegister() {
         <div className="signin-signup">
           {/* Login */}
           <div className="form sign-in-form">
-            <div className="image-ploftec">
-              <Image src={logo} width="200" height="70" alt="Logo PLOFTEC" />
-            </div>
-            <div className="title-login">
-              <h2 className="title">Iniciar Sesión</h2>
-            </div>
-            <div className="input-container">
-              <div className={`input-field ${showUsernameError ? "error" : ""}`}>
-                <i className="icon fas fa-user" style={{ padding: "0 4px" }}></i>
-                <div className="input-content">
-                  <input
-                    type="text"
-                    placeholder=" "
-                    autoComplete="username"
-                    className="input-login"
-                    value={username}
-                    onChange={(e) => {
-                        setUsername(e.target.value);
-                        setShowUsernameError(false);
-                    }}
-                  />
-                  <label className="placeholder-login" placeholder="Usuario"></label>
+            <form
+              className="form"
+              onSubmit={(e) => {
+                e.preventDefault(); // evita que se recargue la página
+                handleLogin();
+              }}
+            >
+              <div className="image-ploftec">
+                <Image src={logo} width="200" height="70" alt="Logo PLOFTEC" />
+              </div>
+              <div className="title-login">
+                <h2 className="title">Iniciar Sesión</h2>
+              </div>
+              <div className="input-container">
+                <div className={`input-field ${showUsernameError ? "error" : ""}`}>
+                  <i className="icon fas fa-user" style={{ padding: "0 4px" }}></i>
+                  <div className="input-content">
+                    <input
+                      type="text"
+                      placeholder=" "
+                      autoComplete="email"
+                      className="input-login"
+                      value={username}
+                      onChange={(e) => {
+                          setUsername(e.target.value);
+                          setShowUsernameError(false);
+                      }}
+                    />
+                    <label className="placeholder-login" placeholder="Usuario"></label>
+                  </div>
+                </div>
+                  {showUsernameError && (
+                      <div className="error-message">Usuario requerido</div>
+                  )}
+              </div>
+              <div className="input-container">
+                <div className={`input-field ${showPasswordError ? "error" : ""}`}>
+                  <i className="icon fas fa-lock" style={{ padding: "0 4px" }}></i>
+                  <div className="input-content">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      placeholder=" "
+                      autoComplete="off"
+                      className="input-login"
+                      value={password}
+                      onChange={(e) => {
+                          setPassword(e.target.value)
+                          setShowPasswordError(false);
+                      }}
+                    />
+                    <label className="placeholder-login" placeholder="Contraseña"></label>
+                    <span className="password-span" onClick={() => setShowPassword(!showPassword)}>
+                      <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
+                    </span>
+                  </div>
+                </div>
+                  {showPasswordError && (
+                      <div className="error-message">Contraseña requerida</div>
+                  )}
+              </div>
+              <div className="button-login-container">
+                <button className="button-login" onClick={handleLogin}>Ingresar</button>
+              </div>
+              {errorVisible && <div className="login-error">{errorMessage}</div>}
+              <div className="no-account">
+                <p className="account-text">
+                  No tienes una cuenta? <a onClick={toggleRegister}>Regístrate!</a>
+                </p>
+              </div>
+              <div className="external-login-text">
+                <p>O iniciar sesión con:</p>
+              </div>
+              <div className="text-center">
+                <div className="btn-group-external-login">
+                  <div className="socialButtonLogin">
+                    <ul>
+                      <li><a href="#"><i className="fab fa-google"></i></a></li>
+                      <li><a href="#"><i className="fab fa-github"></i></a></li>
+                      <li><a href="#"><i className="fab fa-linkedin-in"></i></a></li>
+                    </ul>
+                  </div>
                 </div>
               </div>
-                {showUsernameError && (
-                    <div className="error-message">Usuario requerido</div>
-                )}
-            </div>
-            <div className="input-container">
-              <div className={`input-field ${showPasswordError ? "error" : ""}`}>
-                <i className="icon fas fa-lock" style={{ padding: "0 4px" }}></i>
-                <div className="input-content">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder=" "
-                    autoComplete="off"
-                    className="input-login"
-                    value={password}
-                    onChange={(e) => {
-                        setPassword(e.target.value)
-                        setShowPasswordError(false);
-                    }}
-                  />
-                  <label className="placeholder-login" placeholder="Contraseña"></label>
-                  <span className="password-span" onClick={() => setShowPassword(!showPassword)}>
-                    <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
-                  </span>
-                </div>
-              </div>
-                {showPasswordError && (
-                    <div className="error-message">Contraseña requerida</div>
-                )}
-            </div>
-            <div className="button-login-container">
-              <button className="button-login" onClick={handleLogin}>Ingresar</button>
-            </div>
-            {errorVisible && <div className="login-error">{errorMessage}</div>}
-            <div className="no-account">
-              <p className="account-text">
-                No tienes una cuenta? <a onClick={toggleRegister}>Regístrate!</a>
-              </p>
-            </div>
-            <div className="external-login-text">
-              <p>O iniciar sesión con:</p>
-            </div>
-            <div className="text-center">
-              <div className="btn-group-external-login">
-                <div className="socialButtonLogin">
-                  <ul>
-                    <li><a href="#"><i className="fab fa-google"></i></a></li>
-                    <li><a href="#"><i className="fab fa-github"></i></a></li>
-                    <li><a href="#"><i className="fab fa-linkedin-in"></i></a></li>
-                  </ul>
-                </div>
-              </div>
-            </div>
+            </form>
           </div>
 
         {/* Register */}

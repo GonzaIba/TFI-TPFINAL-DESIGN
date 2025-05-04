@@ -7,11 +7,12 @@ import { GroupResponse } from "@/lib/types/forum";
 import { filtrosService } from "@/lib/services/forum/filtrosService";
 import InputLabel from "@/components/inputLabelComponent/inputLabel";
 import Button from "@/components/buttonComponent/button";
-import styles from "./SideBarFilters.module.css";
+import styles from "./sideBarFilters.module.css";
+import CloseIcon from '@mui/icons-material/Close';
+import { Colors } from '@/theme/colors'
 
 type SideBarFiltersProps = {
   show?: boolean;
-  filter: RightBarFilters;
   grupo: GroupEnum;
   closeFunction?: () => Promise<void>;
   resetFunction?: () => Promise<void>;
@@ -21,7 +22,6 @@ type SideBarFiltersProps = {
 
 export default function SideBarFilters({
   show = false,
-  filter,
   grupo,
   closeFunction,
   resetFunction,
@@ -75,11 +75,10 @@ export default function SideBarFilters({
           <div className={styles.sidebarFiltersHeadboard}>
             <h3>{groupResponse?.descripcionGrupo}</h3>
             <Button
-              executeFunction={clickCloseFunction}
-              iconClass="bx bx-x"
+              onClick={clickCloseFunction}
+              icon={<CloseIcon sx={{ color: Colors.primary }} fontSize='medium'/>}
+              transparent
               width="45px"
-              bordered
-              displayText=""
             />
           </div>
 
@@ -103,25 +102,17 @@ export default function SideBarFilters({
             <div className={styles.sidebarFiltersRow}>
               <div className={styles.filterColumn}>
                 <Button
-                  displayText="Guardar Filtros"
-                  useExecutingInteraction
-                  borderedWithoutRadius
-                  executeFunction={clickSaveFunction}
-                  useIcon={false}
-                  textExecuting="Guardando..."
-                  textCompleteExecuting="Guardado!"
-                  onCompleted={onCompleted}
+                  onClick={clickSaveFunction}
                   width="100%"
+                  text="Guardar Filtros"
                 />
               </div>
               <div className={styles.filterColumn}>
                 <Button
-                  displayText="Restablecer Filtros"
-                  useExecutingInteraction
-                  executeFunction={clickResetFunction}
-                  useIcon={false}
-                  onCompleted={onCompleted}
+                  onClick={clickResetFunction}
+                  transparent
                   width="100%"
+                  text="Restablecer Filtros"
                 />
               </div>
             </div>

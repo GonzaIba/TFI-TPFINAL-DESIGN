@@ -4,18 +4,29 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:https": "node server.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next ts-standard"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^7.0.2",
+    "@mui/material": "^7.0.2",
+    "@tanstack/react-query": "^5.74.4",
+    "axios": "^1.9.0",
     "clsx": "^2.1.1",
+    "formik": "^2.4.6",
+    "framer-motion": "^12.9.2",
     "lucide-react": "^0.501.0",
     "next": "15.3.1",
     "quill": "^2.0.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-spinners": "^0.16.1"
+    "react-spinners": "^0.16.1",
+    "yup": "^1.6.1",
+    "zustand": "^5.0.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -28,6 +39,10 @@
     "eslint-config-next": "15.3.1",
     "open": "^7.4.2",
     "tailwindcss": "^4",
+    "ts-standard": "^12.0.2",
     "typescript": "^5"
+  },
+  "ts-standard": {
+    "project": "./tsconfig.json"
   }
 }

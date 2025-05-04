@@ -11,9 +11,14 @@ import { DetailsUserForumResponse } from '@/lib/types/forum';
 import Search from '@/components/searchComponent/search';
 import AvatarUser from '@/components/avatarUserComponent/avatarUser';
 import SkeletonLine from '@/components/skeletonComponent/skeletonLine';
-import Button from '@/components/buttonComponent/button';
 import Loading from '@/components/loadingComponent/loading';
 import Footer from '@/components/footerComponent/footer';
+import {
+  moveTabBar,
+  moveContentTabBar,
+  enableTdTextSelection,
+  preventHorizontalScrollWheel,
+} from '@/lib/utils/tabBar';
 
 export default function ForumLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -45,17 +50,18 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
   }, []);
 
   useEffect(() => {
-    if (pathname === '/Forum') {
-      router.push('/Forum/Publications');
+    if (pathname === '/forum') {
+      router.push('/forum/publications');
     }
   }, [pathname]);
 
   const changeTab = async (index: number) => {
     setActiveTab(index);
-    let route = '/Forum/Publications';
-    if (index === 1) route = '/Forum/Users';
-    else if (index === 2) route = '/Forum/Labels';
-    else if (index === 3) route = '/Forum/LiveHelp';
+    moveTabBar(index);
+    let route = '/forum/publications';
+    if (index === 1) route = '/forum/users';
+    else if (index === 2) route = '/forum/labels';
+    else if (index === 3) route = '/forum/liveHelp';
     router.push(route);
   };
 
@@ -115,7 +121,7 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
                   className="buttonNav"
                   onClick={async () => {
                     setIsLoading(true);
-                    await new Promise(r => setTimeout(r, 1000));
+                    await new Promise(r => setTimeout(r, 700)); // Simular un retraso de 500ms
                     setIsLoading(false);
                     router.push('/login');
                   }}>

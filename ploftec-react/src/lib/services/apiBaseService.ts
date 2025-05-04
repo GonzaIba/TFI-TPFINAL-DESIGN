@@ -1,4 +1,5 @@
 // src/lib/services/apiBaseService.ts
+import axios, { AxiosRequestConfig } from "axios";
 import { GenericApiResponse } from "@/lib/types/apiResponse";
 import { LoginRequest } from "@/lib/types/auth";
 import { ExceptionBase } from "../types/exception";
@@ -15,9 +16,8 @@ export type ApiRequest<T> = {
 // Servicio externo para obtener IP pública
 const getIpAddress = async (): Promise<string | null> => {
   try {
-    const res = await fetch("https://api.ipify.org?format=json");
-    const data = await res.json();
-    return data.ip;
+    const res = await axios.get("https://api.ipify.org?format=json");
+    return res?.data?.ip ?? "";
   } catch {
     return null;
   }
@@ -26,31 +26,31 @@ const getIpAddress = async (): Promise<string | null> => {
 export const apiBaseService = {
   async execute<EntityResponse, T>(req: ApiRequest<T>): Promise<GenericApiResponse<EntityResponse>> {
     try {
-
       const userAgent = navigator.userAgent;
       const ip = await getIpAddress();
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/${req.url}`, {
+      const config: AxiosRequestConfig = {
         method: req.method,
-        credentials: "include",
+        url: `${process.env.NEXT_PUBLIC_API_URL}/${req.url}`,
         headers: {
           "Content-Type": "application/json",
           "User-Agent": userAgent,
           "X-Client-IP": ip ?? "",
         },
-        body: req.body ? JSON.stringify(req.body) : undefined,
-      });
+        withCredentials: req.requireCredentials ?? false,
+        data: req.body ?? undefined,
+      };
 
-      const json = await res.json();
+      const res = await axios.request<GenericApiResponse<EntityResponse>>(config);
+      return res.data;
+    } catch (error: any) {
 
-      if (!res.ok && json.errors?.errorsList?.some((e: ExceptionBase) => e.nameError === "InvalidTokenException")) {
+      if (error.response?.data?.errors?.errorsList?.some((e: ExceptionBase) => e.nameError === "InvalidTokenException")) {
         if (req.forceLogoutIfException !== false) {
           await apiBaseService.logout();
         }
       }
 
-      return json;
-    } catch (error) {
       throw error;
     }
   },
@@ -60,15 +60,17 @@ export const apiBaseService = {
       method: "POST",
       url: "Auth/Login",
       body: data,
-      requireCredentials: false,
+      requireCredentials: true,
     });
   },
 
   async logout(): Promise<void> {
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/Auth/Logout`, {
-      method: "POST",
-      credentials: "include",
-    });
+    try {
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/Auth/Logout`, {}, { withCredentials: true });
+    }
+    catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
     window.location.href = "/login";
   },
 

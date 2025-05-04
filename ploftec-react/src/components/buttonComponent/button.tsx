@@ -1,97 +1,82 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import styles from "./button.module.css";
-import { Save } from 'lucide-react'
+import { Button as ButtonMui, CircularProgress, Stack, Typography } from '@mui/material';
 
-interface ButtonProps {
-  executeFunction?: () => Promise<void>;
-  onCompleted?: () => Promise<void>;
-  iconClass?: string;
-  iconColor?: string;
-  displayText?: string;
-  textExecuting?: string;
-  textCompleteExecuting?: string;
-  colorBackground?: string;
-  bordered?: boolean;
-  borderedWithoutRadius?: boolean;
-  transparentContainer?: boolean;
-  useIcon?: boolean;
-  useExecutingInteraction?: boolean;
+interface ButtonPloftecProps {
+  text?: string;
+  onClick: () => Promise<void> | void;
+  icon?: React.ReactNode;
+  loading?: boolean;
+  disabled?: boolean;
+  circular?: boolean;
   width?: string;
+  transparent?: boolean;
+  backgroundColor?: string;
 }
 
 export default function ButtonPloftec({
-  executeFunction,
-  onCompleted,
-  iconClass = "bx bx-cloud-download",
-  iconColor = "#fff",
-  displayText = "Descargar",
-  textExecuting = "Ejecutando...",
-  textCompleteExecuting = "Completado!",
-  colorBackground = "#644bff",
-  bordered = false,
-  borderedWithoutRadius = false,
-  transparentContainer = false,
-  useIcon = true,
-  useExecutingInteraction = false,
-  width = "170px",
-}: ButtonProps) {
-  const [currentText, setCurrentText] = useState(displayText);
-  const [currentIcon, setCurrentIcon] = useState(iconClass);
-
-  const execute = async () => {
-    if (!executeFunction) return;
-
-    if (useExecutingInteraction) {
-      setCurrentIcon("bx bx-loader bx-spin");
-      setCurrentText(textExecuting);
-      await executeFunction();
-      setCurrentIcon("bx bx-check-circle");
-      setCurrentText(textCompleteExecuting);
-
-      setTimeout(() => {
-        setCurrentIcon("bx bx-cloud-download");
-        setCurrentText(displayText);
-        onCompleted?.();
-      }, 2000);
-    } else {
-      await executeFunction();
-    }
-  };
-
-  const buttonClass = `${styles.buttonPloftec} ${
-    bordered ? styles.bordered : borderedWithoutRadius ? styles.borderedWithoutRadius : ""
-  }`;
-
-  const containerStyle = {
-    "--bg-color": transparentContainer ? "transparent" : colorBackground,
-    "--bg-color-hover": transparentContainer
-      ? "rgba(255, 255, 255, 0.1)"
-      : "rgba(100, 75, 255, 0.8)", // o cualquier color más claro
-    border: bordered || borderedWithoutRadius ? "2px solid #644bff" : "none",
-    width,
-  } as React.CSSProperties;
-  
-
+  text = '',
+  onClick,
+  icon,
+  loading = false,
+  disabled = false,
+  circular = false,
+  width = '170px',
+  transparent = false,
+  backgroundColor = '#644bff', // color por defecto violeta
+}: ButtonPloftecProps) {
   return (
-    <div className={styles.buttonPloftecContainer}>
-      <div className={buttonClass} onClick={execute} style={containerStyle}>
-        <div
-          className={styles.contentPloftec}
-          style={{ justifyContent: useIcon ? "" : "center" }}
+    <ButtonMui
+      onClick={onClick}
+      disabled={disabled || loading}
+      sx={{
+        width: circular ? '45px' : width,
+        height: '45px',
+        minWidth: 0,
+        borderRadius: circular ? '50%' : '5px',
+        backgroundColor: transparent ? 'transparent' : backgroundColor,
+        color: transparent ? backgroundColor : '#fff',
+        boxShadow: transparent ? 'none' : '0 5px 10px rgba(255, 255, 255, 0.1)',
+        textTransform: 'none',
+        fontFamily: 'inherit', // <<--- ACA HAGO QUE USE LA FUENTE DE TU HTML
+        transition: 'background-color 0.3s ease, transform 0.3s ease, color 0.3s ease',
+        '&:hover': {
+          backgroundColor: transparent ? 'rgba(255, 255, 255, 0.1)' : `${backgroundColor}cc`, // 80% opacidad si no es transparente
+        },
+      }}
+    >
+      {loading ? (
+        <CircularProgress size={24} sx={{ color: 'inherit' }} />
+      ) : (
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="center"
+          spacing={icon && text ? 1 : 0}
+          sx={{ width: '100%', height: '100%' }}
         >
-          {useIcon && (
-            <div className={styles.iconButtonPloftec}>
-              {/*<i className={currentIcon} style={{ color: iconColor }}></i>*/}
-              <i className={currentIcon} style={{ color: iconColor }}></i>
-            </div>
+        {icon && (
+          <Stack
+            alignItems="center"
+            justifyContent="center"
+            sx={{ display: 'flex' }}
+          >
+            {icon}
+          </Stack>
           )}
-          <div className={styles.buttonPloftecText}>
-            <span>{currentText}</span>
-          </div>
-        </div>
-      </div>
-    </div>
+          {!circular && text && (
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 500,
+                fontFamily: 'inherit',
+              }}
+            >
+              {text}
+            </Typography>
+          )}
+        </Stack>
+      )}
+    </ButtonMui>
   );
 }

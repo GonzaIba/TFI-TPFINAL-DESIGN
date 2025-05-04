@@ -1,0 +1,527 @@
+.table-users {
+    height: 400px;
+    overflow-y: auto;
+  }
+  
+  .table-users::-webkit-scrollbar {
+    padding-left: 10px;
+    width: 10px;
+    background: #0000;
+  }
+  
+  .table-users::-webkit-scrollbar-thumb {
+    background: rgba(190, 190, 190, 0.2);
+    border-radius: 5px;
+  }
+  
+  .table-fixed {
+    width: 100%;
+    height: auto;
+    table-layout: fixed;
+    border-radius: 6px;
+    height: auto;
+    margin: 0 auto;
+    background: #1B1B1B;
+  }
+  
+  /*thead, tbody {
+    background: #1B1B1B;
+  }*/
+  
+  .table-fixed tbody {
+    height: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  
+  
+  table {
+    border-collapse: separate;
+    border-spacing: 0;
+  }
+  
+  td, th {
+    padding-left: 16px;
+    padding-right: 16px;
+    color: #FFFF;
+  }
+  
+  th {
+    position: sticky;
+    top: 0;
+    background-color: #1B1B1B;
+    z-index: 30;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  
+    padding: 16px 8px;
+  }
+  
+  thead tr {
+    font-size: 16px;
+  }
+  
+  thead tr th{
+    text-align: center;
+  }
+  
+  tbody tr {
+    border-bottom: 1px solid #0000;
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+  
+  tbody tr td {
+    text-align: center;
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+  
+  tbody tr td.td-skeleton {
+    text-align: unset;
+  }
+  
+  .btn-table-user {
+    background: #1B1B1B;
+    color: white;
+  }
+  
+  .btn-table-user i {
+    font-size: 30px;
+  }
+  
+  
+  
+  
+  
+  table {
+    border-collapse: collapse;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    table-layout: fixed;
+  }
+  
+  table caption {
+    font-size: 1.5em;
+    margin: .5em 0 .75em;
+  }
+  
+  table tr {
+    padding: .35em;
+  }
+  
+  table th,
+  table td {
+    padding: .625em;
+  }
+  
+  table th {
+    font-size: .85em;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  
+  .empty-state{
+    height: 360px;
+  }
+  
+  
+  
+  
+  
+  :root {
+    --background: #fff;
+    --foreground: #000;
+    --divider: #dcdcdc;
+    --overlay: #8887;
+  }
+  
+  @media (prefers-color-scheme: dark) {
+    :root {
+        --background: #000;
+        --foreground: #fff;
+        --divider: #333;
+    }
+  }
+  
+  
+  .profile-buttons-user-sheet button {
+    padding: 4px;
+    font-size: 1rem;
+    border-radius: 1rem;
+    border: 0.0625rem solid var(--divider);
+    background: var(--background);
+    color: var(--foreground);
+    cursor: pointer;
+  }
+  
+  :root {
+    --background: #fff;
+    --foreground: #000;
+    --divider: #dcdcdc;
+    --overlay: #888;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background: #000;
+      --foreground: #fff;
+      --divider: #333;
+    }
+  }
+  #sheet {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 99;
+    visibility: visible;
+    transition: opacity 0.5s, visibility 0.5s;
+  }
+  #sheet[aria-hidden="true"] {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  #sheet .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+    background: var(--overlay);
+    opacity: 0.5;
+  }
+  #sheet .contents {
+    border-radius: 1rem 1rem 0 0;
+    background: var(--background);
+    position: relative;
+    overflow-y: hidden;
+    --default-transitions: transform 0.5s, border-radius 0.5s;
+    transition: var(--default-transitions);
+    transform: translateY(0);
+    max-height: 100vh;
+    height: 30vh;
+    max-width: 70rem;
+    box-sizing: border-box;
+    padding: 1rem;
+    padding-top: 3rem;
+  }
+  #sheet .contents:not(.not-selectable) {
+    transition: var(--default-transitions), height 0.5s;
+  }
+  #sheet .contents.fullscreen {
+    border-radius: 0;
+  }
+  #sheet[aria-hidden="true"] .contents {
+    transform: translateY(100%);
+  }
+  #sheet .draggable-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 3rem;
+    margin: auto;
+    padding: 1rem;
+    cursor: grab;
+  }
+  #sheet .draggable-thumb {
+    width: inherit;
+    height: 0.25rem;
+    background: var(--divider);
+    border-radius: 0.125rem;
+  }
+  #sheet .close-sheet {
+    position: absolute;
+    right: 0;
+    top: 0;
+    border: none;
+  }
+  #sheet .body {
+    height: 100%;
+    overflow-y: auto;
+    gap: 1rem;
+  }
+  
+  #sheet .body::-webkit-scrollbar {
+    width: 10px;
+    background: white;
+  }
+  
+  #sheet .body::-webkit-scrollbar-thumb {
+    background: #000;
+    border-radius: 5px;
+  }
+  
+  .sheet-users {
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 100%;
+  }
+  
+  
+  
+  
+  .profile-container {
+    display: flex;
+    flex-direction: row;
+    margin: auto;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  
+  .profile-header-user-sheet {
+    text-align: center;
+  }
+  
+  .profile-photo-user-sheet {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-bottom: 20px;
+    object-fit: cover;
+  }
+  
+  .profile-name-user-sheet {
+    color: #333;
+    font-size: 22px;
+  }
+  
+  .profile-email-user-sheet {
+    color: #007BFF;
+    font-size: 16px;
+    margin-bottom: 20px;
+  }
+  
+  .profile-buttons-user-sheet button {
+    border-radius: 5px;
+    margin-right: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    color: #007BFF;
+    background-color: white;
+    border-color: #007BFF;
+  }
+  
+  .profile-buttons-user-sheet button:hover {
+    background-color: #0056b3;
+  }
+  
+  .profile-details-user-sheet {
+    margin-top: 50px;
+  }
+  
+  .profile-details-user-sheet p {
+    font-size: 16px;
+    color: #666;
+    line-height: 1.5;
+    justify-content: space-between;
+    display: flex;
+  }
+  
+  
+  .profile-user-left, .profile-user-right {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin-right: 20px;
+  }
+  
+  .profile-user-left {
+    width: 40%; /* Ajusta según el contenido */
+  }
+  
+  .profile-user-right {
+    width: 60%; /* Ajusta según el contenido */
+  }
+  
+  .user-properties-user-sheet, .medals-user-sheet {
+    margin-bottom: 20px;
+  }
+  
+  .user-properties-user-sheet h2, .medals-user-sheet h2 {
+    color: #333;
+    margin-bottom: 10px;
+  }
+  
+  .user-properties-user-sheet p, .medals-user-sheet p {
+    font-size: 16px;
+    color: #666;
+    line-height: 1.5;
+    padding: 8px 0;
+  }
+  
+  .profile-last-connected {
+    color: black;
+    font-size: 12px;
+  }
+  
+  .profile-user-stadistics {
+    display: flex;
+    grid-gap: 16px;
+  }
+  
+  .medals-user {
+    display: flex;
+    flex-direction: row;
+    grid-gap: 22px;
+    float: left;
+  }
+  
+  .medals-user-container {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    width: 300px;
+    height: 170px;
+    max-width: 600px;
+    margin: auto;
+  }
+  
+  .medal-card {
+    border-radius: 8px;
+    padding: 10px;
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    grid-gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .medal-message {
+    font-size: 16px;
+    color: #555;
+    flex: 1;
+  }
+  
+  .medal-date {
+    font-size: 16px;
+    color: #555;
+    flex: 1;
+  }
+  
+  .medal-image img {
+    width: 50px; /* Ajusta el tamaño según necesites */
+    height: auto;
+    border-radius: 50%;
+  }
+  
+  
+  .no-medals-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    padding: 20px;
+    width: 300px;
+    text-align: center;
+    color: #333;
+  }
+  
+  .no-medals-message {
+    font-size: 16px;
+  }
+  
+  @media screen and (max-width: 1100px) {
+    .profile-container {
+        flex-direction: column;
+        grid-gap: 20px;
+    }
+  
+    .profile-user-left {
+        width: 100%; /* Ajusta según el contenido */
+    }
+  
+    .profile-user-right {
+        width: 100%; /* Ajusta según el contenido */
+    }
+  
+  }
+  
+  @media screen and (max-width: 500px) {
+  
+    .profile-buttons-user-sheet button,
+    .profile-email-user-sheet,
+    .profile-details-user-sheet p {
+        font-size: 12px;
+    }
+  
+    .sheet-users {
+        margin-left: 0;
+        margin-right: 0;
+    }
+  
+  }
+  
+  
+  @media screen and (max-width: 600px) {
+    .table-fixed {
+        border: 0;
+        background: #000000;
+    }
+  
+    table caption {
+        font-size: 1.3em;
+    }
+  
+    table thead {
+        border: none;
+        clip: rect(0 0 0 0);
+        height: 1px;
+        margin: -1px;
+        overflow: hidden;
+        padding: 0;
+        position: absolute;
+        width: 1px;
+    }
+  
+    table tr {
+        /*border-bottom: 30px solid #000000;*/
+        display: block;
+        margin-bottom: 1em;
+        background: #1B1B1B;
+    }
+  
+    tbody tr td {
+        border-bottom: 3px solid rgba(255, 255, 255, 0.1);
+        display: block;
+        font-size: .8em;
+        text-align: right;
+    }
+  
+    table td::before {
+        /*
+    * aria-label has no advantage, it won't be read inside a table
+    content: attr(aria-label);
+    */
+        content: attr(data-label);
+        float: left;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+  
+    table td:last-child {
+        border-bottom: 0;
+    }
+  
+    td .details .title-skeleton {
+        display: inline-flex;
+        width: 60% !important;
+        margin-top: 0;
+    }
+  
+    .empty-state {
+        display: flex;
+        align-items: center;
+    }
+  
+    .empty-container {
+        align-items: center;
+        text-align: center;
+    }
+  }

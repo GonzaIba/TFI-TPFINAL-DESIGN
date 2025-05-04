@@ -8,6 +8,8 @@ import {
   SuccessfulResponse,
   FiltersUserRequest,
 } from "@/lib/types/forum";
+import { ImageHelper }from '@/lib/helpers/imageHelper'
+
 
 export const usuariosForoService = {
   async obtenerTopUsuariosUltimaSemana(): Promise<UsersForumPreviewResponse[]> {
@@ -34,6 +36,7 @@ export const usuariosForoService = {
       url: `ApiForum/ObtenerDetalleUsuarioForos?userEmail=${email}`,
       requireCredentials: false,
     });
+    
     return response.data ?? null;
   },
 

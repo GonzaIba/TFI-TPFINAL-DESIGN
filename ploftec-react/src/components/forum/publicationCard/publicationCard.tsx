@@ -5,6 +5,8 @@ import { PublicationResponse } from '@/lib/types/forum'
 import { getPublicationTimeAgo } from '@/lib/helpers/timeHelper'
 import AvatarUser from '@/components/avatarUserComponent/avatarUser'
 import Button from '@/components/buttonComponent/button'
+import { Bookmark, BookmarkBorder } from '@mui/icons-material';
+import { Colors } from '@/theme/colors'
 
 type PublicationCardProps = {
   publication: PublicationResponse
@@ -34,7 +36,12 @@ export default function PublicationCard({
             <h4>{publication.titulo}</h4>
           </div>
           <div className="saveIcon">
-            <Button executeFunction={onToggleSave} width="100%" displayText='' iconClass={iconButtonClass} transparentContainer />
+            <Button
+              transparent
+              onClick={onToggleSave}
+              icon={publication?.estaGuardado ? <Bookmark sx={{ color: Colors.primary }} fontSize='large' /> : <BookmarkBorder sx={{ color: Colors.white }} fontSize='large' />}
+              width="40px"
+            />
             {/*REVISAR PORQUE SIEMPRE TRASPARENT TRUE???*/}
           </div>
         </div>
