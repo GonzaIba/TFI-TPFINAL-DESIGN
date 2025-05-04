@@ -71,8 +71,6 @@ export default function UsersPage() {
                 onClick={handleManageFilters}
                 text="Filtrar Por"
                 />
-                  {/* <Button useExecutingInteraction /> */}
-                  {/* <Button iconClass="bx bx-slider" displayText="Filtrar Por" executeFunction={handleManageFilters} /> */}
                 </div>
               </div>
               <div className={styles.userFilters}>

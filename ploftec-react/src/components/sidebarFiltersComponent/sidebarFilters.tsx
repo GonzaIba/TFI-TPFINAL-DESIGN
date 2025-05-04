@@ -69,6 +69,12 @@ export default function SideBarFilters({
   };
 
   return (
+  <>
+    <div
+      className={`${styles.overlay} ${show ? styles.overlayActive : ''}`}
+      onClick={clickCloseFunction}
+    />
+
     <div className={`${styles.sidebarFilters} ${show ? styles.active : ""}`}>
       <div className={styles.sidebarFiltersContainer}>
         <div className={styles.sidebarFiltersPanel}>
@@ -120,5 +126,6 @@ export default function SideBarFilters({
         </div>
       </div>
     </div>
+  </>
   );
 }

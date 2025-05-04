@@ -3,9 +3,9 @@
   background: #664AFF;
 }
 
-.searchContainer {
+/* .searchContainer {
   margin-right: 10px;
-}
+} */
 
 .searchInput {
   width: 100%;
@@ -116,10 +116,6 @@
   .searchInput input {
     font-size: 13px;
   }
-
-  /* input::placeholder {
-    font-size: 13px;
-  } */
 }
 
 @media (max-width: 320px) {

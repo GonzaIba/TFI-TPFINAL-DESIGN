@@ -23,9 +23,21 @@ export default function LoginRegister() {
   const [showEmailError, setShowEmailError] = useState(false);
   const [showConfirmPasswordError, setShowConfirmPasswordError] = useState(false);
 
+  const [animate, setAnimate] = useState(false);
+  const [loadingLogin, setLoadingLogin] = useState(false);
+
+  const triggerAnimation = () => {
+    setAnimate(true);
+    setTimeout(() => {
+      setAnimate(false);
+    }, 600); // coincide con tu animación CSS de 0.6s
+  };
+
   const toggleRegister = () => setIsRegister(!isRegister);
 
   const handleLogin = async () => {
+    triggerAnimation();
+    setAnimate(true);
     setErrorVisible(false);
   
     const usernameEmpty = !username.trim();
@@ -37,6 +49,7 @@ export default function LoginRegister() {
     if (usernameEmpty || passwordEmpty) {
       return;
     }
+    setLoadingLogin(true);
   
     try {
       const response = await login({ username, password });
@@ -50,6 +63,8 @@ export default function LoginRegister() {
       setErrorMessage("Error al intentar iniciar sesión");
       setErrorVisible(true);
       console.error(err);
+    } finally {
+      //setLoadingLogin(false);
     }
   };
 
@@ -165,18 +180,28 @@ export default function LoginRegister() {
                   </div>
                 </div>
                   {showPasswordError && (
-                      <div className="error-message">Contraseña requerida</div>
+                    <div className="error-message">Contraseña requerida</div>
                   )}
               </div>
               <div className="button-login-container">
-                <button className="button-login" onClick={handleLogin}>Ingresar</button>
+              <button
+                className={`button-login ${animate ? "animate" : ""} ${loadingLogin ? "loading" : ""}`}
+                onClick={handleLogin}
+                disabled={loadingLogin}
+              >
+                {loadingLogin ? (
+                  <span className="spinner"></span>
+                ) : (
+                  "Ingresar"
+                )}
+              </button>
               </div>
               {errorVisible && <div className="login-error">{errorMessage}</div>}
-              <div className="no-account">
+              {/* <div className="no-account">
                 <p className="account-text">
                   No tienes una cuenta? <a onClick={toggleRegister}>Regístrate!</a>
                 </p>
-              </div>
+              </div> */}
               <div className="external-login-text">
                 <p>O iniciar sesión con:</p>
               </div>

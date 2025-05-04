@@ -87,6 +87,51 @@ ul {
     }
 }
 
+.button-login.loading {
+    color: transparent;
+    position: relative;
+    pointer-events: none;
+    box-shadow: none;
+    background-color: #171515;
+  }
+  
+  .button-login .spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    margin: -12px 0 0 -12px;
+    border: 3px solid var(--primary-color);
+    border-top: 3px solid transparent;
+    border-radius: 50%;
+    animation: spinner-rotate 1s linear infinite;
+  }
+  
+  @keyframes spinner-rotate {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 .login-body {
@@ -321,9 +366,6 @@ a {
     transform: translateX(0);
 }
 
-.account-text {
-    display: none;
-}
 /*Animation*/
 .login-container.sign-up-mode::before {
     transform: translateX(0);

@@ -7,7 +7,7 @@
   display: block;
   transition: right 0.5s ease;
   top: 80px;
-  z-index: 32;
+  z-index: 33;
 }
 
 .active {
@@ -53,6 +53,26 @@
   flex: 1;
 }
 
+.overlay {
+  position: fixed;
+  top: 80px; /* altura del navbar */
+  left: 0;
+  width: 100%; /* suponiendo que el sidebar mide 500px */
+  height: calc(100% - 80px);
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 32;
+
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none; /* evita clics cuando está oculto */
+}
+
+.overlayActive {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+
 .filterColumn .buttonPloftecContainer {
   margin-right: 10px;
 }
@@ -60,6 +80,12 @@
 .filterColumn button,
 .filterColumn input {
   width: 100%;
+}
+
+@media (max-width: 768px) {
+  .overlay {
+    width: 0; /* Oculta overlay (porque sidebar ocupa todo) */
+  }
 }
 
 @media (max-width: 720px) {
