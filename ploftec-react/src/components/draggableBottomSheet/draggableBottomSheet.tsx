@@ -19,28 +19,39 @@ export default function DraggableBottomSheet({
   isOpen: boolean
   onClose: () => void
 }) {
+  const [viewportHeight, setViewportHeight] = useState(0)
+  const sheetRef = useRef<HTMLDivElement>(null)
+  const [isDragHandled, setIsDragHandled] = useState(false)
   const y = useMotionValue(0)
   const controls = useAnimation()
   const dragControls = useDragControls()
-  const sheetRef = useRef<HTMLDivElement>(null)
-  const [viewportHeight, setViewportHeight] = useState(0)
+  const backdropControls = useAnimation()
+  const MAX_HEIGHT = viewportHeight - 80
+  const START_HEIGHT = viewportHeight * 0.75
+  const MID_HEIGHT = viewportHeight * 0.6
+  const MIN_DRAG_CLOSE = 120
+  const MIN_VISIBLE_HEIGHT = 200 // px desde el bottom hacia arriba (ajustable)
 
   useEffect(() => {
     setViewportHeight(window.innerHeight)
   }, [])
 
-  const MAX_HEIGHT = viewportHeight - 80
-  const START_HEIGHT = viewportHeight * 0.75
-  const MID_HEIGHT = viewportHeight * 0.6
-  const MIN_DRAG_CLOSE = 120
 
   const handleClose = useCallback(async () => {
-    await controls.start({ y: viewportHeight })
+    const animateSheet = controls.start({ y: viewportHeight })
+    const animateBackdrop = backdropControls.start({
+      opacity: 0,
+      backdropFilter: 'blur(0px)',
+      backgroundColor: 'rgba(0, 0, 0, 0)'
+    })
+  
+    await Promise.all([animateSheet, animateBackdrop])
     onClose()
-  }, [controls, viewportHeight, onClose])
+  }, [controls, backdropControls, viewportHeight, onClose])
+  
 
   const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) handleClose()
+    if (e.target === e.currentTarget && !isDragHandled) handleClose()
   }
 
   const handleDragEnd = async (
@@ -49,21 +60,46 @@ export default function DraggableBottomSheet({
   ) => {
     const offsetY = info.offset.y
     const velocityY = info.velocity.y
-
-    if (offsetY < -(viewportHeight - MID_HEIGHT) / 2) {
+  
+    // ⛔ Si arrastró hacia arriba (negativo), no cerrar jamás
+    if (offsetY < 0 || velocityY < 0) {
+      // Snap al máximo si lo soltó cerca del tope
       await controls.start({ y: 0 })
-    } else if (offsetY < MIN_DRAG_CLOSE) {
-      await controls.start({ y: viewportHeight - MID_HEIGHT })
-    } else {
-      await controls.start({ y: viewportHeight })
-      onClose()
+      setIsDragHandled(false)
+      return
     }
+  
+    // ✅ Snap al medio si no llegó a cerrar
+    if (offsetY < MIN_DRAG_CLOSE) {
+      await controls.start({ y: viewportHeight - MID_HEIGHT })
+    }
+    // ✅ Si arrastró hacia abajo fuerte, cerrar
+    else {
+      handleClose()
+    }
+  
+    setIsDragHandled(false)
+  }
+
+  const handleDragStart = (e: React.PointerEvent<HTMLDivElement>) => {
+    dragControls.start(e)
+    setIsDragHandled(true)
+  }
+  
+  const handleDragStop = () => {
+    setIsDragHandled(false)
   }
 
   useEffect(() => {
     if (isOpen && viewportHeight) {
       controls.set({ y: viewportHeight })
       controls.start({ y: viewportHeight - START_HEIGHT })
+
+      backdropControls.start({
+        opacity: 1,
+        backdropFilter: 'blur(3px)',
+        backgroundColor: 'rgba(0,0,0,0.3)'
+      })
     }
   }, [isOpen, viewportHeight, controls, START_HEIGHT])
 
@@ -76,10 +112,8 @@ export default function DraggableBottomSheet({
           className={styles.bottomSheetWrapper}
           data-state={isOpen ? 'open' : 'closed'}
           onClick={handleBackdropClick}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
+          animate={backdropControls}
+          transition={{ duration: 0.35 }}
         >
           <motion.div
             ref={sheetRef}
@@ -97,9 +131,11 @@ export default function DraggableBottomSheet({
           >
             <motion.div
               className={styles.dragHandle}
-              onPointerDown={(e) => dragControls.start(e)}
+              onPointerDown={handleDragStart}
+              onPointerUp={handleDragStop}
+              onPointerCancel={handleDragStop}
               style={{
-                cursor: 'grab',
+                cursor: isDragHandled ? 'grabbing' : 'grab',
                 touchAction: 'none',
                 userSelect: 'none'
               }}

@@ -22,7 +22,8 @@ export default function PublicationsPage() {
   const router = useRouter()
   const [publicaciones, setPublicaciones] = useState<PublicationResponse[]>([])
   const [usuariosTop, setUsuariosTop] = useState<UsersForumPreviewResponse[]>([])
-  const [loading, setLoading] = useState<boolean>(true)
+  const [loadingPubs, setLoadingPubs] = useState<boolean>(true)
+  const [loadingTopUsers, setLoadingTopusers] = useState<boolean>(true)
   const [showPublicationDetail, setShowPublicationDetail] = useState(false)
   const [currentPublication, setCurrentPublication] = useState<PublicationDetailResponse>()
   const [showSaved, setShowSaved] = useState(false);
@@ -35,7 +36,7 @@ export default function PublicationsPage() {
 
   const onShowSaved = async () => {
     setShowSaved(!showSaved)
-    setLoading(true);
+    setLoadingPubs(true);
 
     let publicationsSaved: PublicationResponse[];
     if(!showSaved)
@@ -44,12 +45,12 @@ export default function PublicationsPage() {
       publicationsSaved = await publicacionesService.obtenerPublicaciones();
 
     setPublicaciones(publicationsSaved);
-    setLoading(false);
+    setLoadingPubs(false);
   }
 
   const onShowCreated = async () => {
     setChowCreated(!showCreated)
-    setLoading(true);
+    setLoadingPubs(true);
 
     let publicationsSaved: PublicationResponse[];
     if(!showCreated)
@@ -58,7 +59,7 @@ export default function PublicationsPage() {
       publicationsSaved = await publicacionesService.obtenerPublicaciones();
 
     setPublicaciones(publicationsSaved);
-    setLoading(false);
+    setLoadingPubs(false);
   }
 
   const onSeeTopUser = async () => {
@@ -74,7 +75,7 @@ export default function PublicationsPage() {
   const onToggleSave = async (codePub: number, isSaved: boolean) => {
     // lógica para redirigir al perfil del usuario top
     //revisar casuistica cuando falla el guardado de la publi
-    setLoading(true);
+    setLoadingPubs(true);
     let result: any;
     if (isSaved) {
       result = await publicacionesService.eliminarPublicacionGuardada(codePub);
@@ -85,19 +86,19 @@ export default function PublicationsPage() {
     if(result){
       setPublicaciones(await publicacionesService.obtenerPublicaciones());
     }
-    setLoading(false);
+    setLoadingPubs(false);
   }
 
   const onClickTitle = async (codigoPublicacion: number) => {
     try {
       setShowPublicationDetail(true)
-      setLoading(true)
+      setLoadingPubs(true)
       const detail = await publicacionesService.obtenerDetallePublicacion(codigoPublicacion)
       setCurrentPublication(detail)
     } catch (error) {
       console.error('Error al obtener detalle de publicación:', error)
     } finally {
-      setLoading(false)
+      setLoadingPubs(false)
     }
   }
 
@@ -112,7 +113,8 @@ export default function PublicationsPage() {
       } catch (error) {
         console.error('Error cargando publicaciones/top usuarios:', error)
       } finally {
-        setLoading(false)
+        setLoadingPubs(false)
+        setLoadingTopusers(false)
       }
     }
 
@@ -121,7 +123,7 @@ export default function PublicationsPage() {
 
   const handleBackToPublications = async () => {
     setShowPublicationDetail(false)
-    //setCurrentPublication(null)
+    setCurrentPublication(undefined)
     //await fetchPublications()
   }
 
@@ -150,7 +152,7 @@ export default function PublicationsPage() {
           width="40px"
         />
       </div>
-      {loading ? (
+      {loadingPubs ? (
         <>
           <SkeletonPublication />
           <SkeletonPublication />
@@ -191,7 +193,7 @@ export default function PublicationsPage() {
                 <div className="top-users-title">Top usuarios esta semana</div>
                 <div className="top-users-container">
                   <div className="top-users-elements">
-                    {loading ? (
+                    {loadingTopUsers ? (
                       <>
                         <div className="top-user-skeleton">
                           <SkeletonAvatarAndName hasCrown crown={AvatarCrownEnum.gold} />

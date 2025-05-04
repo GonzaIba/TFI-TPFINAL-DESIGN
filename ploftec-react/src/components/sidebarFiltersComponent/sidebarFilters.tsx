@@ -2,7 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { GroupEnum, RightBarFilters } from "@/lib/types/enum";
+import { GroupEnum } from "@/lib/types/enum";
 import { GroupResponse } from "@/lib/types/forum";
 import { filtrosService } from "@/lib/services/forum/filtrosService";
 import InputLabel from "@/components/inputLabelComponent/inputLabel";

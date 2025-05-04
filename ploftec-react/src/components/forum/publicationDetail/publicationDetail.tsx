@@ -47,13 +47,12 @@ export default function PublicationDetail({
   return (
     <div className={styles.forumDetailContainer}>
       <main style={{ width: '100%' }}>
-        <Button
-          onClick={onBack}
-          icon={<ArrowBack />}
-          circular
-        />
-
         <div className='forum-left'>
+          <Button
+            onClick={onBack}
+            icon={<ArrowBack />}
+            circular
+          />
           <div className={styles.publicationSection}>
             <div className={styles.commentSection}>
               <div className={styles.commentsWrp}>

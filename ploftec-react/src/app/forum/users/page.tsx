@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Button from '@/components/buttonComponent/button'
+import ProtectedRoute from "@/components/auth/protectedRoute";
 import { usuariosForoService } from '@/lib/services/forum/usuariosForoService'
 import { UserFilterForumResponse } from '@/lib/types/forum'
 import SideBarFilters from '@/components/sidebarFiltersComponent/sidebarFilters'

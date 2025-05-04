@@ -5,6 +5,9 @@ import { usuariosForoService } from '@/lib/services/forum/usuariosForoService'
 import { UsersForumResponse, DetailsUserForumResponse } from '@/lib/types/forum'
 import { getPublicationTimeAgo } from '@/lib/helpers/timeHelper'
 import DraggableBottomSheet from '@/components/draggableBottomSheet/draggableBottomSheet'
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import Button from "@/components/buttonComponent/button";
+import { Colors } from '@/theme/colors'
 import './tableUsers.css'
 
 export default function TableUsers({ reload, onReloadCompleted }: { reload: boolean, onReloadCompleted: () => void }) {
@@ -25,10 +28,16 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
   }, [])
 
   const openSheet = async (email: string) => {
+    setIsSheetOpen(true)
     const user = await usuariosForoService.obtenerDetalleUsuario(email)
     setUsuarioSeleccionado(user)
-    setIsSheetOpen(true)
   }
+
+  const closeSheet = () => {
+    setIsSheetOpen(false)
+    setUsuarioSeleccionado(null)
+  }
+
 
   return (
     <div className="table-users">
@@ -59,9 +68,14 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
                 <td>{u.puntaje}</td>
                 <td>{u.fechaCreado}</td>
                 <td>
-                  <button className="btn-table-user" onClick={() => openSheet(u.email)}>
-                    <i className="bx bx-show"></i>
-                  </button>
+
+                  <Button
+                    onClick={() => openSheet(u.email)}
+                    icon={<VisibilityIcon sx={{ color: Colors.white }} fontSize='medium'/>}
+                    transparent
+                    circular
+                    width="45px"
+                  />
                 </td>
               </tr>
             ))
@@ -78,26 +92,27 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
         </tbody>
       </table>
 
-      {usuarioSeleccionado && isSheetOpen && (
-      <DraggableBottomSheet isOpen={isSheetOpen} onClose={() => setIsSheetOpen(false)}>
+      {isSheetOpen && (
+      <DraggableBottomSheet isOpen={isSheetOpen} onClose={() => closeSheet()}>
+        {usuarioSeleccionado ? (
         <div className="profile-container">
-        <div className="profile-user-left">
+          <div className="profile-user-left">
             <div className="profile-header-user-sheet">
-            <img src={usuarioSeleccionado.imageForum} alt="user" className="profile-photo-user-sheet" />
-            <h1 className="profile-name-user-sheet">{usuarioSeleccionado.nombre} {usuarioSeleccionado.apellido}</h1>
-            <p className="profile-email-user-sheet">{usuarioSeleccionado.email}</p>
-            <p className="profile-last-connected"><strong>Última vez conectado:</strong> {getPublicationTimeAgo('', new Date(usuarioSeleccionado.lastTimeConnectedForum))}</p>
-            <div className="profile-buttons-user-sheet">
-                <button className="button-updates-user-sheet">Qualified for Updates</button>
-                <button className="button-trials-user-sheet">Trials</button>
-            </div>
+              <img src={usuarioSeleccionado.imageForum} alt="user" className="profile-photo-user-sheet" />
+              <h1 className="profile-name-user-sheet">{usuarioSeleccionado.nombre} {usuarioSeleccionado.apellido}</h1>
+              <p className="profile-email-user-sheet">{usuarioSeleccionado.email}</p>
+              <p className="profile-last-connected"><strong>Última vez conectado:</strong> {getPublicationTimeAgo('', new Date(usuarioSeleccionado.lastTimeConnectedForum))}</p>
+              <div className="profile-buttons-user-sheet">
+                  <button className="button-updates-user-sheet">Qualified for Updates</button>
+                  <button className="button-trials-user-sheet">Trials</button>
+              </div>
             </div>
             <div className="profile-details-user-sheet">
-            <h2 style={{ color: 'black' }}>Acerca de</h2>
-            <p>{usuarioSeleccionado.longDescriptionForum}</p>
+              <h2 style={{ color: 'black' }}>Acerca de</h2>
+              <p>{usuarioSeleccionado.longDescriptionForum}</p>
             </div>
-        </div>
-        <div className="profile-user-right">
+          </div>
+          <div className="profile-user-right">
             <div className="user-properties-user-sheet">
             <h2>Estadísticas</h2>
             <div className="profile-user-stadistics">
@@ -126,8 +141,13 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
                 )}
             </div>
             </div>
+          </div>
         </div>
-        </div>
+        ) : (
+          <div className="profile-container">
+            
+          </div>
+        )}
       </DraggableBottomSheet>
       )}
 

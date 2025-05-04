@@ -13,6 +13,8 @@ import AvatarUser from '@/components/avatarUserComponent/avatarUser';
 import SkeletonLine from '@/components/skeletonComponent/skeletonLine';
 import Loading from '@/components/loadingComponent/loading';
 import Footer from '@/components/footerComponent/footer';
+import { useAuthStore } from "@/store/slices/authStore/authStore";
+import ProtectedRoute from "@/components/auth/protectedRoute";
 import {
   moveTabBar,
   moveContentTabBar,
@@ -25,35 +27,56 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
 
   const [isUserLoading, setIsUserLoading] = useState(true);
-  const [user, setUser] = useState<UserApplication | null>(null);
   const [userForum, setUserForum] = useState<DetailsUserForumResponse | null>(null);
   const [activeTab, setActiveTab] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const isAuthLoaded = useAuthStore((state) => state.isAuthLoaded);
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  const rutasProtegidas = [
+    "/forumTest",
+    //"/forum/users",
+    //"/forum/labels",
+    //"/forum/liveHelp",
+  ];
 
   useEffect(() => {
-    const init = async () => {
-      try {
-        const userData = await getUserDetails();
-        if (userData?.email) {
-          const userForumDetails = await usuariosForoService.obtenerDetalleUsuario(userData.email);
-          setUser(userData);
-          setUserForum(userForumDetails);
+    const fetchUserForum = async () => {
+      if (isAuthLoaded) {
+        setIsUserLoading(true);
+
+        if (isAuthenticated && user?.email) {
+          try {
+            const res = await usuariosForoService.obtenerDetalleUsuario(user.email);
+            setUserForum(res);
+          } catch (err) {
+            console.error("Error al obtener detalles del foro:", err);
+          }
         }
-      } catch (e) {
-        // manejar error
-        console.error(e);
-      } finally {
+
         setIsUserLoading(false);
       }
     };
-    init();
-  }, []);
+
+    fetchUserForum();
+  }, [isAuthLoaded, isAuthenticated, user]);
 
   useEffect(() => {
     if (pathname === '/forum') {
       router.push('/forum/publications');
     }
-  }, [pathname]);
+    else if (pathname === '/forum/users') {
+      setActiveTab(1);
+      moveTabBar(1);
+    } else if (pathname === '/forum/labels') {
+      setActiveTab(2);
+      moveTabBar(2);
+    } else if (pathname === '/forum/liveHelp') {
+      setActiveTab(3);
+      moveTabBar(3);
+    }
+  }, [pathname, router]);
 
   const changeTab = async (index: number) => {
     setActiveTab(index);
@@ -69,6 +92,8 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
     await logout();
     router.push('/login');
   };
+
+  const requiereProteccion = rutasProtegidas.includes(pathname);
 
   return (
     <div className="forum">
@@ -145,7 +170,13 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
         <div className="tab-content slider">
           <div className="questionSeparator" />
           <div className="tab-separator" />
-          <div className="content" style={{ marginBottom: 16 }}>{children}</div>
+          <div className="content" style={{ marginBottom: 16 }}>
+            {requiereProteccion ? (
+              <ProtectedRoute>{children}</ProtectedRoute>
+            ) : (
+              children
+            )}
+          </div>
         </div>
       </div>
 

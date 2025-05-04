@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from 'next/image';
 import logo from "../../images/ploftec-fluid.png";
 import { login } from '@/lib/services/auth/authenticationService';
+import { useAuthStore } from "@/store/slices/authStore/authStore";
 
 export default function LoginRegister() {
   const router = useRouter();
@@ -25,6 +26,9 @@ export default function LoginRegister() {
 
   const [animate, setAnimate] = useState(false);
   const [loadingLogin, setLoadingLogin] = useState(false);
+  const setUser = useAuthStore((state) => state.setUser);
+  const setAuthLoaded = useAuthStore((state) => state.setAuthLoaded);
+
 
   const triggerAnimation = () => {
     setAnimate(true);
@@ -54,6 +58,8 @@ export default function LoginRegister() {
     try {
       const response = await login({ username, password });
       if (response != null) {
+        setUser(response);
+        setAuthLoaded();
         router.push("/forum/publications");
       } else {
         setErrorMessage("Usuario o contraseña inválido");

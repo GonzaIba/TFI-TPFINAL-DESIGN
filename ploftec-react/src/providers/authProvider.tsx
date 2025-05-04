@@ -3,8 +3,6 @@
 import { ReactNode, useEffect, useState } from "react";
 import { useAuthStore } from "../store/slices/authStore/authStore";
 import { getUserDetails } from "@/lib/services/auth/authenticationService";
-import { GenericApiResponse } from "@/lib/types/apiResponse";
-import { UserApplication } from "@/lib/types/application";
 
 type Props = {
   children: ReactNode;
@@ -12,27 +10,29 @@ type Props = {
 
 export const AuthProvider = ({ children }: Props) => {
   const setUser = useAuthStore((state) => state.setUser);
-  const [loading, setLoading] = useState(true);
+  const isAuthLoaded = useAuthStore((state) => state.isAuthLoaded);
+  const setAuthLoaded = useAuthStore((state) => state.setAuthLoaded);
+  // const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("AuthProvider mounted", isAuthLoaded);
+    if (isAuthLoaded) return;
+  
     const fetchSession = async () => {
       try {
-        const res: UserApplication | undefined = await getUserDetails();
-
-        if (res) {
+        const res = await getUserDetails();
+        if (res?.email) {
+          console.log("User details fetched", res);
           setUser(res);
         }
-      } catch (error) {
-        // No hace nada, simplemente no hay sesión activa
       } finally {
-        setLoading(false);
+        setAuthLoaded();
+        // setLoading(false);
       }
     };
-
+  
     fetchSession();
-  }, [setUser]);
-
-  if (loading) return null; // O podés poner un loader si querés
-
+  }, [isAuthLoaded]);
+  
   return <>{children}</>;
 };

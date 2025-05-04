@@ -1,26 +1,17 @@
-.bottomSheetWrapper {
+  .bottomSheetWrapper {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(1px);
     z-index: 999;
-    margin-left: 40px;
-    margin-right: 40px;
-    transition: backdrop-filter 0.4s ease, background 0.4s ease;
     pointer-events: all;
-    will-change: backdrop-filter, background;
-  }
-  
-  .bottomSheetWrapper[data-state='closed'] {
-    backdrop-filter: blur(0px);
-    background: rgba(0, 0, 0, 0);
   }
   
   .bottomSheet {
     position: absolute;
     bottom: 0;
     left: 0;
-    width: 100%;
+    right: 0;
     background: #fff;
     border-radius: 20px 20px 0 0;
     padding-top: 10px;
@@ -30,6 +21,8 @@
     max-height: 95vh;
     overflow-y: auto;
     will-change: transform;
+    margin-left: 40px;
+    margin-right: 40px;
   }
   
   .dragHandle {
@@ -40,10 +33,6 @@
     margin: 0 auto 10px;
     cursor: grab;
     user-select: none;
-  }
-  
-  .dragHandle:active {
-    cursor: grabbing;
   }
   
   .content {
