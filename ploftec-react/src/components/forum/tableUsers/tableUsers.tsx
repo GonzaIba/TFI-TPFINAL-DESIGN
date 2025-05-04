@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { usuariosForoService } from '@/lib/services/forum/usuariosForoService'
 import { UsersForumResponse, DetailsUserForumResponse } from '@/lib/types/forum'
 import { getPublicationTimeAgo } from '@/lib/helpers/timeHelper'
-import { initBottomSheetUsers } from '@/lib/utils/bottomSheetUsers';
+import DraggableBottomSheet from '@/components/draggableBottomSheet/draggableBottomSheet'
 import './tableUsers.css'
 
 export default function TableUsers({ reload, onReloadCompleted }: { reload: boolean, onReloadCompleted: () => void }) {
@@ -29,12 +29,6 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
     setUsuarioSeleccionado(user)
     setIsSheetOpen(true)
   }
-
-  useEffect(() => {
-    if(!isLoading) {
-      import('./tableUsers.js')
-    }
-  }, [isLoading])
 
   return (
     <div className="table-users">
@@ -84,69 +78,60 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
         </tbody>
       </table>
 
-      <div id="sheet" className="column items-center justify-end" aria-hidden={!isSheetOpen}>
-        <div className="overlay"></div>
-        <div className="contents column">
-          <header className="controls">
-            <div className="draggable-area">
-              <div className="draggable-thumb" />
+      {usuarioSeleccionado && isSheetOpen && (
+      <DraggableBottomSheet isOpen={isSheetOpen} onClose={() => setIsSheetOpen(false)}>
+        <div className="profile-container">
+        <div className="profile-user-left">
+            <div className="profile-header-user-sheet">
+            <img src={usuarioSeleccionado.imageForum} alt="user" className="profile-photo-user-sheet" />
+            <h1 className="profile-name-user-sheet">{usuarioSeleccionado.nombre} {usuarioSeleccionado.apellido}</h1>
+            <p className="profile-email-user-sheet">{usuarioSeleccionado.email}</p>
+            <p className="profile-last-connected"><strong>Última vez conectado:</strong> {getPublicationTimeAgo('', new Date(usuarioSeleccionado.lastTimeConnectedForum))}</p>
+            <div className="profile-buttons-user-sheet">
+                <button className="button-updates-user-sheet">Qualified for Updates</button>
+                <button className="button-trials-user-sheet">Trials</button>
             </div>
-            <button className="close-sheet" type="button" title="Close the sheet">&times;</button>
-          </header>
-          <main className="body fill column">
-            {usuarioSeleccionado && (
-              <div className="profile-container">
-                <div className="profile-user-left">
-                  <div className="profile-header-user-sheet">
-                    <img src={usuarioSeleccionado.imageForum} alt="user" className="profile-photo-user-sheet" />
-                    <h1 className="profile-name-user-sheet">{usuarioSeleccionado.nombre} {usuarioSeleccionado.apellido}</h1>
-                    <p className="profile-email-user-sheet">{usuarioSeleccionado.email}</p>
-                    <p className="profile-last-connected"><strong>Última vez conectado:</strong> {getPublicationTimeAgo('', new Date(usuarioSeleccionado.lastTimeConnectedForum))}</p>
-                    <div className="profile-buttons-user-sheet">
-                      <button className="button-updates-user-sheet">Qualified for Updates</button>
-                      <button className="button-trials-user-sheet">Trials</button>
-                    </div>
-                  </div>
-                  <div className="profile-details-user-sheet">
-                    <h2 style={{ color: 'black' }}>Acerca de</h2>
-                    <p>{usuarioSeleccionado.longDescriptionForum}</p>
-                  </div>
-                </div>
-                <div className="profile-user-right">
-                  <div className="user-properties-user-sheet">
-                    <h2>Estadísticas</h2>
-                    <div className="profile-user-stadistics">
-                      <p><strong>Puntaje:</strong> {usuarioSeleccionado.puntaje}</p>
-                      <p><strong>Respuestas:</strong> {usuarioSeleccionado.cantidadRespuestas}</p>
-                      <p><strong>Publicaciones:</strong> {usuarioSeleccionado.cantidadPublicacionesCreadas}</p>
-                    </div>
-                  </div>
-                  <div className="medals-user-sheet">
-                    <h2>Medallas</h2>
-                    <div className="medals-user">
-                      {usuarioSeleccionado.medallas?.length ? usuarioSeleccionado.medallas.map((med, i) => (
-                        <div key={i} className="medals-user-container">
-                          <div className="medal-card">
-                            <div className="medal-message">{med.nombreMedalla}</div>
-                            <div className="medal-date">{new Date(med.fechaObtenido).toLocaleDateString()}</div>
-                            <div className="medal-image">
-                              <img src={med.imagenMedalla} alt="medal" />
-                            </div>
-                          </div>
-                        </div>
-                      )) : (
-                        <div className="no-medals-card">
-                          <div className="no-medals-message">Este usuario aún no tiene ninguna medalla.</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </main>
+            </div>
+            <div className="profile-details-user-sheet">
+            <h2 style={{ color: 'black' }}>Acerca de</h2>
+            <p>{usuarioSeleccionado.longDescriptionForum}</p>
+            </div>
         </div>
-      </div>
+        <div className="profile-user-right">
+            <div className="user-properties-user-sheet">
+            <h2>Estadísticas</h2>
+            <div className="profile-user-stadistics">
+                <p><strong>Puntaje:</strong> {usuarioSeleccionado.puntaje}</p>
+                <p><strong>Respuestas:</strong> {usuarioSeleccionado.cantidadRespuestas}</p>
+                <p><strong>Publicaciones:</strong> {usuarioSeleccionado.cantidadPublicacionesCreadas}</p>
+            </div>
+            </div>
+            <div className="medals-user-sheet">
+            <h2>Medallas</h2>
+            <div className="medals-user">
+                {usuarioSeleccionado.medallas?.length ? usuarioSeleccionado.medallas.map((med, i) => (
+                <div key={i} className="medals-user-container">
+                    <div className="medal-card">
+                    <div className="medal-message">{med.nombreMedalla}</div>
+                    <div className="medal-date">{new Date(med.fechaObtenido).toLocaleDateString()}</div>
+                    <div className="medal-image">
+                        <img src={med.imagenMedalla} alt="medal" />
+                    </div>
+                    </div>
+                </div>
+                )) : (
+                <div className="no-medals-card">
+                    <div className="no-medals-message">Este usuario aún no tiene ninguna medalla.</div>
+                </div>
+                )}
+            </div>
+            </div>
+        </div>
+        </div>
+      </DraggableBottomSheet>
+      )}
+
+     
     </div>
   )
 }
