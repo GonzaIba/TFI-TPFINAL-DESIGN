@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Button from '@/components/buttonComponent/button'
 import AvatarUser from '@/components/avatarUserComponent/avatarUser'
 import AnswerCard from '@/components/forum/answerCard/answerCard'
@@ -11,6 +11,7 @@ import { PublicationDetailResponse, AnswerResponse } from '@/lib/types/forum'
 import { getQuillContent, initializeQuill } from '@/lib/utils/quill'
 import { getPublicationTimeAgo } from '@/lib/helpers/timeHelper'
 import styles from './publicationDetail.module.css'
+import Editor from '@/components/editorComponent/editor'
 
 interface PublicationDetailProps {
   publication: PublicationDetailResponse
@@ -25,6 +26,8 @@ export default function PublicationDetail({
   onAddAnswer,
   onVotePublication
 }: PublicationDetailProps) {
+
+  const [editorContent, setEditorContent] = useState('<p>Inserte aquí su respuesta...</p>')
 
   // useEffect(() => {
   //   initializeQuill('editor')
@@ -103,9 +106,7 @@ export default function PublicationDetail({
               <div className={`${styles.publicationReplyInputContainer} ${styles.pubContainer}`}>
                 <div className={styles.publicationReplyInput}>
                   <div className={styles.responseContainer}>
-                    <div id="editor">
-                      <p>Inserte aquí su respuesta...</p>
-                    </div>
+                    <Editor onContentChange={(html) => setEditorContent(html)} />
                   </div>
                   <Button
                     text="Comentar"
