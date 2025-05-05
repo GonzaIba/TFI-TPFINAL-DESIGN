@@ -14,6 +14,8 @@ import javascript from 'highlight.js/lib/languages/javascript'
 import bash from 'highlight.js/lib/languages/bash'
 import xml from 'highlight.js/lib/languages/xml'
 import python from 'highlight.js/lib/languages/python'
+import csharp from 'highlight.js/lib/languages/csharp'
+import 'highlight.js/styles/atom-one-dark.css';
 import './editor.css'
 
 type Props = {
@@ -28,6 +30,7 @@ export default function Editor({ onContentChange }: Props) {
   lowlight.register('bash', bash)
   lowlight.register('html', xml)
   lowlight.register('python', python)
+  lowlight.register('csharp', csharp)
 
   const editor = useEditor({
     extensions: [
@@ -48,10 +51,52 @@ export default function Editor({ onContentChange }: Props) {
       }),
     ],
     content: '<p>Inserte aquí su respuesta...</p>',
-    onUpdate: ({ editor }) => {
-      onContentChange?.(editor.getHTML())
+    onCreate({ editor }) {
+        setTimeout(() => {
+          editor.view.dom.querySelectorAll('div, pre, code').forEach((el) => {
+            el.setAttribute('spellcheck', 'false');
+          });
+        }, 0);
     },
+    onUpdate({ editor }) {
+        requestAnimationFrame(() => {
+          const codeBlocks = editor.view.dom.querySelectorAll('code, code *');
+          codeBlocks.forEach((el) => {
+            el.setAttribute('spellcheck', 'false');
+          });
+        });
+    }
+     
   })
+
+  const handleInsertCode = () => {  
+    const languageMap: Record<string, string> = {
+        plaintext: 'plaintext',
+        javascript: 'javascript',
+        html: 'xml',
+        csharp: 'cs', // Esto es clave
+      }
+      
+    const input = prompt('Lenguaje (plaintext, javascript, html, csharp):')?.toLowerCase()
+    const lang = languageMap[input ?? ''] || 'plaintext'
+  
+    const code = prompt('Pegá tu código aquí:')
+    if (!code) return
+  
+    editor?.chain().focus().insertContent({
+      type: 'codeBlock',
+      attrs: {
+        language: lang,
+      },
+      content: [
+        {
+          type: 'text',
+          text: code,
+        },
+      ],
+    }).run()
+  }
+
 
   if (!editor) return null
 
@@ -64,6 +109,7 @@ export default function Editor({ onContentChange }: Props) {
         <button onClick={() => editor.chain().focus().toggleBulletList().run()} className={editor.isActive('bulletList') ? 'active' : ''}>• List</button>
         <button onClick={() => editor.chain().focus().toggleOrderedList().run()} className={editor.isActive('orderedList') ? 'active' : ''}>1. List</button>
         <button onClick={() => editor.chain().focus().toggleCodeBlock().run()} className={editor.isActive('codeBlock') ? 'active' : ''}>Code</button>
+        <button onClick={handleInsertCode}>Insert Code</button>
         <button onClick={() => {
           const url = prompt('Enter URL')
           if (url) editor.chain().focus().setLink({ href: url }).run()

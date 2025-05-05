@@ -28,6 +28,21 @@
     font-weight: bold;
   }
 
+  /* Hover estilo violeta */
+  .toolbar button:hover {
+    background-color: #644bff;
+    color: white;
+    border-color: #644bff;
+  }
+  
+  /* Activo (botón presionado como bold activo, etc) */
+  .toolbar .active {
+    background-color: #644bff;
+    color: white;
+    border-color: #644bff;
+    font-weight: bold;
+  }
+
   .editor-container div{
     min-height: 300px;
   }
@@ -46,3 +61,51 @@
   .editor-container .ProseMirror:focus {
     border-color: #888;
   }
+
+  /* Estilo base del bloque de código */
+  .ProseMirror pre {
+    background-color: #1e1e1e; /* Un gris un poco más claro que el fondo general */
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 16px 0;
+    overflow-x: auto;
+    position: relative;
+    box-shadow: 0 0 8px rgba(100, 100, 100, 0.1);
+  }
+  
+  /* Opcional: estilos para el texto dentro del bloque */
+  .ProseMirror pre code {
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: inherit; /* Usá los colores de highlight.js */
+  }
+
+  .ProseMirror pre,
+  .ProseMirror pre code {
+    spellcheck: false;
+    -webkit-touch-callout: none;
+    -moz-user-modify: read-write; /* permite editar sin bloquear el caret */
+    text-decoration: none !important; /* borra cualquier subrayado */
+  }
+
+/*
+  .language-csharp {
+    background-color: #68217A;
+  }
+  
+  .language-javascript {
+    background-color: #2d2d2d;
+    color: #fdd835;
+  }
+  
+  .language-html {
+    background-color: #1e1e1e;
+    color: #e34c26;
+  }
+  
+  .language-plaintext {
+    background-color: #333;
+    color: #ccc;
+  }*/
