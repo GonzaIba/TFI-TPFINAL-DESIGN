@@ -42,10 +42,6 @@
     border-color: #644bff;
     font-weight: bold;
   }
-
-  .editor-container div{
-    min-height: 300px;
-  }
   
   .editor-container .ProseMirror {
     border: 1px solid #ccc; /* Siempre visible */
