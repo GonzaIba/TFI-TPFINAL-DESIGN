@@ -101,20 +101,6 @@ export default function Editor({ onContentChange }: Props) {
       </div>
 
       <EditorContent editor={editor} className='editor-container'/>
-        {/* {showInsertCode && (
-          <div className="insert-code-overlay">
-            <InsertCodeBlock
-              onInsert={(lang, code) => {
-                editor.chain().focus().insertContent({
-                  type: 'codeBlock',
-                  attrs: { language: lang },
-                  content: [{ type: 'text', text: code }],
-                }).run()
-                setShowInsertCode(false)
-              }}
-            />
-          </div>
-        )} */}
     </div>
   )
 }

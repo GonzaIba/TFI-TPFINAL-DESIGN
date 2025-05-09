@@ -33,90 +33,108 @@ export default function CustomCodeBlockComponent({ node, updateAttributes, delet
     navigator.clipboard.writeText(node.textContent)
   }
 
+  const sharedLineStyle = {
+    fontFamily: "'Fira Code', 'JetBrains Mono', 'Courier New', monospace",
+    fontSize: '16px',
+    lineHeight: '1.8', // Asegurate que coincida en ambos lados
+  };
+  
+
   return (
     <NodeViewWrapper
       as="div"
       className="custom-code-block"
-      style={{ position: 'relative', margin: '1rem 0' }}
+      style={{ position: 'relative', margin: '1rem 0', borderRadius: '4px', overflow: 'hidden' }}
     >
-      <Paper
-        elevation={2}
+      <Box
+        className="code-block-toolbar"
         sx={{
-          position: 'absolute',
-          top: 8,
-          left: 8,
-          backgroundColor: '#2c2c2c',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 1,
-          padding: '4px 8px',
-          borderRadius: '6px',
-          zIndex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            backgroundColor: '#292c33',
+            padding: '6px 0 6px 0', // sin padding lateral, lo controlamos por grid
         }}
       >
-        <Select
-          size="small"
-          variant="standard"
-          value={language}
-          onChange={handleLanguageChange}
-          sx={{
-            color: 'white',
-            minWidth: 120,
-            '& .MuiSelect-icon': { color: 'white' },
-            '& .MuiInputBase-input': { padding: '4px' },
-          }}
-        >
-          {LANGUAGES.map((lang) => (
-            <MenuItem key={lang.value} value={lang.value}>
-              {lang.label}
-            </MenuItem>
-          ))}
-        </Select>
-        <IconButton onClick={handleCopy} size="small" sx={{ color: 'white' }}>
-          <ContentCopyIcon fontSize="small" />
-        </IconButton>
-        <IconButton onClick={deleteNode} size="small" sx={{ color: 'white' }}>
-          <DeleteIcon fontSize="small" />
-        </IconButton>
-      </Paper>
+        {/* Simulamos el ancho reservado para los números */}
+        <Box sx={{ width: '30px' /* mismo ancho que .line-numbers */, flexShrink: 0 }} />
+
+        {/* Toolbar real a la izquierda del código */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Select
+            size="small"
+            variant="standard"
+            value={language}
+            onChange={handleLanguageChange}
+            sx={{
+                color: 'white',
+                fontSize: '0.9rem',
+                '&::before': { borderBottom: 'none' },
+                '& svg': { color: 'white' },
+                minWidth: '100px',
+            }}
+            >
+            {LANGUAGES.map((lang) => (
+                <MenuItem key={lang.value} value={lang.value}>
+                {lang.label}
+                </MenuItem>
+            ))}
+            </Select>
+
+            <Box sx={{ width: '1px', height: '24px', backgroundColor: '#444', marginX: '4px'}}/>
+            <IconButton onClick={handleCopy} size="small" sx={{ color: 'white' }}>
+              <ContentCopyIcon fontSize="small" />
+            </IconButton>
+            <Box sx={{ width: '1px', height: '24px', backgroundColor: '#444', marginX: '4px'}}/>
+            <IconButton onClick={deleteNode} size="small" sx={{ color: 'white' }}>
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+        </Box>
+      </Box>
 
       <Box
         sx={{
           display: 'grid',
           gridTemplateColumns: 'auto 1fr',
           position: 'relative',
+          background: '#0d1117'
         }}
       >
         {/* Números de línea */}
         <Box
           className="line-numbers"
           sx={{
-            backgroundColor: '#1e1e1e',
-            padding: '1rem 0.5rem',
-            borderRight: '1px solid #333',
-            color: '#999',
-            fontFamily: 'Fira Code, monospace',
-            fontSize: '0.9rem',
-            textAlign: 'right',
-            userSelect: 'none',
+              //backgroundColor: '#1e1e1e',
+              padding: '12px',
+              borderRight: '1px solid #333',
+              color: '#999',
+              textAlign: 'right',
+              userSelect: 'none',
+              pointerEvents: 'none',
           }}
         >
           {node.textContent.split('\n').map((_: string, index: number) => (
-            <div key={index}>{index + 1}</div>
+            <div 
+              key={index}
+              style={{
+                display: 'block',
+              }}
+            >
+                {index + 1}
+            </div>
           ))}
 
         </Box>
 
         {/* Código editable */}
         <pre
-          style={{
-            backgroundColor: '#1e1e1e',
-            margin: 0,
-            padding: '1rem',
-            overflowX: 'auto',
-          }}
+            style={{
+              //backgroundColor: '#1e1e1e',
+              background: '#0d1117',
+              margin: 0,
+              overflowX: 'auto',
+            }}
         >
-          <code>
+          <code style={{background: '#161B21'}}>
             <NodeViewContent as="div" />
           </code>
         </pre>

@@ -61,8 +61,8 @@
   /* Estilo base del bloque de código */
   .ProseMirror pre {
     background-color: #1e1e1e; /* Un gris un poco más claro que el fondo general */
-    border: 1px solid #333;
-    border-radius: 8px;
+    /*border: 1px solid #333;
+    border-radius: 8px;*/
     padding: 12px;
     margin: 16px 0;
     overflow-x: auto;
@@ -70,12 +70,13 @@
     box-shadow: 0 0 8px rgba(100, 100, 100, 0.1);
   }
   
-  /* Opcional: estilos para el texto dentro del bloque */
   .ProseMirror pre code {
+    /*
     font-family: 'Fira Code', 'Consolas', monospace;
     font-size: 0.9rem;
     line-height: 1.5;
-    color: inherit; /* Usá los colores de highlight.js */
+    color: inherit;
+    */
   }
 
   .ProseMirror pre,
