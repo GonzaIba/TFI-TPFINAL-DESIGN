@@ -1,106 +1,178 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react'
-import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import Underline from '@tiptap/extension-underline'
-import Link from '@tiptap/extension-link'
-import Image from '@tiptap/extension-image'
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import Highlight from '@tiptap/extension-highlight'
-import TextAlign from '@tiptap/extension-text-align'
+import React, { useState } from 'react';
+// Kit base
+import RichTextEditor, { BaseKit } from 'reactjs-tiptap-editor';
 
-import { common, createLowlight } from 'lowlight'
-import javascript from 'highlight.js/lib/languages/javascript'
-import bash from 'highlight.js/lib/languages/bash'
-import xml from 'highlight.js/lib/languages/xml'
-import python from 'highlight.js/lib/languages/python'
-import csharp from 'highlight.js/lib/languages/csharp'
-import 'highlight.js/styles/atom-one-dark.css'
+// Formato de texto
+import { Document } from 'reactjs-tiptap-editor/document'; 
+import { Bold } from 'reactjs-tiptap-editor/bold';
+import { Italic } from 'reactjs-tiptap-editor/italic';
+import { Strike } from 'reactjs-tiptap-editor/strike';
+import { Highlight } from 'reactjs-tiptap-editor/highlight';
+import { Code } from 'reactjs-tiptap-editor/code';
+import { SubAndSuperScript } from 'reactjs-tiptap-editor/subandsuperscript';
 
-import './editor.css'
-import InsertCodeBlock from './customCodeBlock/customCodeBlockComponent'
-import CustomCodeBlock from './customCodeBlock/customCodeBlock'
+// Estructura y bloques
+import { Heading } from 'reactjs-tiptap-editor/heading';
+import { Blockquote } from 'reactjs-tiptap-editor/blockquote';
+import { HorizontalRule } from 'reactjs-tiptap-editor/horizontalrule';
+import { CodeBlock } from 'reactjs-tiptap-editor/codeblock';
+import { Table } from 'reactjs-tiptap-editor/table';
+import { TaskList } from 'reactjs-tiptap-editor/tasklist';
+import { MultiColumn } from 'reactjs-tiptap-editor/multicolumn';
+import { Iframe } from 'reactjs-tiptap-editor/iframe';
+
+// Listas
+import { BulletList } from 'reactjs-tiptap-editor/bulletlist';
+import { OrderedList } from 'reactjs-tiptap-editor/orderedlist';
+import { ListItem } from 'reactjs-tiptap-editor/listitem';
+import { Indent } from 'reactjs-tiptap-editor/indent';
+
+// Medios e incrustaciones
+import { Image } from 'reactjs-tiptap-editor/image';
+import { ImageGif } from 'reactjs-tiptap-editor/imagegif';
+import { Video } from 'reactjs-tiptap-editor/video';
+import { Mermaid } from 'reactjs-tiptap-editor/mermaid';
+import { Excalidraw } from 'reactjs-tiptap-editor/excalidraw';
+import { Attachment } from 'reactjs-tiptap-editor/attachment';
+
+// Funcionalidades avanzadas
+import { Link } from 'reactjs-tiptap-editor/link';
+import { FontFamily } from 'reactjs-tiptap-editor/fontfamily';
+import { FontSize } from 'reactjs-tiptap-editor/fontsize';
+import { LineHeight } from 'reactjs-tiptap-editor/lineheight';
+import { Color } from 'reactjs-tiptap-editor/color';
+import { TextAlign } from 'reactjs-tiptap-editor/textalign';
+import { TextDirection } from 'reactjs-tiptap-editor/textdirection';
+import { FormatPainter } from 'reactjs-tiptap-editor/formatpainter';
+import { TextBubble } from 'reactjs-tiptap-editor/textbubble';
+import { MoreMark } from 'reactjs-tiptap-editor/moremark';
+import { TrailingNode } from 'reactjs-tiptap-editor/trailingnode';
+import { SlashCommand } from 'reactjs-tiptap-editor/slashcommand';
+import { Selection } from 'reactjs-tiptap-editor/selection';
+import { Clear } from 'reactjs-tiptap-editor/clear';
+import { History } from 'reactjs-tiptap-editor/history';
+
+// Importación y exportación
+import { ImportWord } from 'reactjs-tiptap-editor/importword';
+import { ExportWord } from 'reactjs-tiptap-editor/exportword';
+import { ExportPdf } from 'reactjs-tiptap-editor/exportpdf';
+
+// Otros
+import { Emoji } from 'reactjs-tiptap-editor/emoji';
+import { Mention } from 'reactjs-tiptap-editor/mention';
+import { BubbleMenuMermaid } from 'reactjs-tiptap-editor/bubble-extra'; 
+import 'react-image-crop/dist/ReactCrop.css';
+import 'reactjs-tiptap-editor/style.css';
+
+import 'prism-code-editor-lightweight/layout.css'; 
+import 'prism-code-editor-lightweight/themes/github-dark.css'; 
 
 type Props = {
   onContentChange?: (content: string) => void;
-}
+};
 
-export default function Editor({ onContentChange }: Props) {
-  const [showInsertCode, setShowInsertCode] = useState(false)
+export default function Editor({ }: Props) {
+  const [content, setContent] = useState('<p>Inserte aquí su respuesta...</p>');
 
-  const lowlight = createLowlight(common)
-  lowlight.register('javascript', javascript)
-  lowlight.register('bash', bash)
-  lowlight.register('html', xml)
-  lowlight.register('python', python)
-  lowlight.register('csharp', csharp)
+  const handleChange = (value: string) => {
+    setContent(value);
+  };
 
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        codeBlock: false,
-      }),
-      CustomCodeBlock,
-      Underline,
-      Highlight,
-      Link.configure({ openOnClick: false }),
-      Image,
-      //CodeBlockLowlight.configure({ lowlight }),
-      TextAlign.configure({ types: ['heading', 'paragraph'] }),
-    ],
-    content: '<p>Inserte aquí su respuesta...</p>',
-    // onCreate({ editor }) {
-    //   setTimeout(() => {
-    //     editor.view.dom.querySelectorAll('div, pre, code').forEach((el) => {
-    //       el.setAttribute('spellcheck', 'false');
-    //     });
-    //   }, 0);
-    // },
-    // onUpdate({ editor }) {
-    //   requestAnimationFrame(() => {
-    //     const codeBlocks = editor.view.dom.querySelectorAll('code, code *');
-    //     codeBlocks.forEach((el) => {
-    //       el.setAttribute('spellcheck', 'false');
-    //     });
-    //   });
-    // },
-  })
-
-  if (!editor) return null
+  const extensions = [
+    BaseKit.configure({
+        //placeholder: { showOnlyCurrent: true },
+        characterCount: { limit: 15000 },
+    }),
+    Blockquote,
+    Bold,
+    BulletList,
+    Clear,
+    Code,
+    CodeBlock,
+    Color,
+    Document,
+    FontFamily,
+    FontSize,
+    FormatPainter,
+    Heading,
+    Highlight,
+    History,
+    HorizontalRule,
+    Iframe,
+    Indent,
+    Italic,
+    LineHeight,
+    Link,
+    ListItem,
+    MoreMark,
+    MultiColumn,
+    OrderedList,
+    Selection,
+    SlashCommand,
+    Strike,
+    SubAndSuperScript,
+    Table,
+    TaskList,
+    TextAlign,
+    TextBubble,
+    TrailingNode,
+    Emoji,
+    ExportPdf,
+    ImportWord,
+    ExportWord,
+    Excalidraw,
+    TextDirection,
+    Mention,
+    Attachment,
+    Mermaid,
+    Image.configure({
+    upload: (files: File) => {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          resolve(URL.createObjectURL(files))
+        }, 500)
+      })
+    },
+    }),
+    Video.configure({
+      upload: (files: File) => {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+            resolve(URL.createObjectURL(files))
+            }, 500)
+        })
+      },
+    }),
+    ImageGif.configure({
+      GIPHY_API_KEY: 'GIPHY_API_KEY', 
+    }),
+  ];
 
   return (
     <div className="tiptap-wrapper">
-      <div className="toolbar">
-        <button onClick={() => editor.chain().focus().toggleBold().run()} className={editor.isActive('bold') ? 'active' : ''}>Bold</button>
-        <button onClick={() => editor.chain().focus().toggleItalic().run()} className={editor.isActive('italic') ? 'active' : ''}>Italic</button>
-        <button onClick={() => editor.chain().focus().toggleUnderline().run()} className={editor.isActive('underline') ? 'active' : ''}>Underline</button>
-        <button onClick={() => editor.chain().focus().toggleBulletList().run()} className={editor.isActive('bulletList') ? 'active' : ''}>• List</button>
-        <button onClick={() => editor.chain().focus().toggleOrderedList().run()} className={editor.isActive('orderedList') ? 'active' : ''}>1. List</button>
-        <button
-          onClick={() => {
-            editor.chain().focus().insertContent({
-              type: 'customCodeBlock',
-              attrs: { language: 'plaintext' },
-              content: [{ type: 'text', text: ' ' }], // <-- espacio mínimo válido
-            }).run()
-          }}
-          className={editor.isActive('customCodeBlock') ? 'active' : ''}
-        >
-          Code
-        </button>
-        {/* <button onClick={() => setShowInsertCode(true)}>Insert Code</button> */}
-        <button onClick={() => {
-          const url = prompt('Enter URL')
-          if (url) editor.chain().focus().setLink({ href: url }).run()
-        }}>Link</button>
-        <button onClick={() => {
-          const url = prompt('Enter image URL')
-          if (url) editor.chain().focus().setImage({ src: url }).run()
-        }}>Image</button>
-      </div>
+      <RichTextEditor
+        output="html"
+        content={content}
+        onChangeContent={handleChange}
+        extensions={extensions}
+        minHeight={900}
+        dark
+        // Puedes personalizar otras propiedades según tus necesidades
+        bubbleMenu={{
+            render({ extensionsNames, editor, disabled }, bubbleDefaultDom) {
+                return <>
+                {bubbleDefaultDom}
 
-      <EditorContent editor={editor} className='editor-container'/>
+                {extensionsNames.includes('mermaid')  ? <BubbleMenuMermaid disabled={disabled}
+                    editor={editor}
+                    key="mermaid"
+                /> : null}
+                </>
+            },
+        }}
+      />
     </div>
-  )
+  );
 }
