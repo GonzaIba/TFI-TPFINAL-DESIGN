@@ -48,7 +48,7 @@
   background-color: #644bff;
   border-radius: 4px;
 }
-
+/* 
 .custom-code-block pre {
   margin: 0;
   padding: 12px;
@@ -64,5 +64,18 @@
 }
 
 .ProseMirror .custom-code-block select {
-  color-scheme: dark; /* mejora visual en select desplegado */
+  color-scheme: dark;
+} 
+*/
+
+
+
+.custom-code-block code > div {
+  caret-color: white;
+  color: transparent;
 }
+
+.custom-code-block pre:focus {
+  outline: none;
+}
+

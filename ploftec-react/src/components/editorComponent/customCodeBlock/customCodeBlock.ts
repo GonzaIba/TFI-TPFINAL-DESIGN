@@ -14,7 +14,7 @@ const CustomCodeBlock = Node.create({
   addAttributes() {
     return {
       language: {
-        default: 'plaintext',
+        default: 'typescript',
       },
     }
   },

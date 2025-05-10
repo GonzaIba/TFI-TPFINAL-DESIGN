@@ -46,25 +46,25 @@ export default function Editor({ onContentChange }: Props) {
       Highlight,
       Link.configure({ openOnClick: false }),
       Image,
-      CodeBlockLowlight.configure({ lowlight }),
+      //CodeBlockLowlight.configure({ lowlight }),
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
     ],
     content: '<p>Inserte aquí su respuesta...</p>',
-    onCreate({ editor }) {
-      setTimeout(() => {
-        editor.view.dom.querySelectorAll('div, pre, code').forEach((el) => {
-          el.setAttribute('spellcheck', 'false');
-        });
-      }, 0);
-    },
-    onUpdate({ editor }) {
-      requestAnimationFrame(() => {
-        const codeBlocks = editor.view.dom.querySelectorAll('code, code *');
-        codeBlocks.forEach((el) => {
-          el.setAttribute('spellcheck', 'false');
-        });
-      });
-    },
+    // onCreate({ editor }) {
+    //   setTimeout(() => {
+    //     editor.view.dom.querySelectorAll('div, pre, code').forEach((el) => {
+    //       el.setAttribute('spellcheck', 'false');
+    //     });
+    //   }, 0);
+    // },
+    // onUpdate({ editor }) {
+    //   requestAnimationFrame(() => {
+    //     const codeBlocks = editor.view.dom.querySelectorAll('code, code *');
+    //     codeBlocks.forEach((el) => {
+    //       el.setAttribute('spellcheck', 'false');
+    //     });
+    //   });
+    // },
   })
 
   if (!editor) return null
