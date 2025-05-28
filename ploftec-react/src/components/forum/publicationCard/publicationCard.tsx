@@ -23,7 +23,7 @@ export default function PublicationCard({
   onToggleSave,
 }: PublicationCardProps) {
 
-  const iconButtonClass = `${publication.estaGuardado ? "bx bxs-bookmark saved" : "bx bx-bookmark"}`;
+  const iconButtonClass = `${publication.isSaved ? "bx bxs-bookmark saved" : "bx bx-bookmark"}`;
 
   return (
     <div className="question">
@@ -33,13 +33,13 @@ export default function PublicationCard({
       <div className="questionBody">
         <div className="questionHeader">
           <div onClick={onClickTitle} style={{ display: 'inline-block' }}>
-            <h4>{publication.titulo}</h4>
+            <h4>{publication.title}</h4>
           </div>
           <div className="saveIcon">
             <Button
               transparent
               onClick={onToggleSave}
-              icon={publication?.estaGuardado ? <Bookmark sx={{ color: Colors.primary }} fontSize='large' /> : <BookmarkBorder sx={{ color: Colors.white }} fontSize='large' />}
+              icon={publication?.isSaved ? <Bookmark sx={{ color: Colors.primary }} fontSize='large' /> : <BookmarkBorder sx={{ color: Colors.white }} fontSize='large' />}
               width="40px"
             />
             {/*REVISAR PORQUE SIEMPRE TRASPARENT TRUE???*/}
@@ -51,7 +51,7 @@ export default function PublicationCard({
             <span className="question-icon">
               <MessageSquare size={16} />
             </span>
-            <span className="question-count">{publication.respuestas}</span>
+            <span className="question-count">{publication.answers}</span>
             <span className="question-text">Respuestas</span>
           </div>
           <div className="question-item">
@@ -65,21 +65,21 @@ export default function PublicationCard({
             <span className="question-icon">
               <Eye size={16} />
             </span>
-            <span className="question-count">{publication.visitas}</span>
+            <span className="question-count">{publication.visits}</span>
             <span className="question-text">Visitas</span>
           </div>
         </div>
 
         <div className="questionMore">
           <div className="tagList">
-            {publication.etiquetas.map((tag, idx) => (
+            {publication.tags.map((tag, idx) => (
               <span key={idx} className="tag">
                 {tag}
               </span>
             ))}
           </div>
           <div className="questionDate">
-            <span>{getPublicationTimeAgo("Preguntado", new Date(publication.fechaCreacion))}</span>
+            <span>{getPublicationTimeAgo("Preguntado", new Date(publication.createdDate))}</span>
           </div>
         </div>
       </div>

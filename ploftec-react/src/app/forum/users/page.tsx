@@ -76,14 +76,14 @@ export default function UsersPage() {
               </div>
               <div className={styles.userFilters}>
                 {userFilters.map(item => (
-                  <span key={item.codigoFiltro} className={styles.userFiltersTag}>
+                  <span key={item.codeFilter} className={styles.userFiltersTag}>
                     <button
                       className={styles.deleteButton}
-                      onClick={() => handleEliminarFiltro(item.codigoFiltro)}
+                      onClick={() => handleEliminarFiltro(item.codeFilter)}
                     >
                       &times;
                     </button>
-                    {item.descripcion}: {item.valor}
+                    {item.description}: {item.valor}
                   </span>
                 ))}
               </div>

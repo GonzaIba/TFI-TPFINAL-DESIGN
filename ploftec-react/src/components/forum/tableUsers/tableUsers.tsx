@@ -64,9 +64,9 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
           ) : usuarios.length ? (
             usuarios.map((u, i) => (
               <tr key={i}>
-                <td>{u.nombre}</td>
-                <td>{u.puntaje}</td>
-                <td>{u.fechaCreado}</td>
+                <td>{u.name}</td>
+                <td>{u.score}</td>
+                <td>{u.createdDate}</td>
                 <td>
 
                   <Button
@@ -99,7 +99,7 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
           <div className="profile-user-left">
             <div className="profile-header-user-sheet">
               <img src={usuarioSeleccionado.imageForum} alt="user" className="profile-photo-user-sheet" />
-              <h1 className="profile-name-user-sheet">{usuarioSeleccionado.nombre} {usuarioSeleccionado.apellido}</h1>
+              <h1 className="profile-name-user-sheet">{usuarioSeleccionado.name} {usuarioSeleccionado.lastName}</h1>
               <p className="profile-email-user-sheet">{usuarioSeleccionado.email}</p>
               <p className="profile-last-connected"><strong>Última vez conectado:</strong> {getPublicationTimeAgo('', new Date(usuarioSeleccionado.lastTimeConnectedForum))}</p>
               <div className="profile-buttons-user-sheet">
@@ -116,21 +116,21 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
             <div className="user-properties-user-sheet">
             <h2>Estadísticas</h2>
             <div className="profile-user-stadistics">
-                <p><strong>Puntaje:</strong> {usuarioSeleccionado.puntaje}</p>
-                <p><strong>Respuestas:</strong> {usuarioSeleccionado.cantidadRespuestas}</p>
-                <p><strong>Publicaciones:</strong> {usuarioSeleccionado.cantidadPublicacionesCreadas}</p>
+                <p><strong>Puntaje:</strong> {usuarioSeleccionado.score}</p>
+                <p><strong>Respuestas:</strong> {usuarioSeleccionado.quantityResponses}</p>
+                <p><strong>Publicaciones:</strong> {usuarioSeleccionado.numberPostsCreated}</p>
             </div>
             </div>
             <div className="medals-user-sheet">
             <h2>Medallas</h2>
             <div className="medals-user">
-                {usuarioSeleccionado.medallas?.length ? usuarioSeleccionado.medallas.map((med, i) => (
+                {usuarioSeleccionado.medals?.length ? usuarioSeleccionado.medals.map((med, i) => (
                 <div key={i} className="medals-user-container">
                     <div className="medal-card">
-                    <div className="medal-message">{med.nombreMedalla}</div>
-                    <div className="medal-date">{new Date(med.fechaObtenido).toLocaleDateString()}</div>
+                    <div className="medal-message">{med.nameMedal}</div>
+                    <div className="medal-date">{new Date(med.dateObtained).toLocaleDateString()}</div>
                     <div className="medal-image">
-                        <img src={med.imagenMedalla} alt="medal" />
+                        <img src={med.imageMedal} alt="medal" />
                     </div>
                     </div>
                 </div>

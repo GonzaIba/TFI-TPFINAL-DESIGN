@@ -29,10 +29,10 @@ export default function SideBarFilters({
   onCompleted,
 }: SideBarFiltersProps) {
   const [groupResponse, setGroupResponse] = useState<GroupResponse | null>({
-    codigoGrupo: 0,
-    nombreGrupo: "",
-    descripcionGrupo: "",
-    listaFiltros: [],
+    codeGroup: 0,
+    namegroup: "",
+    descriptionGroup: "",
+    filtersList: [],
   });
 
   const [filterValues, setFilterValues] = useState<Record<number, string>>({});
@@ -43,8 +43,8 @@ export default function SideBarFilters({
       setGroupResponse(response);
 
       const initialFilters: Record<number, string> = {};
-      response?.listaFiltros.forEach((f) => {
-        initialFilters[f.codigoFiltro] = "";
+      response?.filtersList.forEach((f) => {
+        initialFilters[f.codeFilter] = "";
       });
       setFilterValues(initialFilters);
     };
@@ -79,7 +79,7 @@ export default function SideBarFilters({
       <div className={styles.sidebarFiltersContainer}>
         <div className={styles.sidebarFiltersPanel}>
           <div className={styles.sidebarFiltersHeadboard}>
-            <h3>{groupResponse?.descripcionGrupo}</h3>
+            <h3>{groupResponse?.descriptionGroup}</h3>
             <Button
               onClick={clickCloseFunction}
               icon={<CloseIcon sx={{ color: Colors.primary }} fontSize='medium'/>}
@@ -92,13 +92,13 @@ export default function SideBarFilters({
 
           <div className={styles.sidebarFiltersRows}>
             <div className={styles.sidebarFiltersRow}>
-              {groupResponse?.listaFiltros.map((item) => (
-                <div className={styles.filterColumn} key={item.codigoFiltro}>
+              {groupResponse?.filtersList.map((item) => (
+                <div className={styles.filterColumn} key={item.codeFilter}>
                   <InputLabel
-                    labelText={item.descripcionFiltro}
-                    inputPlaceHolderText={`Escriba un ${item.descripcionFiltro.toLowerCase()} ...`}
+                    labelText={item.descriptionFilter}
+                    inputPlaceHolderText={`Escriba un ${item.descriptionFilter.toLowerCase()} ...`}
                     onInput={(e: { target: { value: string; }; }) =>
-                      updateFilterValue(item.codigoFiltro, e.target.value)
+                      updateFilterValue(item.codeFilter, e.target.value)
                     }
                   />
                 </div>

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 // Kit base
-import RichTextEditor, { BaseKit } from 'reactjs-tiptap-editor';
+import RichTextEditor, { BaseKit, useEditorState } from 'reactjs-tiptap-editor';
 
 // Formato de texto
 import { Document } from 'reactjs-tiptap-editor/document'; 
@@ -55,8 +55,8 @@ import { Clear } from 'reactjs-tiptap-editor/clear';
 import { History } from 'reactjs-tiptap-editor/history';
 
 // Importación y exportación
-import { ImportWord } from 'reactjs-tiptap-editor/importword';
-import { ExportWord } from 'reactjs-tiptap-editor/exportword';
+// import { ImportWord } from 'reactjs-tiptap-editor/importword';
+// import { ExportWord } from 'reactjs-tiptap-editor/exportword';
 import { ExportPdf } from 'reactjs-tiptap-editor/exportpdf';
 
 // Otros
@@ -70,19 +70,17 @@ import 'prism-code-editor-lightweight/layout.css';
 import 'prism-code-editor-lightweight/themes/github-dark.css'; 
 
 type Props = {
+  content?: string;
   onContentChange?: (content: string) => void;
 };
 
-export default function Editor({ }: Props) {
-  const [content, setContent] = useState('<p>Inserte aquí su respuesta...</p>');
+export default function EditorInput({content, onContentChange}: Props) {
 
-  const handleChange = (value: string) => {
-    setContent(value);
-  };
+  const { isReady, editor, editorRef } = useEditorState();
 
   const extensions = [
     BaseKit.configure({
-        //placeholder: { showOnlyCurrent: true },
+        placeholder: { showOnlyCurrent: true },
         characterCount: { limit: 15000 },
     }),
     Blockquote,
@@ -120,8 +118,8 @@ export default function Editor({ }: Props) {
     TrailingNode,
     Emoji,
     ExportPdf,
-    ImportWord,
-    ExportWord,
+    //ImportWord,
+    //ExportWord,
     Excalidraw,
     TextDirection,
     Mention,
@@ -139,14 +137,14 @@ export default function Editor({ }: Props) {
     Video.configure({
       upload: (files: File) => {
         return new Promise((resolve) => {
-            setTimeout(() => {
+          setTimeout(() => {
             resolve(URL.createObjectURL(files))
-            }, 500)
+          }, 500)
         })
       },
     }),
     ImageGif.configure({
-      GIPHY_API_KEY: 'GIPHY_API_KEY', 
+      GIPHY_API_KEY: 'IJFC58HZ81gUGKjF8So27uXSkTw8VRpE', 
     }),
   ];
 
@@ -154,8 +152,9 @@ export default function Editor({ }: Props) {
     <div className="tiptap-wrapper">
       <RichTextEditor
         output="html"
-        content={content}
-        onChangeContent={handleChange}
+        ref={editorRef}
+        content={content ?? ''}
+        onChangeContent={onContentChange}
         extensions={extensions}
         minHeight={900}
         dark
@@ -173,6 +172,11 @@ export default function Editor({ }: Props) {
             },
         }}
       />
+      {isReady && (
+        <button onClick={() => console.log(editor?.getText())}>
+          Get Text
+        </button>
+      )}
     </div>
   );
 }

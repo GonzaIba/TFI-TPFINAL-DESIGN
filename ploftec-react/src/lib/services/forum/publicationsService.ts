@@ -1,13 +1,17 @@
 // src/lib/services/publicacionesService.ts
 import { apiBaseService } from "../apiBaseService";
 import {
+  AnswerVoteRequest,
   PublicationDetailResponse,
   PublicationResponse,
+  PublicationVoteRequest,
   SuccessfulResponse,
+  AnswerPublicationVoteResponse,
+  AddAnswerRequest
 } from "@/lib/types/forum";
 
-export const publicacionesService = {
-  async obtenerPublicaciones(): Promise<PublicationResponse[]> {
+export const publicationsService = {
+  async getPublications(): Promise<PublicationResponse[]> {
     const response = await apiBaseService.execute<PublicationResponse[], undefined>({
       method: "GET",
       url: "ApiForum/ObtenerPublicaciones",
@@ -16,16 +20,16 @@ export const publicacionesService = {
     return response.data ?? [];
   },
 
-  async obtenerDetallePublicacion(code: number): Promise<PublicationDetailResponse> {
+  async getDetailPublication(code: number): Promise<PublicationDetailResponse> {
     const response = await apiBaseService.execute<PublicationDetailResponse, undefined>({
       method: "GET",
       url: `ApiForum/ObtenerDetallePublicacion?codePublication=${code}`,
-      requireCredentials: false,
+      requireCredentials: true,
     });
     return response?.data ?? {};
   },
 
-  async obtenerPublicacionesCreadas(): Promise<PublicationResponse[]> {
+  async getCreatedPublications(): Promise<PublicationResponse[]> {
     const response = await apiBaseService.execute<PublicationResponse[], undefined>({
       method: "GET",
       url: "ApiForum/ObtenerPublicacionesCreadasPorUsuario",
@@ -34,7 +38,7 @@ export const publicacionesService = {
     return response.data ?? [];
   },
 
-  async obtenerPublicacionesGuardadas(): Promise<PublicationResponse[]> {
+  async getSavedPublications(): Promise<PublicationResponse[]> {
     const response = await apiBaseService.execute<PublicationResponse[], undefined>({
       method: "GET",
       url: "ApiForum/ObtenerPublicacionesGuardadas",
@@ -44,7 +48,7 @@ export const publicacionesService = {
     return response.data ?? [];
   },
 
-  async buscarPublicacionesConFiltro(texto: string): Promise<PublicationResponse[]> {
+  async getPublicationsWithFilter(texto: string): Promise<PublicationResponse[]> {
     const response = await apiBaseService.execute<PublicationResponse[], undefined>({
       method: "GET",
       url: `ApiForum/BuscarPublicacionesConFiltro?texto=${texto}`,
@@ -53,7 +57,7 @@ export const publicacionesService = {
     return response.data ?? [];
   },
 
-  async guardarPublicacion(code: number): Promise<boolean> {
+  async savePublication(code: number): Promise<boolean> {
     const response = await apiBaseService.execute<SuccessfulResponse, undefined>({
       method: "POST",
       url: `ApiForum/GuardarPublicacion?publicationCode=${code}`,
@@ -62,12 +66,42 @@ export const publicacionesService = {
     return response.data?.success ?? false;
   },
 
-  async eliminarPublicacionGuardada(code: number): Promise<boolean> {
+  async deleteSavedPublication(code: number): Promise<boolean> {
     const response = await apiBaseService.execute<SuccessfulResponse, undefined>({
       method: "DELETE",
       url: `ApiForum/EliminarPublicacionGuardada?publicationCode=${code}`,
       requireCredentials: true,
     });
     return response.data?.success ?? false;
+  },
+
+  async votePublication(request: PublicationVoteRequest): Promise<AnswerPublicationVoteResponse> {
+    const response = await apiBaseService.execute<AnswerPublicationVoteResponse, PublicationVoteRequest>({
+      method: "POST",
+      url: `ApiForum/VotarPublicacion`,
+      requireCredentials: true,
+      body: request,
+    });
+    return response.data;
+  },
+
+  async voteAnswer(request: AnswerVoteRequest): Promise<AnswerPublicationVoteResponse> {
+    const response = await apiBaseService.execute<AnswerPublicationVoteResponse, AnswerVoteRequest>({
+      method: "POST",
+      url: `ApiForum/VotarRespuesta`,
+      requireCredentials: true,
+      body: request,
+    });
+    return response.data;
+  },
+
+  async addAnswer(request: AddAnswerRequest): Promise<SuccessfulResponse> {
+    const response = await apiBaseService.execute<SuccessfulResponse, AddAnswerRequest>({
+      method: "POST",
+      url: `ApiForum/AgregarRespuesta`,
+      requireCredentials: true,
+      body: request,
+    });
+    return response.data;
   },
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useState } from "react";
+import React, { ReactNode, useEffect } from "react";
 import { useAuthStore } from "../store/slices/authStore/authStore";
 import { getUserDetails } from "@/lib/services/auth/authenticationService";
 
@@ -8,16 +8,18 @@ type Props = {
   children: ReactNode;
 };
 
-export const AuthProvider = ({ children }: Props) => {
-  const setUser = useAuthStore((state) => state.setUser);
+export const AuthProvider = React.memo(({ children }: Props) => {
   const isAuthLoaded = useAuthStore((state) => state.isAuthLoaded);
+  const setUser = useAuthStore((state) => state.setUser);
   const setAuthLoaded = useAuthStore((state) => state.setAuthLoaded);
-  // const [loading, setLoading] = useState(true);
+
+  console.log("-----------Render AuthProvider-----------");
 
   useEffect(() => {
-    console.log("AuthProvider mounted", isAuthLoaded);
     if (isAuthLoaded) return;
-  
+
+    console.log("-----------AuthProvider fetching session-----------");
+
     const fetchSession = async () => {
       try {
         const res = await getUserDetails();
@@ -27,12 +29,17 @@ export const AuthProvider = ({ children }: Props) => {
         }
       } finally {
         setAuthLoaded();
-        // setLoading(false);
       }
     };
-  
+
     fetchSession();
-  }, [isAuthLoaded]);
-  
+  }, [isAuthLoaded, setUser, setAuthLoaded]);
+
+  useEffect(() => {
+    console.log("Effect ejecutado");
+  }, []);
+
+  if (!isAuthLoaded) return null;
+
   return <>{children}</>;
-};
+});

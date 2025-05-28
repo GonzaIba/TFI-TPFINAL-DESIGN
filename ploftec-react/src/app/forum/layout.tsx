@@ -34,6 +34,8 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
+  console.log("LAYOUT page:");
+
   const rutasProtegidas = [
     "/forumTest",
     //"/forum/users",
@@ -95,6 +97,12 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
 
   const requiereProteccion = rutasProtegidas.includes(pathname);
 
+  useEffect(() => {
+    router.prefetch('/forum/publications');
+    router.prefetch('/forum/users');
+    router.prefetch('/login');
+  }, []);
+
   return (
     <div className="forum">
       <Loading show={isLoading} />
@@ -122,7 +130,7 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
                 <div className="buttonNav" style={{ display: 'flex', justifyContent: 'center' }}>
                   <AvatarUser
                     imageUser={userForum.imageForum}
-                    tagUser={obtenerIniciales(userForum.nombre + ' ' + (userForum.apellido ?? ''))}
+                    tagUser={obtenerIniciales(userForum.name + ' ' + (userForum.lastName ?? ''))}
                     showDetails={false}
                   />
                 </div>

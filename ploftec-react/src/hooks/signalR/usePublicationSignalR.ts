@@ -1,0 +1,112 @@
+// src/hooks/usePublicationSignalR.ts
+import { useEffect, useRef } from 'react';
+import * as signalR from '@microsoft/signalr';
+
+interface PublicationSignalRProps {
+  publicationId: number;
+  onVotePublicationChanged: (newVotes: number) => void;
+  onVoteAnswerChanged: (answerId: number, newVotes: number) => void;
+  onCommentAdded: (newComment: any) => void;
+}
+
+export function usePublicationSignalR({
+  publicationId, 
+  onVotePublicationChanged,
+  onVoteAnswerChanged,
+  onCommentAdded,
+  } : PublicationSignalRProps) { 
+  const connectionRef = useRef<signalR.HubConnection | null>(null);
+  console.log("Render pubSignalR");
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    if (connectionRef.current) return;
+
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl('https://localhost:44352/hubs/publications', {
+        withCredentials: true,
+      })
+      .withAutomaticReconnect({
+        nextRetryDelayInMilliseconds: (retryContext) => {
+          if (retryContext.previousRetryCount === 0) {
+            return 0;
+          }
+          return Math.min(10000, retryContext.previousRetryCount * 2000);
+        },
+      })
+      .configureLogging(signalR.LogLevel.Information)
+      .build();
+
+    connectionRef.current = connection;
+
+    connection.on('VotePublicationChanged', (data) => {
+      console.log('🎯 VoteChanged recibido:', data);
+      if (data.publicationId === publicationId) {
+        onVotePublicationChanged(data.newVoteCount);
+      }
+    });
+
+    connection.on('VoteAnswerChanged', (data) => {
+      if (data.publicationId === publicationId) {
+        onVoteAnswerChanged(data.answerId, data.newVoteCount);
+      }
+    });
+
+    connection.on('CommentChanged', (data) => {
+      if (data.publicationId === publicationId) {
+        onCommentAdded(data);
+      }
+    });
+
+    connection.onclose((err) => {
+      console.log('❌ SignalR desconectado:', err);
+    });
+
+    connection.onreconnecting(() => {
+      console.log('🔄 SignalR reconectando...');
+    });
+
+    connection.onreconnected(() => {
+      console.log('✅ SignalR reconectado');
+    });
+
+    connection
+      .start()
+      .then(() => {
+        if (!isCancelled) {
+          console.log('✅ SignalR conectado');
+          return connection.invoke('JoinPublicationRoom', publicationId);
+        }
+      })
+      .then(() => {
+        console.log('📌 JoinPublicationRoom invocado para publicación', publicationId);
+      })
+      .catch((err) => {
+        if (!isCancelled) {
+          console.error('💥 Error al conectar con SignalR', err);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+      if (!connectionRef.current) return;
+
+      const stopConnection = async () => {
+        try {
+          if (connectionRef.current?.state === signalR.HubConnectionState.Connected) {
+            console.log('↩️ Abandonando grupo...');
+            await connectionRef.current.invoke('LeavePublicationRoom', publicationId);
+          }
+        } catch (e) {
+          console.warn('⚠️ No se pudo hacer LeavePublicationRoom:', e);
+        } finally {
+          await connectionRef.current?.stop();
+          connectionRef.current = null;
+        }
+      };
+
+      stopConnection();
+    };
+  }, [publicationId, onVotePublicationChanged, onVoteAnswerChanged, onCommentAdded]);
+}

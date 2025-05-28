@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from 'next/image';
 import logo from "../../images/ploftec-fluid.png";
@@ -34,7 +34,7 @@ export default function LoginRegister() {
     setAnimate(true);
     setTimeout(() => {
       setAnimate(false);
-    }, 600); // coincide con tu animación CSS de 0.6s
+    }, 550); // coincide con tu animación CSS de 0.55s
   };
 
   const toggleRegister = () => setIsRegister(!isRegister);
@@ -70,7 +70,7 @@ export default function LoginRegister() {
       setErrorVisible(true);
       console.error(err);
     } finally {
-      //setLoadingLogin(false);
+      setLoadingLogin(false);
     }
   };
 
@@ -122,6 +122,9 @@ export default function LoginRegister() {
     }
   };
   
+  useEffect(() => {
+    router.prefetch('/forum/publications');
+  }, []);
 
   return (
     <body className="login-body">

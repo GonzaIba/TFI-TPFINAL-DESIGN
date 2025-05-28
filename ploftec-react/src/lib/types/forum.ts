@@ -1,30 +1,52 @@
+
+  /* ------------------------------------------- REQUEST -------------------------------------------*/
+
   export interface FiltersUserRequest {
     filters_CodeValue: Record<number, string>;
-  }  
+  }
+
+  export interface PublicationVoteRequest {
+    publicationCode: number;
+    isPositive: boolean;
+  }
+
+  export interface AnswerVoteRequest {
+    publicationCode: number;
+    answerCode: number;
+    isPositive: boolean;
+  }
+
+  export interface AddAnswerRequest {
+    codePublication: number;
+    textResponse: string;
+    //files?: File[]; // Array de archivos a subir
+  }
+
+  /* ------------------------------------------- RESPONSE -------------------------------------------*/
   
   export interface UsersForumResponse {
-    nombre: string;
-    puntaje: number;
-    fechaCreado: string;
+    name: string;
+    score: number;
+    createdDate: string;
     email: string;
   }
   
   export interface UsersForumPreviewResponse {
-    nombreCompleto: string;
-    iniciales: string;
-    descripcionCorta?: string;
-    descripcionLarga?: string;
+    completeName: string;
+    initials: string;
+    shortDescription?: string;
+    longDescription?: string;
     image?: string;
-    fechaDesde?: string;
-    puntaje: number;
-    ultimaVezConectado: string;
+    dateFrom?: string;
+    score: number;
+    lastTimeOnline: string;
   }
   
   export interface UserFilterForumResponse {
-    codigoFiltro: number;
-    nombreFiltro: string;
-    descripcion: string;
-    valor: string;
+    codeFilter: number;
+    nameFilter: string;
+    description: string;
+    value: string;
   }
   
   export interface SuccessfulResponse {
@@ -32,85 +54,89 @@
   }
   
   export interface PublicationResponse {
-    codigoPublicacion: number;
-    codigoUsuario: string;
-    titulo: string;
-    contenido: string;
-    recompensa: number;
-    visitas: number;
-    respuestas: number;
-    respondida: boolean;
-    cerrada: boolean;
-    fechaCreacion: string;
-    fechaCierre?: string;
-    estaGuardado: boolean;
-    etiquetas: string[];
+    codePublication: number;
+    codeUser: string;
+    title: string;
+    content: string;
+    reward: number;
+    visits: number;
+    answers: number;
+    answered: boolean;
+    closed: boolean;
+    createdDate: string;
+    closedDate?: string;
+    isSaved: boolean;
+    tags: string[];
   }
   
   export interface FilesResponse {
-    nombreArchivo: string;
-    tipoArchivo: string;
-    archivo: Uint8Array; // o string base64 si viene así
+    fileName: string;
+    typeFile: string;
+    file: Uint8Array; // o string base64 si viene así
   }
   
   export interface AnswerResponse {
-    codigoRespuesta: number;
-    usuario: UsersForumPreviewResponse;
-    textoRespuesta: string;
-    fechaCreacion: string;
-    respuestaCorrecta: boolean;
-    votos: number;
-    votadoPositivo?: boolean;
-    archivos: FilesResponse[];
+    codeAnswer: number;
+    user: UsersForumPreviewResponse;
+    textResponse: string;
+    createdDate: string;
+    correctAnswer: boolean;
+    votes: number;
+    votedPositive?: boolean;
+    files: FilesResponse[];
   }
   
   export interface PublicationDetailResponse {
-    codigoPublicacion: number;
-    usuario: UsersForumPreviewResponse;
-    titulo: string;
-    contenido: string;
-    recompensa: number;
-    visitas: number;
-    votos: number;
-    votadoPositivo?: boolean;
-    fechaCreacion: string;
-    fechaCierre?: string;
-    respuestas: AnswerResponse[];
-    archivos: FilesResponse[];
+    codePublication: number;
+    user: UsersForumPreviewResponse;
+    title: string;
+    content: string;
+    reward: number;
+    visits: number;
+    votes: number;
+    votedPositive?: boolean;
+    createdDate: string;
+    closedDate?: string;
+    answers: AnswerResponse[];
+    files: FilesResponse[];
   }
   
   export interface GroupResponse {
-    codigoGrupo: number;
-    nombreGrupo: string;
-    descripcionGrupo: string;
-    listaFiltros: FilterResponse[];
+    codeGroup: number;
+    namegroup: string;
+    descriptionGroup: string;
+    filtersList: FilterResponse[];
   }
   
   export interface FilterResponse {
-    codigoFiltro: number;
-    nombreFiltro: string;
-    descripcionFiltro: string;
+    codeFilter: number;
+    nameFilter: string;
+    descriptionFilter: string;
   }
   
   export interface Medalla {
-    nombreMedalla: string;
-    descripcion: string;
-    imagenMedalla: string;
-    fechaObtenido: string;
+    nameMedal: string;
+    description: string;
+    imageMedal: string;
+    dateObtained: string;
   }
   
   export interface DetailsUserForumResponse {
-    nombre: string;
-    apellido?: string;
-    lenguajePreferencia?: string;
+    name: string;
+    lastName?: string;
+    languagePreference?: string;
     email?: string;
-    fechaCreado: string;
-    puntaje: number;
-    cantidadRespuestas: number;
-    cantidadPublicacionesCreadas: number;
+    createdDate: string;
+    score: number;
+    quantityResponses: number;
+    numberPostsCreated: number;
     shortDescriptionForum?: string;
     longDescriptionForum?: string;
     imageForum?: string;
     lastTimeConnectedForum: string;
-    medallas: Medalla[];
+    medals: Medalla[];
+  }
+
+  export interface AnswerPublicationVoteResponse extends SuccessfulResponse {
+    isVoteCreatedExpired?: boolean;
   }

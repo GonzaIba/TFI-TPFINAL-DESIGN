@@ -2,50 +2,169 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import Button from '@/components/buttonComponent/button'
 import AvatarUser from '@/components/avatarUserComponent/avatarUser'
 import AnswerCard from '@/components/forum/answerCard/answerCard'
 import { ArrowDropUp, ArrowDropDown, ArrowBack } from '@mui/icons-material';
-import { PublicationDetailResponse, AnswerResponse } from '@/lib/types/forum'
-import { getQuillContent, initializeQuill } from '@/lib/utils/quill'
+import { 
+  PublicationDetailResponse,
+  AnswerResponse, 
+  PublicationVoteRequest, 
+  AnswerVoteRequest, 
+  AnswerPublicationVoteResponse,
+  AddAnswerRequest
+} from '@/lib/types/forum'
+import { publicationsService } from '@/lib/services/forum/publicationsService'
 import { getPublicationTimeAgo } from '@/lib/helpers/timeHelper'
 import styles from './publicationDetail.module.css'
-import Editor from '@/components/editorComponent/editor'
+import EditorInput from '@/components/editorComponent/editor'
+import { Colors } from '@/theme/colors'
+import { usePublicationSignalR } from '@/hooks';
+import { VoteNumber } from '@/components/labelComponent/numberMotionComponent/numberMotion'
+
 
 interface PublicationDetailProps {
   publication: PublicationDetailResponse
   onBack: () => Promise<void>
-  onAddAnswer: (answer: AnswerResponse) => Promise<void>
-  onVotePublication: (isUpvote: boolean) => Promise<void>
+  onAddAnswer: (answer: AddAnswerRequest) => Promise<void>
 }
 
 export default function PublicationDetail({
   publication,
   onBack,
   onAddAnswer,
-  onVotePublication
 }: PublicationDetailProps) {
 
   const [editorContent, setEditorContent] = useState('<p>Inserte aquí su respuesta...</p>')
+  const [loadingUpVote, setLoadingUpVote] = useState(false);
+  const [loadingDownVote, setLoadingDownVote] = useState(false);
+  const isVoting = loadingUpVote || loadingDownVote;
+  const isPositiveVoted = publication.votedPositive;
 
-  // useEffect(() => {
-  //   initializeQuill('editor')
-  // }, [])
+  const [votes, setVotes] = useState(publication.votes);
+  const [answers, setAnswers] = useState(publication.answers);
 
-  const handleComment = async () => {
-    const texto = await getQuillContent()
-    const newAnswer: AnswerResponse = {
-      codigoRespuesta: publication.respuestas.length === 0 ? 1 : publication.respuestas[publication.respuestas.length - 1].codigoRespuesta + 1,
-      textoRespuesta: texto,
-      votos: 0,
-      fechaCreacion: new Date().toISOString(),
-      respuestaCorrecta: false,
-      usuario: publication.usuario,
-      archivos: [],
+  const handleVotePublicationChanged = useCallback((newVotes: number) => {
+    setVotes(newVotes);
+  }, []);
+
+  const handleVoteAnswerChanged = useCallback((answerId: number, newVotes: number) => {
+    setAnswers(prevAnswers =>
+      prevAnswers.map(answer =>
+        answer.codeAnswer === answerId
+          ? { ...answer, votes: newVotes }
+          : answer
+      )
+    );
+  }, []);
+
+  const handleCommentAdded = useCallback((newComment: AnswerResponse) => {
+  }, []);
+
+  console.log('render publicationDetail');
+
+  usePublicationSignalR({
+    publicationId: publication.codePublication,
+    onVotePublicationChanged: handleVotePublicationChanged,
+    onVoteAnswerChanged: handleVoteAnswerChanged,
+    onCommentAdded: handleCommentAdded,
+  });
+
+  const handleComment = async (textResponse: string) => {
+    const newAnswer: AddAnswerRequest = {
+      codePublication: publication.codePublication,
+      textResponse: textResponse,
     }
-    onAddAnswer(newAnswer)
+    await onAddAnswer(newAnswer)
   }
+
+  const handleOnClicUpVotePublication = async () => {
+    setLoadingUpVote(true);
+    try {
+      let response = await votePublication(true);
+      if(response.success) {
+        publication.votedPositive = publication.votedPositive === true ? undefined : true;
+      }
+    } finally {
+      setLoadingUpVote(false);
+    }
+  };
+
+  const handleOnClicDownVotePublication = async () => {
+    setLoadingDownVote(true);
+    try {
+      let response = await votePublication(false);
+      if(response.success) {
+        publication.votedPositive = publication.votedPositive === false ? undefined : false;
+      }
+    } finally {
+      setLoadingDownVote(false);
+    }
+  };
+
+  const handleOnClicUpVoteAnswer = async (answerCode: number) => {
+    try {
+      let response = await voteAnswer(true, answerCode);
+      if(response.success) {
+        setAnswers(prevAnswers =>
+          prevAnswers.map(answer =>
+            answer.codeAnswer === answerCode
+              ? { ...answer, votedPositive: answer.votedPositive === true ? undefined : true }
+              : answer)
+        )
+      }
+    } catch (error) {
+      console.error('Error al votar la respuesta:', error);
+    }
+  };
+
+  const handleOnClicDownVoteAnswer = async (answerCode: number) => {
+    try {
+      let response = await voteAnswer(false, answerCode);
+      if(response.success) {
+        setAnswers(prevAnswers =>
+          prevAnswers.map(answer =>
+            answer.codeAnswer === answerCode
+              ? { ...answer, votedPositive: answer.votedPositive === false ? undefined : false }
+              : answer)
+        )
+      }
+    } catch (error) {
+      console.error('Error al votar la respuesta:', error);
+    }
+  };
+
+  const votePublication = async (isPositive : boolean) => {
+    let request: PublicationVoteRequest = {
+      publicationCode: publication.codePublication,
+      isPositive: isPositive,
+    }
+    const response = await publicationsService.votePublication(request);
+    return response;
+  }
+
+  const voteAnswer = async (isPositive: boolean, answerCode: number) => {
+    let request: AnswerVoteRequest = {
+      publicationCode: publication.codePublication,
+      answerCode: answerCode,
+      isPositive: isPositive,
+    }
+    const response = await publicationsService.voteAnswer(request);
+    return response;
+  }
+
+  const handleUpvoteFactory = useCallback((answerCode: number) => {
+    return async () => {
+      await handleOnClicUpVoteAnswer(answerCode);
+    };
+  }, []);
+
+  const handleDownvoteFactory = useCallback((answerCode: number) => {
+    return async () => {
+      await handleOnClicDownVoteAnswer(answerCode);
+    };
+  }, []);
 
   return (
     <div className={styles.forumDetailContainer}>
@@ -65,17 +184,38 @@ export default function PublicationDetail({
                     <Button
                       width="45px"
                       text=""
-                      onClick={() => onVotePublication(true)}
-                      icon={<ArrowDropUp />}
+                      onClick={handleOnClicUpVotePublication}
+                      icon={<ArrowDropUp sx={{ fontSize: 48, color: isPositiveVoted === true ? Colors.primary : Colors.white }} />}
                       circular={true}
+                      loading={loadingUpVote}
+                      disabled={isVoting}
+                      transparent
+                      tooltipOptions={{
+                        title: 'Esta respuesta es útil (hacer clic de nuevo para deshacer la acción)',
+                        placement: 'right',
+                        width: 250,
+                        transition: 'zoom',
+                        arrow: true
+                      }}
                     />
-                    <p className={styles.scoreNumber}>{publication.votos}</p>
+                    <VoteNumber value={votes} />
+                    {/* <p className={styles.scoreNumber}>{votes}</p> */}
                     <Button
                       width="45px"
                       text=""
-                      onClick={() => onVotePublication(false)}
-                      icon={<ArrowDropDown />}
+                      onClick={handleOnClicDownVotePublication}
+                      icon={<ArrowDropDown sx={{ fontSize: 48, color: isPositiveVoted === false ? Colors.primary : Colors.white }} />}
                       circular={true}
+                      loading={loadingDownVote}
+                      disabled={isVoting}
+                      transparent
+                      tooltipOptions={{
+                        title: 'Esta respuesta no es útil (hacer clic de nuevo para deshacer la acción)',
+                        placement: 'right',
+                        width: 250,
+                        transition: 'zoom',
+                        arrow: true
+                      }}
                     />
                   </div>
                     <div className={styles.cControls}>
@@ -88,17 +228,17 @@ export default function PublicationDetail({
                     </div>
                     <div className={styles.cUser}>
                       <AvatarUser
-                        imageUser={publication.usuario?.image}
-                        tagUser={publication.usuario?.iniciales}
-                        descripcionCorta={publication.usuario?.descripcionCorta}
-                        descripcionLarga={publication.usuario?.descripcionLarga}
-                        nombreCompleto={publication.usuario?.nombreCompleto}
+                        imageUser={publication.user?.image}
+                        tagUser={publication.user?.initials}
+                        descripcionCorta={publication.user?.shortDescription}
+                        descripcionLarga={publication.user?.longDescription}
+                        nombreCompleto={publication.user?.completeName}
                       />
-                      <p className={styles.usrName}>{publication.usuario?.nombreCompleto}</p>
-                      <p className={styles.cmntAt}>{getPublicationTimeAgo('Respondido', new Date(publication.fechaCreacion))}</p>
+                      <p className={styles.usrName}>{publication.user?.completeName}</p>
+                      <p className={styles.cmntAt}>{getPublicationTimeAgo('Respondido', new Date(publication.createdDate))}</p>
                     </div>
                     <p className={styles.cText}>
-                      <span className={styles.cBody}>{publication.contenido}</span>
+                      <span className={styles.cBody}>{publication.content}</span>
                     </p>
                   </div>
                 </div>
@@ -106,7 +246,7 @@ export default function PublicationDetail({
               <div className={`${styles.publicationReplyInputContainer} ${styles.pubContainer}`}>
                 <div className={styles.publicationReplyInput}>
                   <div className={styles.responseContainer}>
-                    <Editor onContentChange={(html) => setEditorContent(html)} />
+                    <EditorInput onComment={handleComment} />
                   </div>
                   <Button
                     text="Comentar"
@@ -121,18 +261,18 @@ export default function PublicationDetail({
           <div className={styles.responsesSection}>
             <div className={styles.commentSection}>
               <div className={styles.commentsWrp}>
-                {publication.respuestas.length === 0 ? (
+                {publication.answers.length === 0 ? (
                   <h3>¡Sé el primero en responder!</h3>
                 ) : (
-                  <h3>{publication.respuestas.length} Respuesta{publication.respuestas.length > 1 ? 's' : ''}</h3>
+                  <h3>{publication.answers.length} Respuesta{publication.answers.length > 1 ? 's' : ''}</h3>
                 )}
 
-                {publication.respuestas.map((respuesta) => (
-                  <AnswerCard 
-                    key={respuesta.codigoRespuesta} 
+                {answers.map((respuesta) => (
+                  <AnswerCard
+                    key={respuesta.codeAnswer} 
                     answer={respuesta} 
-                    onUpvote={async () => { console.log("Voté para arriba"); }} 
-                    onDownvote={async () => { console.log("Voté para abajo"); }} 
+                    onUpvote={handleUpvoteFactory(respuesta.codeAnswer)} 
+                    onDownvote={handleDownvoteFactory(respuesta.codeAnswer)} 
                     onDelete={async () => { console.log("Respuesta eliminada"); }} 
                   />
                 ))}

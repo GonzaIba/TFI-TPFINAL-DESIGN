@@ -11,9 +11,9 @@ import PublicationDetailCard from '@/components/forum/publicationDetail/publicat
 import AnswerCard from '@/components/forum/answerCard/answerCard'
 import TopUserCard from '@/components/forum/topUserCard/topUserCard'
 import Button from '@/components/buttonComponent/button'
-import { publicacionesService } from '@/lib/services/forum/publicacionesService'
+import { publicationsService } from '@/lib/services/forum/publicationsService'
 import { usuariosForoService } from '@/lib/services/forum/usuariosForoService'
-import { PublicationResponse, UsersForumPreviewResponse, PublicationDetailResponse } from '@/lib/types/forum'
+import { PublicationResponse, UsersForumPreviewResponse, PublicationDetailResponse, AddAnswerRequest } from '@/lib/types/forum'
 import { AvatarCrownEnum } from '@/lib/types/enum'
 import { Add, Bookmark, BookmarkBorder, BorderColor, BorderColorOutlined } from '@mui/icons-material';
 import { Colors } from '@/theme/colors'
@@ -40,9 +40,9 @@ export default function PublicationsPage() {
 
     let publicationsSaved: PublicationResponse[];
     if(!showSaved)
-      publicationsSaved = await publicacionesService.obtenerPublicacionesGuardadas();
+      publicationsSaved = await publicationsService.getSavedPublications();
     else
-      publicationsSaved = await publicacionesService.obtenerPublicaciones();
+      publicationsSaved = await publicationsService.getPublications();
 
     setPublicaciones(publicationsSaved);
     setLoadingPubs(false);
@@ -54,9 +54,9 @@ export default function PublicationsPage() {
 
     let publicationsSaved: PublicationResponse[];
     if(!showCreated)
-      publicationsSaved = await publicacionesService.obtenerPublicacionesCreadas();
+      publicationsSaved = await publicationsService.getCreatedPublications();
     else
-      publicationsSaved = await publicacionesService.obtenerPublicaciones();
+      publicationsSaved = await publicationsService.getPublications();
 
     setPublicaciones(publicationsSaved);
     setLoadingPubs(false);
@@ -78,13 +78,13 @@ export default function PublicationsPage() {
     setLoadingPubs(true);
     let result: any;
     if (isSaved) {
-      result = await publicacionesService.eliminarPublicacionGuardada(codePub);
+      result = await publicationsService.deleteSavedPublication(codePub);
     } else {
-      result = await publicacionesService.guardarPublicacion(codePub);
+      result = await publicationsService.savePublication(codePub);
     }
 
     if(result){
-      setPublicaciones(await publicacionesService.obtenerPublicaciones());
+      setPublicaciones(await publicationsService.getPublications());
     }
     setLoadingPubs(false);
   }
@@ -93,7 +93,7 @@ export default function PublicationsPage() {
     try {
       setShowPublicationDetail(true)
       setLoadingPubs(true)
-      const detail = await publicacionesService.obtenerDetallePublicacion(codigoPublicacion)
+      const detail = await publicationsService.getDetailPublication(codigoPublicacion)
       setCurrentPublication(detail)
     } catch (error) {
       console.error('Error al obtener detalle de publicación:', error)
@@ -101,12 +101,37 @@ export default function PublicationsPage() {
       setLoadingPubs(false)
     }
   }
+  
+  const handleBackToPublications = async () => {
+    setShowPublicationDetail(false)
+    setCurrentPublication(undefined)
+    //await fetchPublications()
+  }
 
-
+  const handleOnAddAnswer = async (request: AddAnswerRequest) => {
+    try {
+      setLoadingPubs(true)
+      const result = await publicationsService.addAnswer(request)
+      console.log('Respuesta agregada:', result)
+      if (result) {
+        // Actualizar la publicación actual con la nueva respuesta
+        console.log('Respuesta agregada, enter iffff', result)
+        const updatedPublication = await publicationsService.getDetailPublication(request.codePublication)
+        console.log('upd pub', updatedPublication)
+        setCurrentPublication(updatedPublication)
+      }
+    } catch (error) {
+      console.error('Error al agregar respuesta:', error)
+    }
+    finally {
+      setLoadingPubs(false)
+    }
+  }
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const result = await publicacionesService.obtenerPublicaciones()
+        const result = await publicationsService.getPublications()
         const topUsers = await usuariosForoService.obtenerTopUsuariosUltimaSemana()
         setPublicaciones(result ?? [])
         setUsuariosTop(topUsers ?? [])
@@ -117,16 +142,13 @@ export default function PublicationsPage() {
         setLoadingTopusers(false)
       }
     }
-
+    
     fetchData()
   }, [])
-
-  const handleBackToPublications = async () => {
-    setShowPublicationDetail(false)
-    setCurrentPublication(undefined)
-    //await fetchPublications()
-  }
-
+  
+  
+  console.log('Page publications Main:')
+  
   return (
     <div className="slider__contents">
       {!showPublicationDetail ? (
@@ -163,11 +185,11 @@ export default function PublicationsPage() {
         publicaciones.length > 0 ? (
           publicaciones.map(pub => (
             <PublicationCard 
-              key={`${pub.codigoPublicacion}-${pub.codigoUsuario}`}                  
+              key={`${pub.codePublication}-${pub.codeUser}`}                  
               publication={pub} 
-              onClickTitle={async () => onClickTitle(pub.codigoPublicacion)} 
+              onClickTitle={async () => onClickTitle(pub.codePublication)} 
               onClickUser={onClickUser}
-              onToggleSave={async () => onToggleSave(pub.codigoPublicacion, pub.estaGuardado)} 
+              onToggleSave={async () => onToggleSave(pub.codePublication, pub.isSaved)} 
             />
           ))
         ) : showCreated ? (
@@ -209,14 +231,14 @@ export default function PublicationsPage() {
                       usuariosTop.length > 0 ? (
                         usuariosTop.map((usuario, i) => (
                           <TopUserCard
-                            key={usuario.fechaDesde}
+                            key={`${usuario.dateFrom}-${usuario.initials}`}
                             image={usuario.image}
-                            initials={usuario.iniciales}
-                            shortDescription={usuario.descripcionCorta}
-                            longDescription={usuario.descripcionLarga}
-                            fullName={usuario.nombreCompleto}
-                            score={usuario.puntaje}
-                            since={usuario.fechaDesde}
+                            initials={usuario.initials}
+                            shortDescription={usuario.shortDescription}
+                            longDescription={usuario.longDescription}
+                            fullName={usuario.completeName}
+                            score={usuario.score}
+                            since={usuario.dateFrom}
                             index={i}
                             onClickName={onSeeTopUser}
                           />
@@ -265,8 +287,7 @@ export default function PublicationsPage() {
           <PublicationDetailCard
             publication={currentPublication}
             onBack={handleBackToPublications}
-            onAddAnswer={async () => {}}
-            onVotePublication={async () => {}}
+            onAddAnswer={handleOnAddAnswer}
           />
         )
       )}
