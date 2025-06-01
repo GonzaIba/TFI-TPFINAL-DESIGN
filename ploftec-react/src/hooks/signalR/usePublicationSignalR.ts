@@ -41,19 +41,20 @@ export function usePublicationSignalR({
     connectionRef.current = connection;
 
     connection.on('VotePublicationChanged', (data) => {
-      console.log('🎯 VoteChanged recibido:', data);
+      console.log('🎯 VotePublicationChanged recibido:', data);
       if (data.publicationId === publicationId) {
         onVotePublicationChanged(data.newVoteCount);
       }
     });
 
     connection.on('VoteAnswerChanged', (data) => {
+      console.log('🎯 VoteAnswerChanged recibido:', data);
       if (data.publicationId === publicationId) {
         onVoteAnswerChanged(data.answerId, data.newVoteCount);
       }
     });
 
-    connection.on('CommentChanged', (data) => {
+    connection.on('AnswerAdded', (data) => {
       if (data.publicationId === publicationId) {
         onCommentAdded(data);
       }

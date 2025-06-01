@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, KeyboardEvent, ChangeEvent } from 'react';
+import React, { useState, useEffect, useRef, KeyboardEvent, ChangeEvent } from 'react';
 import styles from './search.module.css';
 
 type SearchProps = {
   searchFunction?: (query: string) => void;
-  showHelpCodeOptions?: boolean;
   placeHolder?: string;
   showIcon?: boolean;
   onInput?: (event: ChangeEvent<HTMLInputElement>) => void;
@@ -13,12 +12,26 @@ type SearchProps = {
 
 export default function Search({
   searchFunction,
-  showHelpCodeOptions = false,
   placeHolder = '',
   showIcon = true,
   onInput
 }: SearchProps) {
+
   const [searchQuery, setSearchQuery] = useState('');
+  const [showSearchOptions, setShowSearchOptions] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Cierra el modal si el clic ocurre fuera del contenedor
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setShowSearchOptions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchFunction) {
@@ -40,7 +53,7 @@ export default function Search({
   };
 
   return (
-    <div className={styles.searchContainer}>
+    <div ref={containerRef} className={styles.searchContainer} onClick={() => setShowSearchOptions(true)}>
       <div className={styles.searchInput}>
       <input
           type="text"
@@ -52,8 +65,8 @@ export default function Search({
             padding: showIcon ? '0 60px 0 20px' : '10px'
           }}
         />
-        {showHelpCodeOptions && (
-          <div className={styles.searchModal} style={{ display: "none" }}>
+        {showSearchOptions && (
+          <div className={styles.searchModal} style={{ display: "block" }}>
             <div className={styles.searchOptionsLeft}>
               <div className={styles.searchOption}>[etiqueta] buscar dentro de una etiqueta</div>
               <div className={styles.searchOption}>user:1234 buscar por autor</div>

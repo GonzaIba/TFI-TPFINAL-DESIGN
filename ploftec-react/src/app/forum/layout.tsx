@@ -115,7 +115,6 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
           <div className="logo">PLOFTEC</div>
           <div className="align-items-lg-start searchContainer">
             <Search
-              showHelpCodeOptions={true}
               placeHolder="Escriba algo..."
               searchFunction={async () => {}}
             />
@@ -188,7 +187,7 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
 
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 }

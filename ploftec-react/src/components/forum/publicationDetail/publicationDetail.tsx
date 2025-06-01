@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import Button from '@/components/buttonComponent/button'
 import AvatarUser from '@/components/avatarUserComponent/avatarUser'
 import AnswerCard from '@/components/forum/answerCard/answerCard'
@@ -18,32 +18,32 @@ import {
 import { publicationsService } from '@/lib/services/forum/publicationsService'
 import { getPublicationTimeAgo } from '@/lib/helpers/timeHelper'
 import styles from './publicationDetail.module.css'
-import EditorInput from '@/components/editorComponent/editor'
+import EditorInput, { EditorInputHandle } from '@/components/editorComponent/editor';
 import { Colors } from '@/theme/colors'
 import { usePublicationSignalR } from '@/hooks';
 import { VoteNumber } from '@/components/labelComponent/numberMotionComponent/numberMotion'
-
+// import { motion } from "motion/react"
 
 interface PublicationDetailProps {
   publication: PublicationDetailResponse
+  scrollRef?: React.RefObject<HTMLDivElement>
   onBack: () => Promise<void>
-  onAddAnswer: (answer: AddAnswerRequest) => Promise<void>
 }
 
 export default function PublicationDetail({
   publication,
+  scrollRef,
   onBack,
-  onAddAnswer,
 }: PublicationDetailProps) {
 
-  const [editorContent, setEditorContent] = useState('<p>Inserte aquí su respuesta...</p>')
+  const editorRef = useRef<EditorInputHandle>(null);
   const [loadingUpVote, setLoadingUpVote] = useState(false);
   const [loadingDownVote, setLoadingDownVote] = useState(false);
-  const isVoting = loadingUpVote || loadingDownVote;
-  const isPositiveVoted = publication.votedPositive;
-
   const [votes, setVotes] = useState(publication.votes);
   const [answers, setAnswers] = useState(publication.answers);
+  const [newAnswerId, setNewAnswerId] = useState<number | null>(null);
+  const isVoting = loadingUpVote || loadingDownVote;
+  const isPositiveVoted = publication.votedPositive;
 
   const handleVotePublicationChanged = useCallback((newVotes: number) => {
     setVotes(newVotes);
@@ -59,8 +59,7 @@ export default function PublicationDetail({
     );
   }, []);
 
-  const handleCommentAdded = useCallback((newComment: AnswerResponse) => {
-  }, []);
+  const handleCommentAdded = useCallback((newComment: AnswerResponse) => {}, []);
 
   console.log('render publicationDetail');
 
@@ -76,7 +75,22 @@ export default function PublicationDetail({
       codePublication: publication.codePublication,
       textResponse: textResponse,
     }
-    await onAddAnswer(newAnswer)
+    await handleOnAddAnswer(newAnswer)
+  }
+
+  const handleOnAddAnswer = async (request: AddAnswerRequest) => {
+    try {
+      const result = await publicationsService.addAnswer(request)
+      console.log('Respuesta agregada:', result)
+      if (result) {
+        // Actualizar la publicación actual con la nueva respuesta
+        console.log('Respuesta agregada, enter iffff', result)
+        setAnswers(prevAnswers => [...prevAnswers, result]);
+        setNewAnswerId(result.codeAnswer);
+      }
+    } catch (error) {
+      console.error('Error al agregar respuesta:', error)
+    }
   }
 
   const handleOnClicUpVotePublication = async () => {
@@ -137,7 +151,7 @@ export default function PublicationDetail({
 
   const votePublication = async (isPositive : boolean) => {
     let request: PublicationVoteRequest = {
-      publicationCode: publication.codePublication,
+      codePublication: publication.codePublication,
       isPositive: isPositive,
     }
     const response = await publicationsService.votePublication(request);
@@ -146,7 +160,7 @@ export default function PublicationDetail({
 
   const voteAnswer = async (isPositive: boolean, answerCode: number) => {
     let request: AnswerVoteRequest = {
-      publicationCode: publication.codePublication,
+      codePublication: publication.codePublication,
       answerCode: answerCode,
       isPositive: isPositive,
     }
@@ -165,6 +179,44 @@ export default function PublicationDetail({
       await handleOnClicDownVoteAnswer(answerCode);
     };
   }, []);
+
+  const handleCommentClick = async () => {
+    const content = editorRef.current?.getHtml() ?? '';
+    await handleComment(content);
+  };
+
+  useEffect(() => {
+    setAnswers(publication.answers);
+  }, [publication.answers]);
+
+  useEffect(() => {
+    if (!newAnswerId || !scrollRef?.current) return;
+
+    const el = scrollRef.current;
+    const alreadyInDOM = !!document.body.contains(el);
+    
+    const scrollToEl = () => {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    if (alreadyInDOM) {
+      scrollToEl();
+    } else {
+      const observer = new MutationObserver(() => {
+        if (document.body.contains(el)) {
+          scrollToEl();
+          observer.disconnect();
+        }
+      });
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+      });
+
+      return () => observer.disconnect();
+    }
+  }, [newAnswerId, answers]);
+
 
   return (
     <div className={styles.forumDetailContainer}>
@@ -246,11 +298,11 @@ export default function PublicationDetail({
               <div className={`${styles.publicationReplyInputContainer} ${styles.pubContainer}`}>
                 <div className={styles.publicationReplyInput}>
                   <div className={styles.responseContainer}>
-                    <EditorInput onComment={handleComment} />
+                    <EditorInput ref={editorRef} />
                   </div>
                   <Button
                     text="Comentar"
-                    onClick={handleComment}
+                    onClick={handleCommentClick}
                     width="100%"
                   />
                 </div>
@@ -264,17 +316,21 @@ export default function PublicationDetail({
                 {publication.answers.length === 0 ? (
                   <h3>¡Sé el primero en responder!</h3>
                 ) : (
-                  <h3>{publication.answers.length} Respuesta{publication.answers.length > 1 ? 's' : ''}</h3>
+                  <h3 style={{paddingBottom:'1rem'}}>{publication.answers.length} Respuesta{publication.answers.length > 1 ? 's' : ''}</h3>
                 )}
-
                 {answers.map((respuesta) => (
-                  <AnswerCard
-                    key={respuesta.codeAnswer} 
-                    answer={respuesta} 
-                    onUpvote={handleUpvoteFactory(respuesta.codeAnswer)} 
-                    onDownvote={handleDownvoteFactory(respuesta.codeAnswer)} 
-                    onDelete={async () => { console.log("Respuesta eliminada"); }} 
-                  />
+                  <div
+                    key={respuesta.codeAnswer}
+                    ref={respuesta.codeAnswer === newAnswerId ? scrollRef ?? undefined : undefined}
+                  >
+                    <AnswerCard
+                      answer={respuesta}
+                      onUpvote={handleUpvoteFactory(respuesta.codeAnswer)}
+                      onDownvote={handleDownvoteFactory(respuesta.codeAnswer)}
+                      onDelete={async () => { console.log("Respuesta eliminada"); }}
+                      isNew={respuesta.codeAnswer === newAnswerId} // para aplicar estilo
+                    />
+                  </div>
                 ))}
               </div>
             </div>

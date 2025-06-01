@@ -54,11 +54,13 @@
 }
 
 .commentWrp {
-    /* Container wrapper, not much styling needed */
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
 }
 
 .comment {
-    margin-bottom: 1rem;
     display: grid;
     grid-template-areas:
         "score user controls"

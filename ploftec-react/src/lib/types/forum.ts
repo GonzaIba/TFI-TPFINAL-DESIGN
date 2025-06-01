@@ -6,12 +6,12 @@
   }
 
   export interface PublicationVoteRequest {
-    publicationCode: number;
+    codePublication: number;
     isPositive: boolean;
   }
 
   export interface AnswerVoteRequest {
-    publicationCode: number;
+    codePublication: number;
     answerCode: number;
     isPositive: boolean;
   }

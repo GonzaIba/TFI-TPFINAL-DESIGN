@@ -2,7 +2,7 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import SkeletonAvatarAndName from '@/components/skeletonComponent/skeletonAvatarAndName'
 import SkeletonPublication from '@/components/skeletonComponent/skeletonPublication'
@@ -20,15 +20,15 @@ import { Colors } from '@/theme/colors'
 
 export default function PublicationsPage() {
   const router = useRouter()
+  const scrollRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
   const [publicaciones, setPublicaciones] = useState<PublicationResponse[]>([])
+  const [currentPublication, setCurrentPublication] = useState<PublicationDetailResponse>()
   const [usuariosTop, setUsuariosTop] = useState<UsersForumPreviewResponse[]>([])
   const [loadingPubs, setLoadingPubs] = useState<boolean>(true)
   const [loadingTopUsers, setLoadingTopusers] = useState<boolean>(true)
   const [showPublicationDetail, setShowPublicationDetail] = useState(false)
-  const [currentPublication, setCurrentPublication] = useState<PublicationDetailResponse>()
   const [showSaved, setShowSaved] = useState(false);
   const [showCreated, setChowCreated] = useState(false);
-
 
   const onNewPublication = async () => {
     // lógica para abrir modal o redireccionar
@@ -107,26 +107,6 @@ export default function PublicationsPage() {
     setCurrentPublication(undefined)
     //await fetchPublications()
   }
-
-  const handleOnAddAnswer = async (request: AddAnswerRequest) => {
-    try {
-      setLoadingPubs(true)
-      const result = await publicationsService.addAnswer(request)
-      console.log('Respuesta agregada:', result)
-      if (result) {
-        // Actualizar la publicación actual con la nueva respuesta
-        console.log('Respuesta agregada, enter iffff', result)
-        const updatedPublication = await publicationsService.getDetailPublication(request.codePublication)
-        console.log('upd pub', updatedPublication)
-        setCurrentPublication(updatedPublication)
-      }
-    } catch (error) {
-      console.error('Error al agregar respuesta:', error)
-    }
-    finally {
-      setLoadingPubs(false)
-    }
-  }
   
   useEffect(() => {
     const fetchData = async () => {
@@ -145,7 +125,6 @@ export default function PublicationsPage() {
     
     fetchData()
   }, [])
-  
   
   console.log('Page publications Main:')
   
@@ -287,7 +266,7 @@ export default function PublicationsPage() {
           <PublicationDetailCard
             publication={currentPublication}
             onBack={handleBackToPublications}
-            onAddAnswer={handleOnAddAnswer}
+            scrollRef={scrollRef}
           />
         )
       )}

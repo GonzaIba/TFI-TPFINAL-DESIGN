@@ -7,7 +7,8 @@ import {
   PublicationVoteRequest,
   SuccessfulResponse,
   AnswerPublicationVoteResponse,
-  AddAnswerRequest
+  AddAnswerRequest,
+  AnswerResponse
 } from "@/lib/types/forum";
 
 export const publicationsService = {
@@ -95,8 +96,8 @@ export const publicationsService = {
     return response.data;
   },
 
-  async addAnswer(request: AddAnswerRequest): Promise<SuccessfulResponse> {
-    const response = await apiBaseService.execute<SuccessfulResponse, AddAnswerRequest>({
+  async addAnswer(request: AddAnswerRequest): Promise<AnswerResponse> {
+    const response = await apiBaseService.execute<AnswerResponse, AddAnswerRequest>({
       method: "POST",
       url: `ApiForum/AgregarRespuesta`,
       requireCredentials: true,

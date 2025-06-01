@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useImperativeHandle, forwardRef } from 'react';
 // Kit base
 import RichTextEditor, { BaseKit, useEditorState } from 'reactjs-tiptap-editor';
 
@@ -70,18 +70,30 @@ import 'prism-code-editor-lightweight/layout.css';
 import 'prism-code-editor-lightweight/themes/github-dark.css'; 
 
 type Props = {
-  content?: string;
-  onContentChange?: (content: string) => void;
+  onComment?: (content: string) => void;
 };
 
-export default function EditorInput({content, onContentChange}: Props) {
+export type EditorInputHandle = {
+  getHtml: () => string;
+  getText: () => string;
+};
+
+const EditorInput = forwardRef<EditorInputHandle, Props>(({ onComment }, ref) => {
 
   const { isReady, editor, editorRef } = useEditorState();
+  const [content, setContent] = useState<string | null>('<p>Inserte aquí su respuesta...</p>');
+
+  useImperativeHandle(ref, () => ({
+    getHtml: () => editor?.getHTML() ?? '',
+    getText: () => editor?.getText() ?? '',
+  }));
+
+  console.log('EditorInput content:');
 
   const extensions = [
     BaseKit.configure({
-        placeholder: { showOnlyCurrent: true },
-        characterCount: { limit: 15000 },
+      placeholder: { showOnlyCurrent: true },
+      characterCount: { limit: 15000 },
     }),
     Blockquote,
     Bold,
@@ -154,29 +166,31 @@ export default function EditorInput({content, onContentChange}: Props) {
         output="html"
         ref={editorRef}
         content={content ?? ''}
-        onChangeContent={onContentChange}
+        onChangeContent={setContent}
         extensions={extensions}
         minHeight={900}
         dark
         // Puedes personalizar otras propiedades según tus necesidades
         bubbleMenu={{
-            render({ extensionsNames, editor, disabled }, bubbleDefaultDom) {
-                return <>
-                {bubbleDefaultDom}
+          render({ extensionsNames, editor, disabled }, bubbleDefaultDom) {
+              return <>
+              {bubbleDefaultDom}
 
-                {extensionsNames.includes('mermaid')  ? <BubbleMenuMermaid disabled={disabled}
-                    editor={editor}
-                    key="mermaid"
-                /> : null}
-                </>
-            },
+              {extensionsNames.includes('mermaid')  ? <BubbleMenuMermaid disabled={disabled}
+                  editor={editor}
+                  key="mermaid"
+              /> : null}
+              </>
+          },
         }}
       />
-      {isReady && (
+      {/* {isReady && (
         <button onClick={() => console.log(editor?.getText())}>
           Get Text
         </button>
-      )}
+      )} */}
     </div>
   );
-}
+})
+
+export default EditorInput;
