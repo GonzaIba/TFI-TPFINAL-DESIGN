@@ -21,6 +21,7 @@ import {
   enableTdTextSelection,
   preventHorizontalScrollWheel,
 } from '@/lib/utils/tabBar';
+import { Chatbot } from '@/components';
 
 export default function ForumLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -188,6 +189,7 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
       </div>
 
       {/* <Footer /> */}
+      <Chatbot></Chatbot>
     </div>
   );
 }

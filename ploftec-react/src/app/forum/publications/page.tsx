@@ -17,6 +17,7 @@ import { PublicationResponse, UsersForumPreviewResponse, PublicationDetailRespon
 import { AvatarCrownEnum } from '@/lib/types/enum'
 import { Add, Bookmark, BookmarkBorder, BorderColor, BorderColorOutlined } from '@mui/icons-material';
 import { Colors } from '@/theme/colors'
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function PublicationsPage() {
   const router = useRouter()
@@ -75,7 +76,7 @@ export default function PublicationsPage() {
   const onToggleSave = async (codePub: number, isSaved: boolean) => {
     // lógica para redirigir al perfil del usuario top
     //revisar casuistica cuando falla el guardado de la publi
-    setLoadingPubs(true);
+    // setLoadingPubs(true);
     let result: any;
     if (isSaved) {
       result = await publicationsService.deleteSavedPublication(codePub);
@@ -83,10 +84,17 @@ export default function PublicationsPage() {
       result = await publicationsService.savePublication(codePub);
     }
 
-    if(result){
-      setPublicaciones(await publicationsService.getPublications());
-    }
-    setLoadingPubs(false);
+    setPublicaciones(prevPubs =>
+      prevPubs.map(pub =>
+        pub.codePublication === codePub
+          ? { ...pub, isSaved: !pub.isSaved }
+          : pub)
+    )
+
+    // if(result){
+    //   setPublicaciones(await publicationsService.getPublications());
+    // }
+    // setLoadingPubs(false);
   }
 
   const onClickTitle = async (codigoPublicacion: number) => {
@@ -162,15 +170,28 @@ export default function PublicationsPage() {
         </>
       ) : (
         publicaciones.length > 0 ? (
-          publicaciones.map(pub => (
-            <PublicationCard 
-              key={`${pub.codePublication}-${pub.codeUser}`}                  
-              publication={pub} 
-              onClickTitle={async () => onClickTitle(pub.codePublication)} 
-              onClickUser={onClickUser}
-              onToggleSave={async () => onToggleSave(pub.codePublication, pub.isSaved)} 
-            />
-          ))
+          <AnimatePresence mode="wait">
+            {publicaciones.map((pub, i) => (
+              <motion.div
+                key={`${pub.codePublication}-${pub.codeUser}`}
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{
+                  duration: 0.7,
+                  delay: i * 0.1,
+                  ease: 'easeOut'
+                }}
+              >
+                <PublicationCard 
+                  publication={pub} 
+                  onClickTitle={async () => onClickTitle(pub.codePublication)} 
+                  onClickUser={onClickUser}
+                  onToggleSave={async () => onToggleSave(pub.codePublication, pub.isSaved)} 
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
         ) : showCreated ? (
           <p>
           Aún no tenes publicaciones creadas

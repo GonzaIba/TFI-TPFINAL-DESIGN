@@ -7,6 +7,7 @@ import AvatarUser from '@/components/avatarUserComponent/avatarUser'
 import Button from '@/components/buttonComponent/button'
 import { Bookmark, BookmarkBorder } from '@mui/icons-material';
 import { Colors } from '@/theme/colors'
+import { motion, AnimatePresence } from 'framer-motion';
 
 type PublicationCardProps = {
   publication: PublicationResponse
@@ -23,8 +24,6 @@ export default function PublicationCard({
   onToggleSave,
 }: PublicationCardProps) {
 
-  const iconButtonClass = `${publication.isSaved ? "bx bxs-bookmark saved" : "bx bx-bookmark"}`;
-
   return (
     <div className="question">
       <div className="avatarUser" onClick={onClickUser}>
@@ -36,12 +35,22 @@ export default function PublicationCard({
             <h4>{publication.title}</h4>
           </div>
           <div className="saveIcon">
-            <Button
-              transparent
-              onClick={onToggleSave}
-              icon={publication?.isSaved ? <Bookmark sx={{ color: Colors.primary }} fontSize='large' /> : <BookmarkBorder sx={{ color: Colors.white }} fontSize='large' />}
-              width="40px"
-            />
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={publication?.isSaved ? 'saved' : 'unsaved'}
+                initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
+                transition={{ duration: 0.35, ease: 'easeInOut' }}
+              >
+                <Button
+                  transparent
+                  onClick={onToggleSave}
+                  icon={publication?.isSaved ? <Bookmark sx={{ color: Colors.primary }} fontSize='large' /> : <BookmarkBorder sx={{ color: Colors.white }} fontSize='large' />}
+                  width="40px"
+                />
+              </motion.div>
+            </AnimatePresence>
             {/*REVISAR PORQUE SIEMPRE TRASPARENT TRUE???*/}
           </div>
         </div>
