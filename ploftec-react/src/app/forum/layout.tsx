@@ -22,6 +22,7 @@ import {
   preventHorizontalScrollWheel,
 } from '@/lib/utils/tabBar';
 import { Chatbot } from '@/components';
+import { RobotIntro } from '@/components/chatbotComponent/robotIntro/robotIntro';
 
 export default function ForumLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -104,8 +105,17 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
     router.prefetch('/login');
   }, []);
 
+  const [showIntro, setShowIntro] = useState(true);
+  const [showRobot, setShowRobot] = useState(false);
+
+  const handleIntroComplete = () => {
+    setShowIntro(false);
+    setShowRobot(true);
+  };
+
   return (
     <div className="forum">
+      {showIntro && <RobotIntro onComplete={handleIntroComplete} />}
       <Loading show={isLoading} />
       <nav className="navBar">
         <div className="navBar-container">
@@ -189,7 +199,7 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
       </div>
 
       {/* <Footer /> */}
-      <Chatbot></Chatbot>
+      {<Chatbot showRobot={showRobot}></Chatbot>}    
     </div>
   );
 }
