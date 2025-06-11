@@ -4,6 +4,8 @@ import { GenericApiResponse } from "@/lib/types/apiResponse";
 import { LoginRequest } from "@/lib/types/auth";
 import { ExceptionBase } from "../types/exception";
 import { UserApplication } from "../types/application";
+import { getMappedError } from "@/lib/utils/getMappedError";
+import useErrorStore from "@/store/slices/errorStore/errorStore";
 
 export type ApiRequest<T> = {
   method: "GET" | "POST" | "PUT" | "DELETE";
@@ -11,6 +13,7 @@ export type ApiRequest<T> = {
   body?: T;
   requireCredentials?: boolean;
   forceLogoutIfException?: boolean;
+  handleError?: boolean; // default true
 };
 
 // Servicio externo para obtener IP pública
@@ -22,6 +25,29 @@ const getIpAddress = async (): Promise<string | null> => {
     return null;
   }
 };
+
+function getInternalErrorHandler() {
+  const { showToast, showModal } = useErrorStore.getState();
+  return (errors: ExceptionBase[]) => {
+    const mapped = getMappedError(errors);
+    if (!mapped) return;
+
+    const { exception, config } = mapped;
+    switch (config.type) {
+      case "toast":
+        showToast(exception.message || "Error inesperado");
+        break;
+      case "modal":
+        showModal({
+          title: exception.title || "Error",
+          message: exception.message || "Algo salió mal",
+          image: exception.image || null,
+        });
+        break;
+    }
+  };
+}
+
 
 export const apiBaseService = {
   async execute<EntityResponse, T>(req: ApiRequest<T>): Promise<GenericApiResponse<EntityResponse>> {
@@ -42,6 +68,11 @@ export const apiBaseService = {
       };
 
       const res = await axios.request<GenericApiResponse<EntityResponse>>(config);
+
+      // if (res.data.errors?.errorsList?.length > 0 && req?.handleError !== false) {
+      //   getInternalErrorHandler()(res.data.errors.errorsList);
+      // }
+
       return res.data;
     } catch (error: any) {
 

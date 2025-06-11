@@ -249,123 +249,169 @@ function PublicationDetail({
 
   return (
     <div className={styles.forumDetailContainer}>
-      <main style={{ width: '100%' }}>
+      <div className='forum-left'>
+        <div className={styles.publicationSection}>
         <Button
           onClick={onBack}
           icon={<ArrowBack />}
           circular
         />
-        <div className='forum-left'>
-          <div className={styles.publicationSection}>
-            <div className={styles.commentSection}>
-              <div className={styles.commentsWrp}>
-                <div className={styles.commentWrp}>
-                  <div className={`${styles.comment} ${styles.pubContainer}`}>
-                    <div className={styles.cScore}>
-                      <Button
-                        width="45px"
-                        text=""
-                        onClick={handleOnClicUpVotePublication}
-                        icon={<ArrowDropUp sx={{ fontSize: 48, color: isPositiveVoted === true ? Colors.primary : Colors.white }} />}
-                        circular={true}
-                        loading={loadingUpVote}
-                        disabled={isVoting}
-                        transparent
-                        tooltipOptions={{
-                          title: 'Esta respuesta es útil (hacer clic de nuevo para deshacer la acción)',
-                          placement: 'right',
-                          width: 250,
-                          transition: 'zoom',
-                          arrow: true
-                        }}
-                      />
-                      <VoteNumber value={votes} />
-                      <Button
-                        width="45px"
-                        text=""
-                        onClick={handleOnClicDownVotePublication}
-                        icon={<ArrowDropDown sx={{ fontSize: 48, color: isPositiveVoted === false ? Colors.primary : Colors.white }} />}
-                        circular={true}
-                        loading={loadingDownVote}
-                        disabled={isVoting}
-                        transparent
-                        tooltipOptions={{
-                          title: 'Esta respuesta no es útil (hacer clic de nuevo para deshacer la acción)',
-                          placement: 'right',
-                          width: 250,
-                          transition: 'zoom',
-                          arrow: true
-                        }}
-                      />
-                    </div>
-                    <div className={styles.cControls}>
-                      <a className={styles.edit}>
-                        <img src="images/icon-edit.svg" alt="" className={styles.controlIcon}/>Edit
-                      </a>
-                      <a className={styles.reply}>
-                        <img src="images/icon-reply.svg" alt="" className={styles.controlIcon}/>Reply
-                      </a>
-                    </div>
-                    <div className={styles.cUser}>
-                      <AvatarUser
-                        imageUser={publication.user?.image}
-                        tagUser={publication.user?.initials}
-                        descripcionCorta={publication.user?.shortDescription}
-                        descripcionLarga={publication.user?.longDescription}
-                        nombreCompleto={publication.user?.completeName}
-                      />
-                      <p className={styles.usrName}>{publication.user?.completeName}</p>
-                      <p className={styles.cmntAt}>{getPublicationTimeAgo('Respondido', new Date(publication.createdDate))}</p>
-                    </div>
-                    <p className={styles.cText}>
-                      <span className={styles.cBody}>{publication.content}</span>
-                    </p>
+          <div className={styles.commentSection}>
+            <div className={styles.commentsWrp}>
+              <div className={styles.commentWrp}>
+                <div className={`${styles.comment} ${styles.pubContainer}`}>
+                  <div className={styles.cScore}>
+                    <Button
+                      width="45px"
+                      text=""
+                      onClick={handleOnClicUpVotePublication}
+                      icon={<ArrowDropUp sx={{ fontSize: 48, color: isPositiveVoted === true ? Colors.primary : Colors.white }} />}
+                      circular={true}
+                      loading={loadingUpVote}
+                      disabled={isVoting}
+                      transparent
+                      tooltipOptions={{
+                        title: 'Esta respuesta es útil (hacer clic de nuevo para deshacer la acción)',
+                        placement: 'right',
+                        width: 250,
+                        transition: 'zoom',
+                        arrow: true
+                      }}
+                    />
+                    <VoteNumber value={votes} />
+                    <Button
+                      width="45px"
+                      text=""
+                      onClick={handleOnClicDownVotePublication}
+                      icon={<ArrowDropDown sx={{ fontSize: 48, color: isPositiveVoted === false ? Colors.primary : Colors.white }} />}
+                      circular={true}
+                      loading={loadingDownVote}
+                      disabled={isVoting}
+                      transparent
+                      tooltipOptions={{
+                        title: 'Esta respuesta no es útil (hacer clic de nuevo para deshacer la acción)',
+                        placement: 'right',
+                        width: 250,
+                        transition: 'zoom',
+                        arrow: true
+                      }}
+                    />
                   </div>
-                </div>
-              </div>
-              <div className={`${styles.publicationReplyInputContainer} ${styles.pubContainer}`}>
-                <div className={styles.publicationReplyInput}>
-                  <div className={styles.responseContainer}>
-                    <EditorInput ref={editorRef} />
+                  <div className={styles.cControls}>
+                    <a className={styles.edit}>
+                      <img src="images/icon-edit.svg" alt="" className={styles.controlIcon}/>Edit
+                    </a>
+                    <a className={styles.reply}>
+                      <img src="images/icon-reply.svg" alt="" className={styles.controlIcon}/>Reply
+                    </a>
                   </div>
-                  <Button
-                    text="Comentar"
-                    onClick={handleCommentClick}
-                    width="100%"
-                  />
+                  <div className={styles.cUser}>
+                    <AvatarUser
+                      imageUser={publication.user?.image}
+                      tagUser={publication.user?.initials}
+                      descripcionCorta={publication.user?.shortDescription}
+                      descripcionLarga={publication.user?.longDescription}
+                      nombreCompleto={publication.user?.completeName}
+                    />
+                    <p className={styles.usrName}>{publication.user?.completeName}</p>
+                    <p className={styles.cmntAt}>{getPublicationTimeAgo('Respondido', new Date(publication.createdDate))}</p>
+                  </div>
+                  <p className={styles.cText}>
+                    <span className={styles.cBody}>{publication.content}</span>
+                  </p>
                 </div>
               </div>
             </div>
-          </div>
-
-          <div className={styles.responsesSection}>
-            <div className={styles.commentSection}>
-              <div className={styles.commentsWrp}>
-                {publication.answers.length === 0 ? (
-                  <h3>¡Sé el primero en responder!</h3>
-                ) : (
-                  <h3 style={{paddingBottom:'1rem'}}>{publication.answers.length} Respuesta{publication.answers.length > 1 ? 's' : ''}</h3>
-                )}
-                {answers.map((respuesta) => (
-                  <div
-                    key={respuesta.codeAnswer}
-                    ref={respuesta.codeAnswer === newAnswerId ? scrollRef ?? undefined : undefined}
-                  >
-                    <AnswerCard
-                      answer={respuesta}
-                      onUpvote={handleUpvoteFactory(respuesta.codeAnswer)}
-                      onDownvote={handleDownvoteFactory(respuesta.codeAnswer)}
-                      onDelete={async () => { console.log("Respuesta eliminada"); }}
-                      isNew={respuesta.codeAnswer === newAnswerId} // para aplicar estilo
-                    />
-                  </div>
-                ))}
+            <div className={`${styles.publicationReplyInputContainer} ${styles.pubContainer}`}>
+              <div className={styles.publicationReplyInput}>
+                <div className={styles.responseContainer}>
+                  <EditorInput ref={editorRef} />
+                </div>
+                <Button
+                  text="Comentar"
+                  onClick={handleCommentClick}
+                  width="100%"
+                />
               </div>
             </div>
           </div>
         </div>
-        <div className='forum-right'></div>
-      </main>
+
+        <div className={styles.responsesSection}>
+          <div className={styles.commentSection}>
+            <div className={styles.commentsWrp}>
+              {publication.answers.length === 0 ? (
+                <h3>¡Sé el primero en responder!</h3>
+              ) : (
+                <h3 style={{paddingBottom:'1rem'}}>{publication.answers.length} Respuesta{publication.answers.length > 1 ? 's' : ''}</h3>
+              )}
+              {answers.map((respuesta) => (
+                <div
+                  key={respuesta.codeAnswer}
+                  ref={respuesta.codeAnswer === newAnswerId ? scrollRef ?? undefined : undefined}
+                >
+                  <AnswerCard
+                    answer={respuesta}
+                    onUpvote={handleUpvoteFactory(respuesta.codeAnswer)}
+                    onDownvote={handleDownvoteFactory(respuesta.codeAnswer)}
+                    onDelete={async () => { console.log("Respuesta eliminada"); }}
+                    isNew={respuesta.codeAnswer === newAnswerId} // para aplicar estilo
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className='forum-right'>
+        <div className="top-users">
+          <div className="top-users-square">
+            <div>
+              <div className="top-users-title">Top usuarios esta semana</div>
+              <div className="top-users-container">
+                <div className="top-users-elements">
+                  {/* {loadingTopUsers ? (
+                    <>
+                      <div className="top-user-skeleton">
+                        <SkeletonAvatarAndName hasCrown crown={AvatarCrownEnum.gold} />
+                      </div>
+                      <div className="top-user-skeleton">
+                        <SkeletonAvatarAndName hasCrown crown={AvatarCrownEnum.silver} />
+                      </div>
+                      <div className="top-user-skeleton">
+                        <SkeletonAvatarAndName hasCrown crown={AvatarCrownEnum.bronze} />
+                      </div>
+                    </>
+                  ) : (
+                    usuariosTop.length > 0 ? (
+                      usuariosTop.map((usuario, i) => (
+                        <TopUserCard
+                          key={`${usuario.dateFrom}-${usuario.initials}`}
+                          image={usuario.image}
+                          initials={usuario.initials}
+                          shortDescription={usuario.shortDescription}
+                          longDescription={usuario.longDescription}
+                          fullName={usuario.completeName}
+                          score={usuario.score}
+                          since={usuario.dateFrom}
+                          index={i}
+                          onClickName={onSeeTopUser}
+                        />
+                      ))
+                    ) : (
+                      <p>
+                        Aún no hay usuarios con puntos esta semana.
+                        <br />
+                        ¡Se el primero!
+                      </p>
+                    )
+                  )} */}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

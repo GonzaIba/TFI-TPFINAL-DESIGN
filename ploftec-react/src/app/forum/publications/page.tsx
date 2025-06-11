@@ -353,9 +353,9 @@ export default function PublicationsPage() {
                 </div>
             ) : (
                 <PublicationDetailCard
-                publication={currentPublication}
-                onBack={handleBackToPublications}
-                scrollRef={scrollRef}
+                  publication={currentPublication}
+                  onBack={handleBackToPublications}
+                  scrollRef={scrollRef}
                 />
             )}
           </motion.div>
