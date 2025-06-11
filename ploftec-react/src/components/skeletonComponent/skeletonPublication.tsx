@@ -1,4 +1,4 @@
-export default function SkeletonPublication() {
+export function SkeletonPublication() {
     return (
       <div className="question">
         <div className="card-skeleton">

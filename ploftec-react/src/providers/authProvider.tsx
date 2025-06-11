@@ -1,7 +1,7 @@
 "use client";
 
 import React, { ReactNode, useEffect } from "react";
-import { useAuthStore } from "../store/slices/authStore/authStore";
+import useAuthStore from "../store/slices/authStore/authStore";
 import { getUserDetails } from "@/lib/services/auth/authenticationService";
 
 type Props = {

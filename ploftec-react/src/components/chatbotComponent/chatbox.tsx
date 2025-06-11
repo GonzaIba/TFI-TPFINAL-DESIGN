@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { mcpChatService } from '@/lib/services/mcp/mcpChatService';
 import { RobotAnimated } from './robotIcon/robotIcon';
-import { useAuthStore } from "@/store/slices/authStore/authStore";
+import useAuthStore from "@/store/slices/authStore/authStore";
 import styles from './chatbot.module.css';
 
 type ChatMessage = { from: 'user' | 'bot'; content: string };

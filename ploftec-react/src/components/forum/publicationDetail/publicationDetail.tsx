@@ -2,11 +2,19 @@
 
 'use client'
 
-import { useEffect, useState, useCallback, useRef } from 'react'
+import React, { useEffect, useState, useCallback, useRef } from 'react'
 import Button from '@/components/buttonComponent/button'
 import AvatarUser from '@/components/avatarUserComponent/avatarUser'
 import AnswerCard from '@/components/forum/answerCard/answerCard'
 import { ArrowDropUp, ArrowDropDown, ArrowBack } from '@mui/icons-material';
+import { publicationsService } from '@/lib/services/forum/publicationsService'
+import { getPublicationTimeAgo } from '@/lib/helpers/timeHelper'
+import styles from './publicationDetail.module.css'
+import EditorInput, { EditorInputHandle } from '@/components/editorComponent/editor';
+import { Colors } from '@/theme/colors'
+import { usePublicationSignalR } from '@/hooks';
+import { VoteNumber } from '@/components/labelComponent/numberMotionComponent/numberMotion'
+import { useErrorHandler } from '@/hooks/errors/useErrorHandler'
 import { 
   PublicationDetailResponse,
   AnswerResponse, 
@@ -15,13 +23,6 @@ import {
   AnswerPublicationVoteResponse,
   AddAnswerRequest
 } from '@/lib/types/forum'
-import { publicationsService } from '@/lib/services/forum/publicationsService'
-import { getPublicationTimeAgo } from '@/lib/helpers/timeHelper'
-import styles from './publicationDetail.module.css'
-import EditorInput, { EditorInputHandle } from '@/components/editorComponent/editor';
-import { Colors } from '@/theme/colors'
-import { usePublicationSignalR } from '@/hooks';
-import { VoteNumber } from '@/components/labelComponent/numberMotionComponent/numberMotion'
 // import { motion } from "motion/react"
 
 interface PublicationDetailProps {
@@ -30,7 +31,7 @@ interface PublicationDetailProps {
   onBack: () => Promise<void>
 }
 
-export default function PublicationDetail({
+function PublicationDetail({
   publication,
   scrollRef,
   onBack,
@@ -45,6 +46,7 @@ export default function PublicationDetail({
   const isVoting = loadingUpVote || loadingDownVote;
   const isPositiveVoted = publication.votedPositive;
 
+  const handleError = useErrorHandler();
   const handleVotePublicationChanged = useCallback((newVotes: number) => {
     setVotes(newVotes);
   }, []);
@@ -81,12 +83,18 @@ export default function PublicationDetail({
   const handleOnAddAnswer = async (request: AddAnswerRequest) => {
     try {
       const result = await publicationsService.addAnswer(request)
+
+      if (result.errors?.errorsList?.length > 0) {
+        handleError(result.errors.errorsList);
+        return;
+      }
+
       console.log('Respuesta agregada:', result)
-      if (result) {
+      if (result.data) {
         // Actualizar la publicación actual con la nueva respuesta
-        console.log('Respuesta agregada, enter iffff', result)
-        setAnswers(prevAnswers => [...prevAnswers, result]);
-        setNewAnswerId(result.codeAnswer);
+        console.log('Respuesta agregada, enter iffff', result.data)
+        setAnswers(prevAnswers => [...prevAnswers, result.data as AnswerResponse]);
+        setNewAnswerId(result.data.codeAnswer);
       }
     } catch (error) {
       console.error('Error al agregar respuesta:', error)
@@ -97,7 +105,13 @@ export default function PublicationDetail({
     setLoadingUpVote(true);
     try {
       let response = await votePublication(true);
-      if(response.success) {
+
+      if (response.errors?.errorsList?.length > 0) {
+        handleError(response.errors.errorsList);
+        return;
+      }
+
+      if(response?.data?.success) {
         publication.votedPositive = publication.votedPositive === true ? undefined : true;
       }
     } finally {
@@ -109,7 +123,12 @@ export default function PublicationDetail({
     setLoadingDownVote(true);
     try {
       let response = await votePublication(false);
-      if(response.success) {
+      if (response.errors?.errorsList?.length > 0) {
+        handleError(response.errors.errorsList);
+        return;
+      }
+
+      if(response?.data?.success) {
         publication.votedPositive = publication.votedPositive === false ? undefined : false;
       }
     } finally {
@@ -120,7 +139,12 @@ export default function PublicationDetail({
   const handleOnClicUpVoteAnswer = async (answerCode: number) => {
     try {
       let response = await voteAnswer(true, answerCode);
-      if(response.success) {
+      if (response.errors?.errorsList?.length > 0) {
+        handleError(response.errors.errorsList);
+        return;
+      }
+
+      if(response?.data?.success) {
         setAnswers(prevAnswers =>
           prevAnswers.map(answer =>
             answer.codeAnswer === answerCode
@@ -136,7 +160,12 @@ export default function PublicationDetail({
   const handleOnClicDownVoteAnswer = async (answerCode: number) => {
     try {
       let response = await voteAnswer(false, answerCode);
-      if(response.success) {
+      if (response.errors?.errorsList?.length > 0) {
+        handleError(response.errors.errorsList);
+        return;
+      }
+
+      if(response?.data?.success) {
         setAnswers(prevAnswers =>
           prevAnswers.map(answer =>
             answer.codeAnswer === answerCode
@@ -221,55 +250,54 @@ export default function PublicationDetail({
   return (
     <div className={styles.forumDetailContainer}>
       <main style={{ width: '100%' }}>
+        <Button
+          onClick={onBack}
+          icon={<ArrowBack />}
+          circular
+        />
         <div className='forum-left'>
-          <Button
-            onClick={onBack}
-            icon={<ArrowBack />}
-            circular
-          />
           <div className={styles.publicationSection}>
             <div className={styles.commentSection}>
               <div className={styles.commentsWrp}>
                 <div className={styles.commentWrp}>
                   <div className={`${styles.comment} ${styles.pubContainer}`}>
-                  <div className={styles.cScore}>
-                    <Button
-                      width="45px"
-                      text=""
-                      onClick={handleOnClicUpVotePublication}
-                      icon={<ArrowDropUp sx={{ fontSize: 48, color: isPositiveVoted === true ? Colors.primary : Colors.white }} />}
-                      circular={true}
-                      loading={loadingUpVote}
-                      disabled={isVoting}
-                      transparent
-                      tooltipOptions={{
-                        title: 'Esta respuesta es útil (hacer clic de nuevo para deshacer la acción)',
-                        placement: 'right',
-                        width: 250,
-                        transition: 'zoom',
-                        arrow: true
-                      }}
-                    />
-                    <VoteNumber value={votes} />
-                    {/* <p className={styles.scoreNumber}>{votes}</p> */}
-                    <Button
-                      width="45px"
-                      text=""
-                      onClick={handleOnClicDownVotePublication}
-                      icon={<ArrowDropDown sx={{ fontSize: 48, color: isPositiveVoted === false ? Colors.primary : Colors.white }} />}
-                      circular={true}
-                      loading={loadingDownVote}
-                      disabled={isVoting}
-                      transparent
-                      tooltipOptions={{
-                        title: 'Esta respuesta no es útil (hacer clic de nuevo para deshacer la acción)',
-                        placement: 'right',
-                        width: 250,
-                        transition: 'zoom',
-                        arrow: true
-                      }}
-                    />
-                  </div>
+                    <div className={styles.cScore}>
+                      <Button
+                        width="45px"
+                        text=""
+                        onClick={handleOnClicUpVotePublication}
+                        icon={<ArrowDropUp sx={{ fontSize: 48, color: isPositiveVoted === true ? Colors.primary : Colors.white }} />}
+                        circular={true}
+                        loading={loadingUpVote}
+                        disabled={isVoting}
+                        transparent
+                        tooltipOptions={{
+                          title: 'Esta respuesta es útil (hacer clic de nuevo para deshacer la acción)',
+                          placement: 'right',
+                          width: 250,
+                          transition: 'zoom',
+                          arrow: true
+                        }}
+                      />
+                      <VoteNumber value={votes} />
+                      <Button
+                        width="45px"
+                        text=""
+                        onClick={handleOnClicDownVotePublication}
+                        icon={<ArrowDropDown sx={{ fontSize: 48, color: isPositiveVoted === false ? Colors.primary : Colors.white }} />}
+                        circular={true}
+                        loading={loadingDownVote}
+                        disabled={isVoting}
+                        transparent
+                        tooltipOptions={{
+                          title: 'Esta respuesta no es útil (hacer clic de nuevo para deshacer la acción)',
+                          placement: 'right',
+                          width: 250,
+                          transition: 'zoom',
+                          arrow: true
+                        }}
+                      />
+                    </div>
                     <div className={styles.cControls}>
                       <a className={styles.edit}>
                         <img src="images/icon-edit.svg" alt="" className={styles.controlIcon}/>Edit
@@ -336,18 +364,10 @@ export default function PublicationDetail({
             </div>
           </div>
         </div>
-
-        <div className={`${styles.modalWrp} ${styles.invisible}`}>
-          <div className={`${styles.modal} ${styles.pubContainer}`}>
-            <h3>Delete comment</h3>
-            <p>Are you sure you want to delete this comment? This will remove the comment and can't be undone.</p>
-            <button className={styles.yes}>YES, DELETE</button>
-            <button className={styles.no}>NO, CANCEL</button>
-          </div>
-        </div>
-
         <div className='forum-right'></div>
       </main>
     </div>
   )
 }
+
+export default React.memo(PublicationDetail)

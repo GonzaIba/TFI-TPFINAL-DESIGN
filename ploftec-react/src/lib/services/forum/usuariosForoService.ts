@@ -9,71 +9,72 @@ import {
   FiltersUserRequest,
 } from "@/lib/types/forum";
 import { ImageHelper }from '@/lib/helpers/imageHelper'
+import { GenericApiResponse } from '@/lib/types/apiResponse';
 
 
 export const usuariosForoService = {
-  async obtenerTopUsuariosUltimaSemana(): Promise<UsersForumPreviewResponse[]> {
+  async obtenerTopUsuariosUltimaSemana(): Promise<GenericApiResponse<UsersForumPreviewResponse[]>> {
     const response = await apiBaseService.execute<UsersForumPreviewResponse[], undefined>({
       method: "GET",
       url: "ApiForum/ObtenerTopUsuariosSemana",
       requireCredentials: false,
     });
-    return response.data ?? [];
+    return response;
   },
 
-  async obtenerUsuariosForo(): Promise<UsersForumResponse[]> {
+  async obtenerUsuariosForo(): Promise<GenericApiResponse<UsersForumResponse[]>> {
     const response = await apiBaseService.execute<UsersForumResponse[], undefined>({
       method: "GET",
       url: "ApiForum/ObtenerUsuariosForos",
       requireCredentials: true,
     });
-    return response.data ?? [];
+    return response;
   },
 
-  async obtenerDetalleUsuario(email: string): Promise<DetailsUserForumResponse | null> {
+  async obtenerDetalleUsuario(email: string): Promise<GenericApiResponse<DetailsUserForumResponse | null>> {
     const response = await apiBaseService.execute<DetailsUserForumResponse, undefined>({
       method: "GET",
       url: `ApiForum/ObtenerDetalleUsuarioForos?userEmail=${email}`,
       requireCredentials: false,
     });
     
-    return response.data ?? null;
+    return response;
   },
 
-  async obtenerFiltrosUsuario(): Promise<UserFilterForumResponse[]> {
+  async obtenerFiltrosUsuario(): Promise<GenericApiResponse<UserFilterForumResponse[]>> {
     const response = await apiBaseService.execute<UserFilterForumResponse[], undefined>({
       method: "GET",
       url: "ApiForum/ObtenerFiltrosUsuario",
       requireCredentials: true,
     });
-    return response.data ?? [];
+    return response;
   },
 
-  async eliminarFiltroUsuario(codigoFiltro: number): Promise<SuccessfulResponse> {
+  async eliminarFiltroUsuario(codigoFiltro: number): Promise<GenericApiResponse<SuccessfulResponse>> {
     const response = await apiBaseService.execute<SuccessfulResponse, undefined>({
       method: "DELETE",
       url: `ApiForum/EliminarFiltroUsuario?filterCode=${codigoFiltro}`,
       requireCredentials: true,
     });
-    return response.data ?? { success: false };
+    return response;
   },
 
-  async eliminarTodosFiltrosUsuario(grupo: string): Promise<SuccessfulResponse> {
+  async eliminarTodosFiltrosUsuario(grupo: string): Promise<GenericApiResponse<SuccessfulResponse>> {
     const response = await apiBaseService.execute<SuccessfulResponse, undefined>({
       method: "DELETE",
       url: `ApiForum/EliminarTodosLosFiltrosUsuario?filter=${grupo}`,
       requireCredentials: true,
     });
-    return response.data ?? { success: false };
+    return response;
   },
 
-  async agregarFiltrosUsuario(request: FiltersUserRequest): Promise<SuccessfulResponse> {
+  async agregarFiltrosUsuario(request: FiltersUserRequest): Promise<GenericApiResponse<SuccessfulResponse>> {
     const response = await apiBaseService.execute<SuccessfulResponse, FiltersUserRequest>({
       method: "POST",
       url: "ApiForum/AgregarFiltrosUsuario",
       body: request,
       requireCredentials: true,
     });
-    return response.data ?? { success: false };
+    return response;
   },
 };

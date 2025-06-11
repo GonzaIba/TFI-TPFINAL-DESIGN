@@ -5,7 +5,7 @@ interface Props {
   crown?: AvatarCrownEnum;
 }
 
-export default function SkeletonAvatarAndName({ hasCrown = false, crown = AvatarCrownEnum.gold }: Props) {
+export function SkeletonAvatarAndName({ hasCrown = false, crown = AvatarCrownEnum.gold }: Props) {
   return (
     <div className="card-skeleton-topUser">
       <div className="header-skeleton">

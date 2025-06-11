@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from 'next/image';
 import logo from "../../images/ploftec-fluid.png";
 import { login } from '@/lib/services/auth/authenticationService';
-import { useAuthStore } from "@/store/slices/authStore/authStore";
+import useAuthStore from "@/store/slices/authStore/authStore";
 
 export default function LoginRegister() {
   const router = useRouter();
@@ -127,7 +127,7 @@ export default function LoginRegister() {
   }, []);
 
   return (
-    <body className="login-body">
+    <div className="login-body">
       <div className={`login-container ${isRegister ? "sign-up-mode" : ""}`}>
         <div className="signin-signup">
           {/* Login */}
@@ -329,6 +329,6 @@ export default function LoginRegister() {
           </div>
         </div>
       </div>
-    </body>
+    </div>
   );
 }

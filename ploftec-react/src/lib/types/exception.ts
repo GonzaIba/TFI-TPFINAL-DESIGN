@@ -15,22 +15,22 @@
     customStatusCode: string;
     customHttpCode: number;
   };
-
-  export type InvalidTokenException = {
-
-  };
-
+  
   export type ErrorDisplayType = "toast" | "modal" | "tooltip";
-
+  
   export type ErrorUIConfig = {
     type: ErrorDisplayType;
     priority?: number; // Por si querés ordenar o dar importancia futura
   };
-
+  
   export const errorUIMapper: Record<string, ErrorUIConfig> = {
     SurveyVoteException: { type: "toast" },
     CourseClosedException: { type: "modal" },
     PublicationNotFoundException: { type: "toast" },
-    InvalidTokenException: { type: "modal" },
+    AnswerVoteExpiredException: { type: "toast" },
     // Agregá más según tu sistema
+  };
+  
+  export type InvalidTokenException = {
+
   };

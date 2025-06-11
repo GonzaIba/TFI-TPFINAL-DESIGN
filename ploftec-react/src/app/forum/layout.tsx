@@ -10,10 +10,10 @@ import { UserApplication } from '@/lib/types/application';
 import { DetailsUserForumResponse } from '@/lib/types/forum';
 import Search from '@/components/searchComponent/search';
 import AvatarUser from '@/components/avatarUserComponent/avatarUser';
-import SkeletonLine from '@/components/skeletonComponent/skeletonLine';
+import { SkeletonLine } from '@/components';
 import Loading from '@/components/loadingComponent/loading';
 import Footer from '@/components/footerComponent/footer';
-import { useAuthStore } from "@/store/slices/authStore/authStore";
+import useAuthStore from "@/store/slices/authStore/authStore";
 import ProtectedRoute from "@/components/auth/protectedRoute";
 import {
   moveTabBar,
@@ -53,7 +53,8 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
         if (isAuthenticated && user?.email) {
           try {
             const res = await usuariosForoService.obtenerDetalleUsuario(user.email);
-            setUserForum(res);
+            ///////
+            setUserForum(res.data as DetailsUserForumResponse);
           } catch (err) {
             console.error("Error al obtener detalles del foro:", err);
           }
@@ -105,8 +106,8 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
     router.prefetch('/login');
   }, []);
 
-  const [showIntro, setShowIntro] = useState(true);
-  const [showRobot, setShowRobot] = useState(false);
+  const [showIntro, setShowIntro] = useState(false);
+  const [showRobot, setShowRobot] = useState(true);
 
   const handleIntroComplete = () => {
     setShowIntro(false);

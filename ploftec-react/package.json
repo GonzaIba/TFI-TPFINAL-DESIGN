@@ -33,13 +33,15 @@
     "lowlight": "^3.3.0",
     "lucide-react": "^0.501.0",
     "next": "15.3.1",
+    "notistack": "^3.0.2",
     "quill": "^2.0.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-spinners": "^0.16.1",
     "reactjs-tiptap-editor": "^0.3.2",
     "yup": "^1.6.1",
-    "zustand": "^5.0.4"
+    "zustand": "^5.0.4",
+    "zustymiddleware": "^1.2.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

@@ -13,7 +13,7 @@ import ReplyIcon from '@mui/icons-material/Reply';
 import { Colors } from '@/theme/colors';
 import {VoteNumber} from '@/components';
 import { motion } from 'framer-motion';
-import { useAuthStore } from "@/store/slices/authStore/authStore";
+import useAuthStore from "@/store/slices/authStore/authStore";
 import stylesAnswer from './answerCard.module.css'
 import 'react-image-crop/dist/ReactCrop.css';
 import 'reactjs-tiptap-editor/style.css';
