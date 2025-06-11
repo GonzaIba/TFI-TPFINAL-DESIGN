@@ -370,4 +370,4 @@ function PublicationDetail({
   )
 }
 
-export default React.memo(PublicationDetail)
+export default PublicationDetail

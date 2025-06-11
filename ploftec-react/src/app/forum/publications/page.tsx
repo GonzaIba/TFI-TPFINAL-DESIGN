@@ -30,6 +30,10 @@ export default function PublicationsPage() {
   const [showPublicationDetail, setShowPublicationDetail] = useState(false)
   const [showSaved, setShowSaved] = useState(false);
   const [showCreated, setChowCreated] = useState(false);
+  const [selectedPublicationId, setSelectedPublicationId] = useState<number | null>(null);
+
+  const [showSkeletonDetail, setShowSkeletonDetail] = useState(false)
+  const waitNextFrame = () => new Promise(requestAnimationFrame)
 
   const handleError = useErrorHandler();
   const onNewPublication = async () => {
@@ -96,23 +100,32 @@ export default function PublicationsPage() {
     // setLoadingPubs(false);
   }
 
-  const onClickTitle = async (codigoPublicacion: number) => {
+  const onClickTitle = (codigo: number) => {
+    setCurrentPublication(undefined);
+    setShowSkeletonDetail(true);
+    setShowPublicationDetail(true);
+    setSelectedPublicationId(codigo); // se usará después
+  };
+
+  const fetchPublicationDetail = async (codigo: number) => {
+    setLoadingDetail(true);
     try {
-      setLoadingDetail(true)
-      setShowPublicationDetail(true)
-      const response = await publicationsService.getDetailPublication(codigoPublicacion)
-      if (response.errors?.errorsList?.length > 0) {
+        const response = await publicationsService.getDetailPublication(codigo);
+        if (response.errors?.errorsList?.length > 0) {
         handleError(response.errors.errorsList);
         return;
-      }
+        }
 
-      setCurrentPublication(response.data as PublicationDetailResponse)
+        setCurrentPublication(response.data as PublicationDetailResponse);
     } catch (error) {
-      console.error('Error al obtener detalle de publicación:', error)
+        console.error('Error al obtener detalle de publicación:', error);
     } finally {
-      setLoadingDetail(false)
+        setLoadingDetail(false);
+        setShowSkeletonDetail(false);
     }
-  }
+  };
+
+
   
   const handleBackToPublications = async () => {
     setShowPublicationDetail(false)
@@ -141,6 +154,18 @@ export default function PublicationsPage() {
     
     fetchData()
   }, [])
+
+  useEffect(() => {
+  if (currentPublication) {
+    console.time('render-publicationDetail');
+  }
+  return () => {
+    if (currentPublication) {
+      console.timeEnd('render-publicationDetail');
+    }
+  };
+}, [currentPublication]);
+
   
   console.log('Page publications Main:')
   
@@ -301,30 +326,37 @@ export default function PublicationsPage() {
           </div>
           </motion.div>
         ) : (
-          <motion.div
-            key="detail"
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 30 }}
-            transition={{ duration: 0.4 }}
-            style={{ width: '100%', height: '100%' }}
-          >
+            <motion.div
+                key="detail"
+                initial={{ opacity: 0, x: 30 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 30 }}
+                transition={{ duration: 0.4 }}
+                onAnimationComplete={() => {
+                    if (selectedPublicationId !== null && currentPublication === undefined) {
+                        setTimeout(() => {
+                        fetchPublicationDetail(selectedPublicationId);
+                        }, 0);
+                    }
+                }}
+
+                style={{ width: '100%', height: '100%' }}
+            >
             {currentPublication === undefined ? (
-              <div className="forumContainer">
+                <div className="forumContainer">
                 <div className="forum-left">
-                  <SkeletonCircle />
-                  <SkeletonAnswerCard />
-                  <SkeletonEditorComment />
+                    <SkeletonCircle />
+                    <SkeletonAnswerCard />
+                    <SkeletonEditorComment />
                 </div>
-                <div className="forum-right">
+                <div className="forum-right" />
                 </div>
-              </div>
             ) : (
-              <PublicationDetailCard
+                <PublicationDetailCard
                 publication={currentPublication}
                 onBack={handleBackToPublications}
                 scrollRef={scrollRef}
-              />
+                />
             )}
           </motion.div>
         )}
