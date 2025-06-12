@@ -10,15 +10,18 @@ interface PublicationSignalRProps {
 }
 
 export function usePublicationSignalR(props: PublicationSignalRProps | null) { 
-    console.log("Render pubSignalR");
-    
-    useEffect(() => {
-        
+  const connectionRef = useRef<signalR.HubConnection | null>(null);
+  console.log("Render pubSignalR");
+  
+  useEffect(() => {       
     if (!props) return;
 
-    console.log('KEEE', props);
+    if (connectionRef.current?.state === signalR.HubConnectionState.Connecting ||
+        connectionRef.current?.state === signalR.HubConnectionState.Connected) {
+      console.log('🚫 Ya hay una conexión activa o en negociación. Abortando nuevo start.');
+      return;
+    }
         
-    const connectionRef = useRef<signalR.HubConnection | null>(null);
     const { 
       publicationId,
       onVotePublicationChanged,
@@ -68,7 +71,7 @@ export function usePublicationSignalR(props: PublicationSignalRProps | null) {
     });
 
     connection.onclose((err) => {
-      console.log('❌ SignalR desconectado:', err);
+      console.log('❌ Cierre de SignalR. Error:', err?.message ?? 'cerrado manual');
     });
 
     connection.onreconnecting(() => {
@@ -113,7 +116,6 @@ export function usePublicationSignalR(props: PublicationSignalRProps | null) {
           connectionRef.current = null;
         }
       };
-
       stopConnection();
     };
   }, [props]);

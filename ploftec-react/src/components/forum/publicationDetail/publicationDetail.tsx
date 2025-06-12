@@ -2,7 +2,7 @@
 
 'use client'
 
-import React, { useEffect, useState, useCallback, useRef } from 'react'
+import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import Button from '@/components/buttonComponent/button'
 import AvatarUser from '@/components/avatarUserComponent/avatarUser'
 import AnswerCard from '@/components/forum/answerCard/answerCard'
@@ -63,7 +63,7 @@ function PublicationDetail({
 
   const handleCommentAdded = useCallback((newComment: AnswerResponse) => {}, []);
 
-  console.log('render publicationDetail');
+  // console.log('render publicationDetail');
 
   usePublicationSignalR(publication ? {
     publicationId: publication.codePublication,
@@ -72,16 +72,15 @@ function PublicationDetail({
     onCommentAdded: handleCommentAdded,
   } : null);
 
-  const handleComment = async (textResponse: string) => {
-    if (!publication) {
-      throw new Error("Publication is undefined");
-    }
+  const handleComment = useCallback((text: string) => {
+    if (!publication) return;
     const newAnswer: AddAnswerRequest = {
       codePublication: publication.codePublication,
-      textResponse: textResponse,
-    }
-    await handleOnAddAnswer(newAnswer)
-  }
+      textResponse: text,
+    };
+    handleOnAddAnswer(newAnswer);
+  }, [publication]);
+
 
   const handleOnAddAnswer = async (request: AddAnswerRequest) => {
     try {
@@ -206,17 +205,17 @@ function PublicationDetail({
     return response;
   }
 
-   const handleUpvoteFactory = useCallback((answerCode: number) => {
-     return async () => {
-       await handleOnClicUpVoteAnswer(answerCode);
-     };
-   }, []);
+  const handleUpvoteFactory = useCallback((answerCode: number) => {
+    return async () => {
+      await handleOnClicUpVoteAnswer(answerCode);
+    };
+  }, []);
 
-   const handleDownvoteFactory = useCallback((answerCode: number) => {
-     return async () => {
-       await handleOnClicDownVoteAnswer(answerCode);
-     };
-   }, []);
+  const handleDownvoteFactory = useCallback((answerCode: number) => {
+    return async () => {
+      await handleOnClicDownVoteAnswer(answerCode);
+    };
+  }, []);
 
   useEffect(() => {
     setAnswers(publication?.answers);
@@ -249,6 +248,20 @@ function PublicationDetail({
       return () => observer.disconnect();
     }
   }, [newAnswerId, answers]);
+
+  // useEffect(() => {
+  //   console.log("🔍 Cambio en publicación:", publication);
+  // }, [publication]);
+
+  const renderRef = useRef(0);
+  renderRef.current++;
+  console.log(`🔁 Render PublicationDetailCard #${renderRef.current}`);
+
+  useEffect(() => {
+    console.log('🧩 Prop publication', publication);
+  }, [publication]);
+
+
 
   return (
     <div className={styles.forumDetailContainer}>

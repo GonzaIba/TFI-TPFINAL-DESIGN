@@ -144,7 +144,7 @@ export default function PublicationsPage() {
     fetchData()
   }, [])
   
-  console.log('Page publications Main:')
+  // console.log('Page publications Main:')
   
   return (
     <div className="slider__contents">
@@ -303,19 +303,19 @@ export default function PublicationsPage() {
           </div>
           </motion.div>
         ) : (
-            <motion.div
-                key="detail"
-                initial={{ opacity: 0, x: 30 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 30 }}
-                transition={{ duration: 0.4 }}
-                style={{ width: '100%', height: '100%' }}
-                onAnimationComplete={() => {
-                    if (selectedPublicationId !== null && currentPublication === undefined) {
-                        fetchPublicationDetail(selectedPublicationId);
-                    }
-                }}
-            >
+          <motion.div
+            key="detail"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 30 }}
+            transition={{ duration: 0.4 }}
+            style={{ width: '100%', height: '100%' }}
+            onAnimationComplete={() => {
+              if (selectedPublicationId !== null && currentPublication === undefined) {
+                fetchPublicationDetail(selectedPublicationId);
+              }
+            }}
+          >
             <PublicationDetailCard
               publication={currentPublication}
               onBack={handleBackToPublications}

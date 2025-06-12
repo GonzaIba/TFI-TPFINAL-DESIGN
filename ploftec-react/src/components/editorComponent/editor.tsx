@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
+import React, { useState } from 'react';
 // Kit base
 import RichTextEditor, { BaseKit, useEditorState } from 'reactjs-tiptap-editor';
 // Formato de texto
@@ -155,19 +155,20 @@ const EditorInput = ({ onComment } : Props) => {
           content={content ?? ''}
           onChangeContent={setContent}
           extensions={extensions}
+          useEditorOptions={{immediatelyRender: false}}
           minHeight={900}
           dark
           // Puedes personalizar otras propiedades según tus necesidades
           bubbleMenu={{
             render({ extensionsNames, editor, disabled }, bubbleDefaultDom) {
-                return <>
-                {bubbleDefaultDom}
+              return <>
+              {bubbleDefaultDom}
 
-                {extensionsNames.includes('mermaid')  ? <BubbleMenuMermaid disabled={disabled}
-                    editor={editor}
-                    key="mermaid"
-                /> : null}
-                </>
+              {extensionsNames.includes('mermaid')  ? <BubbleMenuMermaid disabled={disabled}
+                editor={editor}
+                key="mermaid"
+              /> : null}
+              </>
             },
           }}
         />
@@ -178,4 +179,4 @@ const EditorInput = ({ onComment } : Props) => {
   );
 }
 
-export default EditorInput;
+export default React.memo(EditorInput);
