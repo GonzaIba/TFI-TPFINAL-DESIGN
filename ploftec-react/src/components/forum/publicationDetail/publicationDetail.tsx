@@ -38,7 +38,6 @@ function PublicationDetail({
   onBack,
 }: PublicationDetailProps) {
 
-  // const editorRef = useRef<EditorInputHandle>(null);
   const [loadingUpVote, setLoadingUpVote] = useState(false);
   const [loadingDownVote, setLoadingDownVote] = useState(false);
   const [votes, setVotes] = useState(publication?.votes);
@@ -207,22 +206,17 @@ function PublicationDetail({
     return response;
   }
 
-  // const handleUpvoteFactory = useCallback((answerCode: number) => {
-  //   return async () => {
-  //     await handleOnClicUpVoteAnswer(answerCode);
-  //   };
-  // }, []);
+   const handleUpvoteFactory = useCallback((answerCode: number) => {
+     return async () => {
+       await handleOnClicUpVoteAnswer(answerCode);
+     };
+   }, []);
 
-  // const handleDownvoteFactory = useCallback((answerCode: number) => {
-  //   return async () => {
-  //     await handleOnClicDownVoteAnswer(answerCode);
-  //   };
-  // }, []);
-
-  const handleCommentClick = async (content : string) => {
-    // const content = editorRef.current?.getHtml() ?? '';
-    await handleComment(content);
-  };
+   const handleDownvoteFactory = useCallback((answerCode: number) => {
+     return async () => {
+       await handleOnClicDownVoteAnswer(answerCode);
+     };
+   }, []);
 
   useEffect(() => {
     setAnswers(publication?.answers);
@@ -310,7 +304,6 @@ function PublicationDetail({
                   <div className={styles.responseContainer}>
                     <EditorInput onComment={handleComment} />
                   </div>
-                  {/* <Button text='Comentar' onClick={handleCommentClick} width='100%' /> */}
                 </div>
               </div>
             </div>

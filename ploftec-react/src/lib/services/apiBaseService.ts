@@ -69,9 +69,9 @@ export const apiBaseService = {
 
       const res = await axios.request<GenericApiResponse<EntityResponse>>(config);
 
-      // if (res.data.errors?.errorsList?.length > 0 && req?.handleError !== false) {
-      //   getInternalErrorHandler()(res.data.errors.errorsList);
-      // }
+       if (res.data.errors?.errorsList?.length > 0 && req?.handleError !== false) {
+         getInternalErrorHandler()(res.data.errors.errorsList);
+       }
 
       return res.data;
     } catch (error: any) {

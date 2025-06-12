@@ -26,14 +26,10 @@ export default function PublicationsPage() {
   const [usuariosTop, setUsuariosTop] = useState<UsersForumPreviewResponse[]>([])
   const [loadingPubs, setLoadingPubs] = useState<boolean>(true)
   const [loadingTopUsers, setLoadingTopusers] = useState<boolean>(true)
-  const [loadingDetail, setLoadingDetail] = useState(false)
   const [showPublicationDetail, setShowPublicationDetail] = useState(false)
   const [showSaved, setShowSaved] = useState(false);
   const [showCreated, setChowCreated] = useState(false);
   const [selectedPublicationId, setSelectedPublicationId] = useState<number | null>(null);
-
-  const [showSkeletonDetail, setShowSkeletonDetail] = useState(false)
-  const waitNextFrame = () => new Promise(requestAnimationFrame)
 
   const handleError = useErrorHandler();
   const onNewPublication = async () => {
@@ -102,13 +98,11 @@ export default function PublicationsPage() {
 
   const onClickTitle = (codigo: number) => {
     setCurrentPublication(undefined);
-    setShowSkeletonDetail(true);
     setShowPublicationDetail(true);
     setSelectedPublicationId(codigo); // se usará después
   };
 
   const fetchPublicationDetail = async (codigo: number) => {
-    setLoadingDetail(true);
     try {
       const response = await publicationsService.getDetailPublication(codigo);
       if (response.errors?.errorsList?.length > 0) {
@@ -119,13 +113,8 @@ export default function PublicationsPage() {
       setCurrentPublication(response.data as PublicationDetailResponse);
     } catch (error) {
         console.error('Error al obtener detalle de publicación:', error);
-    } finally {
-      setLoadingDetail(false);
-      setShowSkeletonDetail(false);
     }
   };
-
-
   
   const handleBackToPublications = async () => {
     setShowPublicationDetail(false)
@@ -320,15 +309,12 @@ export default function PublicationsPage() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 30 }}
                 transition={{ duration: 0.4 }}
+                style={{ width: '100%', height: '100%' }}
                 onAnimationComplete={() => {
                     if (selectedPublicationId !== null && currentPublication === undefined) {
-                        setTimeout(() => {
                         fetchPublicationDetail(selectedPublicationId);
-                        }, 0);
                     }
                 }}
-
-                style={{ width: '100%', height: '100%' }}
             >
             <PublicationDetailCard
               publication={currentPublication}

@@ -10,13 +10,15 @@ interface PublicationSignalRProps {
 }
 
 export function usePublicationSignalR(props: PublicationSignalRProps | null) { 
-  const connectionRef = useRef<signalR.HubConnection | null>(null);
-  console.log("Render pubSignalR");
-
-  useEffect(() => {
-
+    console.log("Render pubSignalR");
+    
+    useEffect(() => {
+        
     if (!props) return;
 
+    console.log('KEEE', props);
+        
+    const connectionRef = useRef<signalR.HubConnection | null>(null);
     const { 
       publicationId,
       onVotePublicationChanged,
