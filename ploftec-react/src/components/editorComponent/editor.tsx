@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
 // Kit base
 import RichTextEditor, { BaseKit, useEditorState } from 'reactjs-tiptap-editor';
-
 // Formato de texto
 import { Document } from 'reactjs-tiptap-editor/document'; 
 import { Bold } from 'reactjs-tiptap-editor/bold';
@@ -12,7 +11,6 @@ import { Strike } from 'reactjs-tiptap-editor/strike';
 import { Highlight } from 'reactjs-tiptap-editor/highlight';
 import { Code } from 'reactjs-tiptap-editor/code';
 import { SubAndSuperScript } from 'reactjs-tiptap-editor/subandsuperscript';
-
 // Estructura y bloques
 import { Heading } from 'reactjs-tiptap-editor/heading';
 import { Blockquote } from 'reactjs-tiptap-editor/blockquote';
@@ -22,13 +20,11 @@ import { Table } from 'reactjs-tiptap-editor/table';
 import { TaskList } from 'reactjs-tiptap-editor/tasklist';
 import { MultiColumn } from 'reactjs-tiptap-editor/multicolumn';
 import { Iframe } from 'reactjs-tiptap-editor/iframe';
-
 // Listas
 import { BulletList } from 'reactjs-tiptap-editor/bulletlist';
 import { OrderedList } from 'reactjs-tiptap-editor/orderedlist';
 import { ListItem } from 'reactjs-tiptap-editor/listitem';
 import { Indent } from 'reactjs-tiptap-editor/indent';
-
 // Medios e incrustaciones
 import { Image } from 'reactjs-tiptap-editor/image';
 import { ImageGif } from 'reactjs-tiptap-editor/imagegif';
@@ -36,7 +32,6 @@ import { Video } from 'reactjs-tiptap-editor/video';
 import { Mermaid } from 'reactjs-tiptap-editor/mermaid';
 import { Excalidraw } from 'reactjs-tiptap-editor/excalidraw';
 import { Attachment } from 'reactjs-tiptap-editor/attachment';
-
 // Funcionalidades avanzadas
 import { Link } from 'reactjs-tiptap-editor/link';
 import { FontFamily } from 'reactjs-tiptap-editor/fontfamily';
@@ -53,12 +48,10 @@ import { SlashCommand } from 'reactjs-tiptap-editor/slashcommand';
 import { Selection } from 'reactjs-tiptap-editor/selection';
 import { Clear } from 'reactjs-tiptap-editor/clear';
 import { History } from 'reactjs-tiptap-editor/history';
-
 // Importación y exportación
 // import { ImportWord } from 'reactjs-tiptap-editor/importword';
 // import { ExportWord } from 'reactjs-tiptap-editor/exportword';
 import { ExportPdf } from 'reactjs-tiptap-editor/exportpdf';
-
 // Otros
 import { Emoji } from 'reactjs-tiptap-editor/emoji';
 import { Mention } from 'reactjs-tiptap-editor/mention';
@@ -69,24 +62,17 @@ import 'reactjs-tiptap-editor/style.css';
 import 'prism-code-editor-lightweight/layout.css'; 
 import 'prism-code-editor-lightweight/themes/github-dark.css'; 
 
+import { SkeletonEditorComment } from '@/components'
+import Button from '@/components/buttonComponent/button'
+
 type Props = {
-  onComment?: (content: string) => void;
+  onComment: (content: string) => void;
 };
 
-export type EditorInputHandle = {
-  getHtml: () => string;
-  getText: () => string;
-};
-
-const EditorInput = forwardRef<EditorInputHandle, Props>(({ onComment }, ref) => {
-
+const EditorInput = ({ onComment } : Props) => {
   const { isReady, editor, editorRef } = useEditorState();
+  console.log('EditorInput isReady:', isReady);
   const [content, setContent] = useState<string | null>('<p>Inserte aquí su respuesta...</p>');
-
-  useImperativeHandle(ref, () => ({
-    getHtml: () => editor?.getHTML() ?? '',
-    getText: () => editor?.getText() ?? '',
-  }));
 
   console.log('EditorInput content:');
 
@@ -161,36 +147,35 @@ const EditorInput = forwardRef<EditorInputHandle, Props>(({ onComment }, ref) =>
   ];
 
   return (
-    <div className="tiptap-wrapper">
-      <RichTextEditor
-        output="html"
-        ref={editorRef}
-        content={content ?? ''}
-        onChangeContent={setContent}
-        extensions={extensions}
-        minHeight={900}
-        dark
-        // Puedes personalizar otras propiedades según tus necesidades
-        bubbleMenu={{
-          render({ extensionsNames, editor, disabled }, bubbleDefaultDom) {
-              return <>
-              {bubbleDefaultDom}
+    <>
+      <div className="tiptap-wrapper">
+        <RichTextEditor
+          output="html"
+          ref={editorRef}
+          content={content ?? ''}
+          onChangeContent={setContent}
+          extensions={extensions}
+          minHeight={900}
+          dark
+          // Puedes personalizar otras propiedades según tus necesidades
+          bubbleMenu={{
+            render({ extensionsNames, editor, disabled }, bubbleDefaultDom) {
+                return <>
+                {bubbleDefaultDom}
 
-              {extensionsNames.includes('mermaid')  ? <BubbleMenuMermaid disabled={disabled}
-                  editor={editor}
-                  key="mermaid"
-              /> : null}
-              </>
-          },
-        }}
-      />
-      {/* {isReady && (
-        <button onClick={() => console.log(editor?.getText())}>
-          Get Text
-        </button>
-      )} */}
-    </div>
+                {extensionsNames.includes('mermaid')  ? <BubbleMenuMermaid disabled={disabled}
+                    editor={editor}
+                    key="mermaid"
+                /> : null}
+                </>
+            },
+          }}
+        />
+        {!isReady && <SkeletonEditorComment isInEditorComponent={true} />}
+      </div>
+      {isReady && <Button text='Comentar' onClick={() => onComment(content ?? '')} width='100%' />}
+    </>
   );
-})
+}
 
 export default EditorInput;

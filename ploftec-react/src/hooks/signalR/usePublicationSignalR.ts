@@ -9,16 +9,21 @@ interface PublicationSignalRProps {
   onCommentAdded: (newComment: any) => void;
 }
 
-export function usePublicationSignalR({
-  publicationId, 
-  onVotePublicationChanged,
-  onVoteAnswerChanged,
-  onCommentAdded,
-  } : PublicationSignalRProps) { 
+export function usePublicationSignalR(props: PublicationSignalRProps | null) { 
   const connectionRef = useRef<signalR.HubConnection | null>(null);
   console.log("Render pubSignalR");
 
   useEffect(() => {
+
+    if (!props) return;
+
+    const { 
+      publicationId,
+      onVotePublicationChanged,
+      onVoteAnswerChanged,
+      onCommentAdded
+    } = props;
+
     let isCancelled = false;
 
     if (connectionRef.current) return;
@@ -109,5 +114,5 @@ export function usePublicationSignalR({
 
       stopConnection();
     };
-  }, [publicationId, onVotePublicationChanged, onVoteAnswerChanged, onCommentAdded]);
+  }, [props]);
 }

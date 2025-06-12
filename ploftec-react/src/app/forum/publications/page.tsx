@@ -110,18 +110,18 @@ export default function PublicationsPage() {
   const fetchPublicationDetail = async (codigo: number) => {
     setLoadingDetail(true);
     try {
-        const response = await publicationsService.getDetailPublication(codigo);
-        if (response.errors?.errorsList?.length > 0) {
+      const response = await publicationsService.getDetailPublication(codigo);
+      if (response.errors?.errorsList?.length > 0) {
         handleError(response.errors.errorsList);
         return;
-        }
+      }
 
-        setCurrentPublication(response.data as PublicationDetailResponse);
+      setCurrentPublication(response.data as PublicationDetailResponse);
     } catch (error) {
         console.error('Error al obtener detalle de publicación:', error);
     } finally {
-        setLoadingDetail(false);
-        setShowSkeletonDetail(false);
+      setLoadingDetail(false);
+      setShowSkeletonDetail(false);
     }
   };
 
@@ -154,18 +154,6 @@ export default function PublicationsPage() {
     
     fetchData()
   }, [])
-
-  useEffect(() => {
-  if (currentPublication) {
-    console.time('render-publicationDetail');
-  }
-  return () => {
-    if (currentPublication) {
-      console.timeEnd('render-publicationDetail');
-    }
-  };
-}, [currentPublication]);
-
   
   console.log('Page publications Main:')
   
@@ -342,22 +330,11 @@ export default function PublicationsPage() {
 
                 style={{ width: '100%', height: '100%' }}
             >
-            {currentPublication === undefined ? (
-                <div className="forumContainer">
-                <div className="forum-left">
-                    <SkeletonCircle />
-                    <SkeletonAnswerCard />
-                    <SkeletonEditorComment />
-                </div>
-                <div className="forum-right" />
-                </div>
-            ) : (
-                <PublicationDetailCard
-                  publication={currentPublication}
-                  onBack={handleBackToPublications}
-                  scrollRef={scrollRef}
-                />
-            )}
+            <PublicationDetailCard
+              publication={currentPublication}
+              onBack={handleBackToPublications}
+              scrollRef={scrollRef}
+            />
           </motion.div>
         )}
       </AnimatePresence>
