@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { startTransition, useDeferredValue } from 'react';
 // Kit base
 import RichTextEditor, { BaseKit, useEditorState } from 'reactjs-tiptap-editor';
 // Formato de texto
@@ -76,7 +77,7 @@ const EditorInput = ({ onComment } : Props) => {
 
   console.log('EditorInput content:');
 
-  const extensions = [
+  const extensions = React.useMemo(() => [
     BaseKit.configure({
       placeholder: { showOnlyCurrent: true },
       characterCount: { limit: 15000 },
@@ -88,7 +89,7 @@ const EditorInput = ({ onComment } : Props) => {
     Code,
     CodeBlock,
     Color,
-    Document,
+    //Document,
     FontFamily,
     FontSize,
     FormatPainter,
@@ -101,19 +102,19 @@ const EditorInput = ({ onComment } : Props) => {
     Italic,
     LineHeight,
     Link,
-    ListItem,
+    //ListItem,
     MoreMark,
-    MultiColumn,
+    //MultiColumn,
     OrderedList,
-    Selection,
+    //Selection,
     SlashCommand,
     Strike,
-    SubAndSuperScript,
+    //SubAndSuperScript,
     Table,
     TaskList,
     TextAlign,
-    TextBubble,
-    TrailingNode,
+    //TextBubble,
+    //TrailingNode,
     Emoji,
     ExportPdf,
     //ImportWord,
@@ -144,7 +145,10 @@ const EditorInput = ({ onComment } : Props) => {
     ImageGif.configure({
       GIPHY_API_KEY: 'IJFC58HZ81gUGKjF8So27uXSkTw8VRpE', 
     }),
-  ];
+  ], []);
+
+  /** ① Diferimos el HTML que llega al editor */
+  const deferredContent = useDeferredValue(content);
 
   return (
     <>
@@ -152,25 +156,30 @@ const EditorInput = ({ onComment } : Props) => {
         <RichTextEditor
           output="html"
           ref={editorRef}
-          content={content ?? ''}
-          onChangeContent={setContent}
+          content={deferredContent ?? ''}
+          /** ② Actualizamos el estado en baja prioridad */
+          onChangeContent={(html) =>
+            startTransition(() => {
+              setContent(html);
+            })
+          }
           extensions={extensions}
           useEditorOptions={{immediatelyRender: false}}
           minHeight={900}
           dark
           // Puedes personalizar otras propiedades según tus necesidades
-          bubbleMenu={{
-            render({ extensionsNames, editor, disabled }, bubbleDefaultDom) {
-              return <>
-              {bubbleDefaultDom}
+          // bubbleMenu={{
+          //   render({ extensionsNames, editor, disabled }, bubbleDefaultDom) {
+          //     return <>
+          //     {bubbleDefaultDom}
 
-              {extensionsNames.includes('mermaid')  ? <BubbleMenuMermaid disabled={disabled}
-                editor={editor}
-                key="mermaid"
-              /> : null}
-              </>
-            },
-          }}
+          //     {extensionsNames.includes('mermaid')  ? <BubbleMenuMermaid disabled={disabled}
+          //       editor={editor}
+          //       key="mermaid"
+          //     /> : null}
+          //     </>
+          //   },
+          // }}
         />
         {!isReady && <SkeletonEditorComment isInEditorComponent={true} />}
       </div>

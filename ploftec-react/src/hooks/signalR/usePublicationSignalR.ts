@@ -46,14 +46,14 @@ export function usePublicationSignalR(
         .build();
 
       connectionRef.current = conn;
-      roomIdRef.current     = pubId;
+      roomIdRef.current = pubId;
 
       conn.on('VotePublicationChanged', d => d.publicationId === pubId && props.onVotePublicationChanged(d.newVoteCount));
       conn.on('VoteAnswerChanged', d => {
         if (d.connectionId === conn.connectionId) return;  // ya la actualicé localmente
         if (d.publicationId === pubId) props.onVoteAnswerChanged(d.answerId, d.newVoteCount);
       });      
-      conn.on('AnswerAdded',           d => d.publicationId === pubId && props.onCommentAdded(d));
+      conn.on('AnswerAdded', d => d.publicationId === pubId && props.onCommentAdded(d));
 
       conn.start()
         .then(() => conn.invoke('JoinPublicationRoom', pubId))

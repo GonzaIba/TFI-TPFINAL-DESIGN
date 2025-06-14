@@ -27,37 +27,54 @@ import {
 // import { motion } from "motion/react"
 
 interface PublicationDetailProps {
-  publication?: PublicationDetailResponse
+  publication?: PublicationDetailResponse;
   scrollRef?: React.RefObject<HTMLDivElement>
   onBack: () => Promise<void>
 }
 
 function PublicationDetail({
-  publication,
+  publication: publicationProp,
   scrollRef,
   onBack,
 }: PublicationDetailProps) {
 
+  /*
+   * Copia local de la publicación para poder mutarla sin tocar la prop.
+   * Si el padre cambia de publicación (nuevo id), reemplazamos el estado.
+  */
+  const [publication, setPublication] = useState<PublicationDetailResponse | undefined>(publicationProp);
+
+  useEffect(() => {
+    // Si cambió de publicación (nuevo código) refrescamos el estado interno.
+    if (publicationProp?.codePublication !== publication?.codePublication) {
+      setPublication(publicationProp);
+    }
+  }, [publicationProp]);
+
   const [loadingUpVote, setLoadingUpVote] = useState(false);
   const [loadingDownVote, setLoadingDownVote] = useState(false);
-  const [votes, setVotes] = useState(publication?.votes);
-  const [answers, setAnswers] = useState(publication?.answers);
   const [newAnswerId, setNewAnswerId] = useState<number | null>(null);
+  const [editorKey, setEditorKey] = useState<number>(0);
   const isVoting = loadingUpVote || loadingDownVote;
   const isPositiveVoted = publication?.votedPositive;
 
   const handleError = useErrorHandler();
   const handleVotePublicationChanged = useCallback((newVotes: number) => {
-    setVotes(newVotes);
+    setPublication(p =>
+      p ? { ...p, votes: newVotes } : p,
+    );
   }, []);
 
   const handleVoteAnswerChanged = useCallback((answerId: number, newVotes: number) => {
-    setAnswers(prevAnswers =>
-      (prevAnswers ?? []).map(answer =>
-        answer.codeAnswer === answerId
-          ? { ...answer, votes: newVotes }
-          : answer
-      )
+    setPublication(p =>
+      p
+        ? {
+            ...p,
+            answers: p.answers.map(a =>
+              a.codeAnswer === answerId ? { ...a, votes: newVotes } : a,
+            ),
+          }
+        : p,
     );
   }, []);
 
@@ -100,7 +117,11 @@ function PublicationDetail({
       if (result.data) {
         // Actualizar la publicación actual con la nueva respuesta
         console.log('Respuesta agregada, enter iffff', result.data)
-        setAnswers(prevAnswers => [...(prevAnswers ?? []), result.data as AnswerResponse]);
+        setPublication(p =>
+          p
+            ? { ...p, answers: [...p.answers, result.data as AnswerResponse] }
+            : p,
+        );
         setNewAnswerId(result.data.codeAnswer);
       }
     } catch (error) {
@@ -119,7 +140,15 @@ function PublicationDetail({
       }
 
       if(response?.data?.success && publication) {
-        publication.votedPositive = publication.votedPositive === true ? undefined : true;
+        setPublication(p =>
+          p
+            ? {
+                ...p,
+                votedPositive: p.votedPositive === true ? undefined : true,
+                // si querés actualizar también el conteo de votos, hazlo aquí usando p.votes
+              }
+            : p,
+        );
       }
     } finally {
       setLoadingUpVote(false);
@@ -136,7 +165,14 @@ function PublicationDetail({
       }
 
       if(response?.data?.success && publication) {
-        publication.votedPositive = publication.votedPositive === false ? undefined : false;
+        setPublication(p =>
+          p
+            ? {
+                ...p,
+                votedPositive: p.votedPositive === false ? undefined : false,
+              }
+            : p,
+        );
       }
     } finally {
       setLoadingDownVote(false);
@@ -152,12 +188,22 @@ function PublicationDetail({
       }
       console.log(response);
       if(response?.data?.success) {
-        setAnswers(prevAnswers =>
-          (prevAnswers ?? []).map(answer =>
-            answer.codeAnswer === answerCode
-              ? { ...answer, votedPositive: answer.votedPositive === true ? undefined : true, votes: answer.votedPositive === true ? answer.votes - 1 : answer.votes + 1 }
-              : answer)
-        )
+        setPublication(p =>
+          p
+            ? {
+                ...p,
+                answers: p.answers.map(a =>
+                  a.codeAnswer === answerCode
+                    ? { 
+                        ...a, 
+                        votedPositive: a.votedPositive === true ? undefined : true, 
+                        votes: a.votedPositive === true ? a.votes - 1 : a.votes + 1 
+                      }
+                    : a,
+                ),
+              }
+            : p,
+        );
       }
     } catch (error) {
       console.error('Error al votar la respuesta:', error);
@@ -173,12 +219,22 @@ function PublicationDetail({
       }
 
       if(response?.data?.success) {
-        setAnswers(prevAnswers =>
-          (prevAnswers ?? []).map(answer =>
-            answer.codeAnswer === answerCode
-              ? { ...answer, votedPositive: answer.votedPositive === false ? undefined : false, votes: answer.votedPositive === false ? answer.votes + 1 : answer.votes - 1 }
-              : answer)
-        )
+        setPublication(p =>
+          p
+            ? {
+                ...p,
+                answers: p.answers.map(a =>
+                  a.codeAnswer === answerCode
+                    ? { 
+                        ...a, 
+                        votedPositive: a.votedPositive === false ? undefined : false,
+                        votes: a.votedPositive === false ? a.votes + 1 : a.votes - 1 
+                      }
+                    : a,
+                ),
+              }
+            : p,
+        );
       }
     } catch (error) {
       console.error('Error al votar la respuesta:', error);
@@ -227,10 +283,6 @@ function PublicationDetail({
   }, [publication]);
 
   useEffect(() => {
-    setAnswers(publication?.answers);
-  }, [publication?.answers]);
-
-  useEffect(() => {
     console.log('hola')
     if (!newAnswerId || !scrollRef?.current) return;
 
@@ -257,7 +309,7 @@ function PublicationDetail({
 
       return () => observer.disconnect();
     }
-  }, [newAnswerId, answers]);
+  }, [newAnswerId, publication?.answers?.length]);
 
   // useEffect(() => {
   //   console.log("🔍 Cambio en publicación:", publication);
@@ -269,7 +321,14 @@ function PublicationDetail({
 
   useEffect(() => {
     console.log('🧩 Prop publication', publication);
-  }, [publication]);
+  }, [publicationProp]);
+
+  // cada vez que cambia de publicación, reiniciamos el editor
+  useEffect(() => {
+    if (publicationProp?.codePublication !== publication?.codePublication) {
+      setEditorKey(prev => prev + 1);
+    }
+  }, [publicationProp]);
 
   return (
     <div className={styles.forumDetailContainer}>
@@ -293,7 +352,7 @@ function PublicationDetail({
                         disabled={isVoting}
                         transparent
                       />
-                      <VoteNumber value={votes ?? 0} />
+                      <VoteNumber value={publication?.votes ?? 0} />
                       <Button
                         width='45px'
                         text=''
@@ -323,7 +382,7 @@ function PublicationDetail({
               <div className={`${styles.publicationReplyInputContainer} ${styles.pubContainer}`}>
                 <div className={styles.publicationReplyInput}>
                   <div className={styles.responseContainer}>
-                    <EditorInput onComment={handleComment} />
+                    <EditorInput key={editorKey} onComment={handleComment} />
                   </div>
                 </div>
               </div>
@@ -346,7 +405,7 @@ function PublicationDetail({
               ) : (
                 <>
                   <h3>{publication?.answers?.length} Respuesta{publication?.answers?.length > 1 ? 's' : ''}</h3>
-                  {(answers ?? []).map(respuesta => (
+                  {(publication?.answers ?? []).map(respuesta => (
                     <div
                       key={respuesta.codeAnswer}
                       ref={respuesta.codeAnswer === newAnswerId ? scrollRef ?? undefined : undefined}
