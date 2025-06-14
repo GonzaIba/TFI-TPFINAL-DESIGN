@@ -8,18 +8,21 @@
   export interface PublicationVoteRequest {
     codePublication: number;
     isPositive: boolean;
+    connectionId: string | null;
   }
 
   export interface AnswerVoteRequest {
     codePublication: number;
     answerCode: number;
     isPositive: boolean;
+    connectionId: string | null;
   }
 
   export interface AddAnswerRequest {
     codePublication: number;
     textResponse: string;
     //files?: File[]; // Array de archivos a subir
+    connectionId: string | null;
   }
 
   /* ------------------------------------------- RESPONSE -------------------------------------------*/

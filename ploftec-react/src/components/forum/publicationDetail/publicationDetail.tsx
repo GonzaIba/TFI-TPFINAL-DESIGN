@@ -65,18 +65,23 @@ function PublicationDetail({
 
   // console.log('render publicationDetail');
 
-  usePublicationSignalR(publication ? {
-    publicationId: publication.codePublication,
-    onVotePublicationChanged: handleVotePublicationChanged,
-    onVoteAnswerChanged: handleVoteAnswerChanged,
-    onCommentAdded: handleCommentAdded,
-  } : null);
+  const connectionId = usePublicationSignalR(
+    publication
+      ? {
+          publicationId: publication.codePublication,
+          onVotePublicationChanged: handleVotePublicationChanged,
+          onVoteAnswerChanged:     handleVoteAnswerChanged,
+          onCommentAdded:          handleCommentAdded,
+        }
+      : null
+  );
 
   const handleComment = useCallback((text: string) => {
     if (!publication) return;
     const newAnswer: AddAnswerRequest = {
       codePublication: publication.codePublication,
       textResponse: text,
+      connectionId: connectionId
     };
     handleOnAddAnswer(newAnswer);
   }, [publication]);
@@ -145,12 +150,12 @@ function PublicationDetail({
         handleError(response.errors.errorsList);
         return;
       }
-
+      console.log(response);
       if(response?.data?.success) {
         setAnswers(prevAnswers =>
           (prevAnswers ?? []).map(answer =>
             answer.codeAnswer === answerCode
-              ? { ...answer, votedPositive: answer.votedPositive === true ? undefined : true }
+              ? { ...answer, votedPositive: answer.votedPositive === true ? undefined : true, votes: answer.votedPositive === true ? answer.votes - 1 : answer.votes + 1 }
               : answer)
         )
       }
@@ -171,7 +176,7 @@ function PublicationDetail({
         setAnswers(prevAnswers =>
           (prevAnswers ?? []).map(answer =>
             answer.codeAnswer === answerCode
-              ? { ...answer, votedPositive: answer.votedPositive === false ? undefined : false }
+              ? { ...answer, votedPositive: answer.votedPositive === false ? undefined : false, votes: answer.votedPositive === false ? answer.votes + 1 : answer.votes - 1 }
               : answer)
         )
       }
@@ -181,18 +186,21 @@ function PublicationDetail({
   };
 
   const votePublication = async (isPositive : boolean) => {
+    console.log(publication);
     if (!publication) {
       throw new Error("Publication is undefined");
     }
     let request: PublicationVoteRequest = {
       codePublication: publication.codePublication,
       isPositive: isPositive,
+      connectionId: connectionId
     }
     const response = await publicationsService.votePublication(request);
     return response;
   }
 
   const voteAnswer = async (isPositive: boolean, answerCode: number) => {
+    console.log(publication);
     if (!publication) {
       throw new Error("Publication is undefined");
     }
@@ -200,6 +208,7 @@ function PublicationDetail({
       codePublication: publication.codePublication,
       answerCode: answerCode,
       isPositive: isPositive,
+      connectionId: connectionId
     }
     const response = await publicationsService.voteAnswer(request);
     return response;
@@ -209,19 +218,20 @@ function PublicationDetail({
     return async () => {
       await handleOnClicUpVoteAnswer(answerCode);
     };
-  }, []);
+  }, [publication]);
 
   const handleDownvoteFactory = useCallback((answerCode: number) => {
     return async () => {
       await handleOnClicDownVoteAnswer(answerCode);
     };
-  }, []);
+  }, [publication]);
 
   useEffect(() => {
     setAnswers(publication?.answers);
   }, [publication?.answers]);
 
   useEffect(() => {
+    console.log('hola')
     if (!newAnswerId || !scrollRef?.current) return;
 
     const el = scrollRef.current;
@@ -260,8 +270,6 @@ function PublicationDetail({
   useEffect(() => {
     console.log('🧩 Prop publication', publication);
   }, [publication]);
-
-
 
   return (
     <div className={styles.forumDetailContainer}>
@@ -345,8 +353,8 @@ function PublicationDetail({
                     >
                       <AnswerCard
                         answer={respuesta}
-                        onUpvote={async () => { await voteAnswer(true, respuesta.codeAnswer); }}
-                        onDownvote={async () => { await voteAnswer(false, respuesta.codeAnswer); }}
+                        onUpvote={async () => await handleOnClicUpVoteAnswer(respuesta.codeAnswer)}
+                        onDownvote={async () => await handleOnClicDownVoteAnswer(respuesta.codeAnswer)}
                         onDelete={async () => console.log("Respuesta eliminada")}
                         isNew={respuesta.codeAnswer === newAnswerId}
                       />
