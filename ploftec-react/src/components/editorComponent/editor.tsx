@@ -1,17 +1,17 @@
 'use client';
 
 import React, { useState } from 'react';
-import { startTransition, useDeferredValue } from 'react';
+//import { startTransition, useDeferredValue } from 'react';
 // Kit base
 import RichTextEditor, { BaseKit, useEditorState } from 'reactjs-tiptap-editor';
 // Formato de texto
-import { Document } from 'reactjs-tiptap-editor/document'; 
+//import { Document } from 'reactjs-tiptap-editor/document'; 
 import { Bold } from 'reactjs-tiptap-editor/bold';
 import { Italic } from 'reactjs-tiptap-editor/italic';
 import { Strike } from 'reactjs-tiptap-editor/strike';
 import { Highlight } from 'reactjs-tiptap-editor/highlight';
 import { Code } from 'reactjs-tiptap-editor/code';
-import { SubAndSuperScript } from 'reactjs-tiptap-editor/subandsuperscript';
+//import { SubAndSuperScript } from 'reactjs-tiptap-editor/subandsuperscript';
 // Estructura y bloques
 import { Heading } from 'reactjs-tiptap-editor/heading';
 import { Blockquote } from 'reactjs-tiptap-editor/blockquote';
@@ -19,12 +19,12 @@ import { HorizontalRule } from 'reactjs-tiptap-editor/horizontalrule';
 import { CodeBlock } from 'reactjs-tiptap-editor/codeblock';
 import { Table } from 'reactjs-tiptap-editor/table';
 import { TaskList } from 'reactjs-tiptap-editor/tasklist';
-import { MultiColumn } from 'reactjs-tiptap-editor/multicolumn';
+//import { MultiColumn } from 'reactjs-tiptap-editor/multicolumn';
 import { Iframe } from 'reactjs-tiptap-editor/iframe';
 // Listas
 import { BulletList } from 'reactjs-tiptap-editor/bulletlist';
 import { OrderedList } from 'reactjs-tiptap-editor/orderedlist';
-import { ListItem } from 'reactjs-tiptap-editor/listitem';
+//import { ListItem } from 'reactjs-tiptap-editor/listitem';
 import { Indent } from 'reactjs-tiptap-editor/indent';
 // Medios e incrustaciones
 import { Image } from 'reactjs-tiptap-editor/image';
@@ -42,11 +42,11 @@ import { Color } from 'reactjs-tiptap-editor/color';
 import { TextAlign } from 'reactjs-tiptap-editor/textalign';
 import { TextDirection } from 'reactjs-tiptap-editor/textdirection';
 import { FormatPainter } from 'reactjs-tiptap-editor/formatpainter';
-import { TextBubble } from 'reactjs-tiptap-editor/textbubble';
+//import { TextBubble } from 'reactjs-tiptap-editor/textbubble';
 import { MoreMark } from 'reactjs-tiptap-editor/moremark';
-import { TrailingNode } from 'reactjs-tiptap-editor/trailingnode';
+//import { TrailingNode } from 'reactjs-tiptap-editor/trailingnode';
 import { SlashCommand } from 'reactjs-tiptap-editor/slashcommand';
-import { Selection } from 'reactjs-tiptap-editor/selection';
+//import { Selection } from 'reactjs-tiptap-editor/selection';
 import { Clear } from 'reactjs-tiptap-editor/clear';
 import { History } from 'reactjs-tiptap-editor/history';
 // Importación y exportación
@@ -147,39 +147,31 @@ const EditorInput = ({ onComment } : Props) => {
     }),
   ], []);
 
-  /** ① Diferimos el HTML que llega al editor */
-  const deferredContent = useDeferredValue(content);
-
   return (
     <>
       <div className="tiptap-wrapper">
         <RichTextEditor
           output="html"
           ref={editorRef}
-          content={deferredContent ?? ''}
-          /** ② Actualizamos el estado en baja prioridad */
-          onChangeContent={(html) =>
-            startTransition(() => {
-              setContent(html);
-            })
-          }
+          content={content ?? ''}
+          onChangeContent={setContent}
           extensions={extensions}
           useEditorOptions={{immediatelyRender: false}}
           minHeight={900}
           dark
           // Puedes personalizar otras propiedades según tus necesidades
-          // bubbleMenu={{
-          //   render({ extensionsNames, editor, disabled }, bubbleDefaultDom) {
-          //     return <>
-          //     {bubbleDefaultDom}
+           bubbleMenu={{
+             render({ extensionsNames, editor, disabled }, bubbleDefaultDom) {
+               return <>
+               {bubbleDefaultDom}
 
-          //     {extensionsNames.includes('mermaid')  ? <BubbleMenuMermaid disabled={disabled}
-          //       editor={editor}
-          //       key="mermaid"
-          //     /> : null}
-          //     </>
-          //   },
-          // }}
+               {extensionsNames.includes('mermaid')  ? <BubbleMenuMermaid disabled={disabled}
+                 editor={editor}
+                 key="mermaid"
+               /> : null}
+               </>
+             },
+           }}
         />
         {!isReady && <SkeletonEditorComment isInEditorComponent={true} />}
       </div>

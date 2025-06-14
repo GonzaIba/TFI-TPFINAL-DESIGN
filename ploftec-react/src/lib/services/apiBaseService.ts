@@ -5,6 +5,7 @@ import { LoginRequest } from "@/lib/types/auth";
 import { ExceptionBase } from "../types/exception";
 import { UserApplication } from "../types/application";
 import { getMappedError } from "@/lib/utils/getMappedError";
+import { getClientIp } from '@/lib/utils/getClientIp';
 import useErrorStore from "@/store/slices/errorStore/errorStore";
 
 export type ApiRequest<T> = {
@@ -52,15 +53,15 @@ function getInternalErrorHandler() {
 export const apiBaseService = {
   async execute<EntityResponse, T>(req: ApiRequest<T>): Promise<GenericApiResponse<EntityResponse>> {
     try {
-      const userAgent = navigator.userAgent;
-      const ip = await getIpAddress();
+      //const userAgent = navigator.userAgent;
+      const ip = await getClientIp();
 
       const config: AxiosRequestConfig = {
         method: req.method,
         url: `${process.env.NEXT_PUBLIC_API_URL}/${req.url}`,
         headers: {
           "Content-Type": "application/json",
-          "User-Agent": userAgent,
+          //"User-Agent": userAgent, --> no lo agregamos porque lo hace el navegador automáticamente
           "X-Client-IP": ip ?? "",
         },
         withCredentials: req.requireCredentials ?? false,
