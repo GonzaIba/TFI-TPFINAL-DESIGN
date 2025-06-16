@@ -132,6 +132,7 @@ export const publicationsService = {
       url: `ApiForum/EliminarRespuestaPropia`,
       requireCredentials: true,
       body: request,
+      handleError: true
     });
     return response;
   },
