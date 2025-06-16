@@ -13,7 +13,7 @@ import { GenericApiResponse } from '@/lib/types/apiResponse';
 
 
 export const usuariosForoService = {
-  async obtenerTopUsuariosUltimaSemana(): Promise<GenericApiResponse<UsersForumPreviewResponse[]>> {
+  async getTopUsersLastWeek(): Promise<GenericApiResponse<UsersForumPreviewResponse[]>> {
     const response = await apiBaseService.execute<UsersForumPreviewResponse[], undefined>({
       method: "GET",
       url: "ApiForum/ObtenerTopUsuariosSemana",

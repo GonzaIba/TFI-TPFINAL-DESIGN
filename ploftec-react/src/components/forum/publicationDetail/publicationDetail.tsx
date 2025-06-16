@@ -15,15 +15,17 @@ import { Colors } from '@/theme/colors'
 import { usePublicationSignalR } from '@/hooks';
 import { VoteNumber } from '@/components/labelComponent/numberMotionComponent/numberMotion'
 import { useErrorHandler } from '@/hooks/errors/useErrorHandler'
-import { SkeletonAnswerCard, SkeletonEditorComment } from '@/components'
-import { 
+import { SkeletonAnswerCard, SkeletonEditorComment, ModalComponent } from '@/components'
+import {
   PublicationDetailResponse,
   AnswerResponse, 
   PublicationVoteRequest, 
   AnswerVoteRequest, 
   AnswerPublicationVoteResponse,
-  AddAnswerRequest
+  AddAnswerRequest,
+  DeleteAnswerRequest
 } from '@/lib/types/forum'
+import { isWithinLastHour } from '@/lib/helpers/timeHelper';
 // import { motion } from "motion/react"
 
 interface PublicationDetailProps {
@@ -43,20 +45,15 @@ function PublicationDetail({
    * Si el padre cambia de publicación (nuevo id), reemplazamos el estado.
   */
   const [publication, setPublication] = useState<PublicationDetailResponse | undefined>(publicationProp);
-
-  useEffect(() => {
-    // Si cambió de publicación (nuevo código) refrescamos el estado interno.
-    if (publicationProp?.codePublication !== publication?.codePublication) {
-      setPublication(publicationProp);
-    }
-  }, [publicationProp]);
-
   const [loadingUpVote, setLoadingUpVote] = useState(false);
   const [loadingDownVote, setLoadingDownVote] = useState(false);
+  const [showModalDelete, setShowModalDelete] = useState(false);
   const [newAnswerId, setNewAnswerId] = useState<number | null>(null);
   const [editorKey, setEditorKey] = useState<number>(0);
   const isVoting = loadingUpVote || loadingDownVote;
   const isPositiveVoted = publication?.votedPositive;
+
+  const [selectedAnswerToDelete, setSelectedAnswerToDelete] = useState<AnswerResponse | null>(null);
 
   const handleError = useErrorHandler();
   const handleVotePublicationChanged = useCallback((newVotes: number) => {
@@ -80,8 +77,6 @@ function PublicationDetail({
 
   const handleCommentAdded = useCallback((newComment: AnswerResponse) => {}, []);
 
-  // console.log('render publicationDetail');
-
   const connectionId = usePublicationSignalR(
     publication
       ? {
@@ -102,7 +97,6 @@ function PublicationDetail({
     };
     handleOnAddAnswer(newAnswer);
   }, [publication]);
-
 
   const handleOnAddAnswer = async (request: AddAnswerRequest) => {
     try {
@@ -145,7 +139,7 @@ function PublicationDetail({
             ? {
                 ...p,
                 votedPositive: p.votedPositive === true ? undefined : true,
-                // si querés actualizar también el conteo de votos, hazlo aquí usando p.votes
+                votes: p.votedPositive === true ? p.votes - 1 : p.votes + 1
               }
             : p,
         );
@@ -170,6 +164,7 @@ function PublicationDetail({
             ? {
                 ...p,
                 votedPositive: p.votedPositive === false ? undefined : false,
+                votes: p.votedPositive === false ? p.votes + 1 : p.votes - 1
               }
             : p,
         );
@@ -186,7 +181,7 @@ function PublicationDetail({
         handleError(response.errors.errorsList);
         return;
       }
-      console.log(response);
+      
       if(response?.data?.success) {
         setPublication(p =>
           p
@@ -270,20 +265,7 @@ function PublicationDetail({
     return response;
   }
 
-  const handleUpvoteFactory = useCallback((answerCode: number) => {
-    return async () => {
-      await handleOnClicUpVoteAnswer(answerCode);
-    };
-  }, [publication]);
-
-  const handleDownvoteFactory = useCallback((answerCode: number) => {
-    return async () => {
-      await handleOnClicDownVoteAnswer(answerCode);
-    };
-  }, [publication]);
-
   useEffect(() => {
-    console.log('hola')
     if (!newAnswerId || !scrollRef?.current) return;
 
     const el = scrollRef.current;
@@ -311,26 +293,20 @@ function PublicationDetail({
     }
   }, [newAnswerId, publication?.answers?.length]);
 
-  // useEffect(() => {
-  //   console.log("🔍 Cambio en publicación:", publication);
-  // }, [publication]);
-
   const renderRef = useRef(0);
   renderRef.current++;
   console.log(`🔁 Render PublicationDetailCard #${renderRef.current}`);
 
   useEffect(() => {
-    console.log('🧩 Prop publication', publication);
-  }, [publicationProp]);
-
-  // cada vez que cambia de publicación, reiniciamos el editor
-  useEffect(() => {
+    // Si cambió de publicación (nuevo código) refrescamos el estado interno.
     if (publicationProp?.codePublication !== publication?.codePublication) {
+      setPublication(publicationProp);
       setEditorKey(prev => prev + 1);
     }
   }, [publicationProp]);
 
   return (
+    <>
     <div className={styles.forumDetailContainer}>
       <div className='forum-left'>
         <div className={styles.publicationSection}>
@@ -412,10 +388,14 @@ function PublicationDetail({
                     >
                       <AnswerCard
                         answer={respuesta}
+                        canDelete={isWithinLastHour(respuesta.createdDate) && respuesta.isAuthor}
+                        isNew={respuesta.codeAnswer === newAnswerId}
                         onUpvote={async () => await handleOnClicUpVoteAnswer(respuesta.codeAnswer)}
                         onDownvote={async () => await handleOnClicDownVoteAnswer(respuesta.codeAnswer)}
-                        onDelete={async () => console.log("Respuesta eliminada")}
-                        isNew={respuesta.codeAnswer === newAnswerId}
+                        onDelete={async () => {
+                          setSelectedAnswerToDelete(respuesta);
+                          setShowModalDelete(true);
+                        }}
                       />
                     </div>
                   ))}
@@ -429,7 +409,28 @@ function PublicationDetail({
       <div className='forum-right'>
         {/* Cualquier contenido a la derecha */}
       </div>
+
+      <ModalComponent open={showModalDelete} onClose={() => setShowModalDelete(false)}>
+        <h2>¿Estás seguro de eliminar esta respuesta?</h2>
+        <p>Ten en cuenta que esta accion es irreversible.</p>
+        <Button
+          onClick={async () => {
+            if (!selectedAnswerToDelete) return;
+
+            const request: DeleteAnswerRequest = {
+              codePublication: publication?.codePublication ?? 0,
+              answerCode: selectedAnswerToDelete?.codeAnswer,
+              connectionId: connectionId
+            };
+            await publicationsService.deleteMyAnswer(request);
+            setShowModalDelete(false);
+            setSelectedAnswerToDelete(null);
+          }}
+          text="Eliminar"
+        />
+      </ModalComponent>
     </div>
+    </>
   )
 }
 

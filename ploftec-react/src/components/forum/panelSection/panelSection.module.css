@@ -1,0 +1,33 @@
+/* panel-section hereda tu estructura actual */
+.panelSection {
+  margin-left: 20px;
+  background-color: #212121;
+}
+
+.panelSectionSquare {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    font-weight: bold;
+}
+
+.panelSectionTitle {
+    background-color: #000;
+    height: 65px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.panelSectionContainer {
+    background-color: #000;
+    height: 270px;
+    color: #fff;
+}
+
+.panelSectionElements {
+    padding: 18px;
+    margin-top: 8px;
+}

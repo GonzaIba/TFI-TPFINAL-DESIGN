@@ -1,6 +1,7 @@
 "use client";
 
 import React, { ReactNode, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import useAuthStore from "../store/slices/authStore/authStore";
 import { getUserDetails } from "@/lib/services/auth/authenticationService";
 
@@ -9,6 +10,7 @@ type Props = {
 };
 
 export const AuthProvider = React.memo(({ children }: Props) => {
+  const pathname = usePathname();
   const isAuthLoaded = useAuthStore((state) => state.isAuthLoaded);
   const setUser = useAuthStore((state) => state.setUser);
   const setAuthLoaded = useAuthStore((state) => state.setAuthLoaded);
@@ -16,7 +18,7 @@ export const AuthProvider = React.memo(({ children }: Props) => {
   console.log("-----------Render AuthProvider-----------");
 
   useEffect(() => {
-    if (isAuthLoaded) return;
+    if (pathname === "/login" || isAuthLoaded) return;
 
     console.log("-----------AuthProvider fetching session-----------");
 
@@ -27,19 +29,21 @@ export const AuthProvider = React.memo(({ children }: Props) => {
           console.log("User details fetched", res);
           setUser(res);
         }
+      } catch (err) {
+        console.log(err);
       } finally {
         setAuthLoaded();
       }
     };
 
     fetchSession();
-  }, [isAuthLoaded, setUser, setAuthLoaded]);
+  }, [pathname, isAuthLoaded, setUser, setAuthLoaded]);
 
   useEffect(() => {
     console.log("Effect ejecutado");
   }, []);
 
-  if (!isAuthLoaded) return null;
+  if (pathname !== "/login" && !isAuthLoaded) return null;
 
   return <>{children}</>;
 });

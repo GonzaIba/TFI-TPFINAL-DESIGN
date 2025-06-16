@@ -3,12 +3,13 @@ import { GenericApiResponse } from "@/lib/types/apiResponse";
 import { apiBaseService } from "../apiBaseService";
 import {
   AnswerVoteRequest,
+  PublicationVoteRequest,
+  AddAnswerRequest,
+  DeleteAnswerRequest,
   PublicationDetailResponse,
   PublicationResponse,
-  PublicationVoteRequest,
   SuccessfulResponse,
   AnswerPublicationVoteResponse,
-  AddAnswerRequest,
   AnswerResponse
 } from "@/lib/types/forum";
 
@@ -26,6 +27,15 @@ export const publicationsService = {
     const response = await apiBaseService.execute<PublicationDetailResponse, undefined>({
       method: "GET",
       url: `ApiForum/ObtenerDetallePublicacion?codePublication=${code}`,
+      requireCredentials: true,
+    });
+    return response;
+  },
+
+  async getRelatedPublications(code: number): Promise<GenericApiResponse<PublicationDetailResponse>> {
+    const response = await apiBaseService.execute<PublicationDetailResponse, undefined>({
+      method: "GET",
+      url: `ApiForum/ObtenerPublicacionesRelacionadas?codePublication=${code}`,
       requireCredentials: true,
     });
     return response;
@@ -55,6 +65,15 @@ export const publicationsService = {
       method: "GET",
       url: `ApiForum/BuscarPublicacionesConFiltro?texto=${texto}`,
       requireCredentials: false,
+    });
+    return response;
+  },
+
+  async getTopPublicationsLastWeek(): Promise<GenericApiResponse<PublicationResponse[]>> {
+    const response = await apiBaseService.execute<PublicationResponse[], undefined>({
+      method: "GET",
+      url: "ApiForum/ObtenerTopPublicacionesSemana",
+      requireCredentials: true,
     });
     return response;
   },
@@ -101,6 +120,16 @@ export const publicationsService = {
     const response = await apiBaseService.execute<AnswerResponse, AddAnswerRequest>({
       method: "POST",
       url: `ApiForum/AgregarRespuesta`,
+      requireCredentials: true,
+      body: request,
+    });
+    return response;
+  },
+
+  async deleteMyAnswer(request: DeleteAnswerRequest): Promise<GenericApiResponse<SuccessfulResponse>> {
+    const response = await apiBaseService.execute<SuccessfulResponse, DeleteAnswerRequest>({
+      method: "POST",
+      url: `ApiForum/EliminarRespuestaPropia`,
       requireCredentials: true,
       body: request,
     });

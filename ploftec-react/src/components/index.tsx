@@ -8,3 +8,6 @@ export { SkeletonCircle } from '@/components/skeletonComponent/skeletonCircle';
 export { SkeletonLine } from '@/components/skeletonComponent/skeletonLine';
 export { SkeletonAnswerCard } from '@/components/skeletonComponent/skeletonAnswerCard';
 export { SkeletonEditorComment } from '@/components/skeletonComponent/skeletonEditorComment';
+export { PanelSection } from '@/components/forum/panelSection/panelSection';
+export { TopPublicationCard } from '@/components/forum/topPublicationCard/topPublicationCard';
+export { ModalComponent } from '@/components/modalComponent/modalComponent';

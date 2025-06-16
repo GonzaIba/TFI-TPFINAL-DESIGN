@@ -9,12 +9,9 @@ import { AnswerResponse } from '@/lib/types/forum';
 import styles from '../publicationDetail/publicationDetail.module.css';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import ReplyIcon from '@mui/icons-material/Reply';
 import { Colors } from '@/theme/colors';
 import {VoteNumber} from '@/components';
 import { motion } from 'framer-motion';
-import useAuthStore from "@/store/slices/authStore/authStore";
-import stylesAnswer from './answerCard.module.css'
 import 'react-image-crop/dist/ReactCrop.css';
 import 'reactjs-tiptap-editor/style.css';
 
@@ -24,20 +21,25 @@ import 'prism-code-editor-lightweight/themes/github-dark.css';
 
 interface Props {
   answer: AnswerResponse;
+  canDelete: boolean
   isNew?: boolean;
   onUpvote: () => Promise<void>;
   onDownvote: () => Promise<void>;
   onDelete: () => Promise<void>;
 }
 
-export default function AnswerCard({ answer, isNew = false, onUpvote, onDownvote, onDelete }: Props) {
+export default function AnswerCard({ 
+  answer,
+  canDelete,
+  isNew = false, 
+  onUpvote, 
+  onDownvote, 
+  onDelete 
+}: Props) {
 
   const [loadingUpVote, setLoadingUpVote] = useState(false);
   const [loadingDownVote, setLoadingDownVote] = useState(false);
   const [animateNew, setAnimateNew] = useState(false);
-  const isAuthLoaded = useAuthStore((state) => state.isAuthLoaded);
-  const user = useAuthStore((state) => state.user);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const isVoting = loadingUpVote || loadingDownVote;
   const isPositiveVoted = answer.votedPositive;
 
@@ -146,13 +148,15 @@ export default function AnswerCard({ answer, isNew = false, onUpvote, onDownvote
               width="45px"
               transparent
             />
-            <Button
-              onClick={onDelete}
-              icon={<DeleteIcon />}
-              circular={false}
-              width="45px"
-              transparent
-            />
+            {canDelete && (
+              <Button
+                onClick={onDelete}
+                icon={<DeleteIcon />}
+                circular={false}
+                width="45px"
+                transparent
+              />
+            )}
             {/* <Button
               onClick={() => {}}
               icon={<ReplyIcon />}

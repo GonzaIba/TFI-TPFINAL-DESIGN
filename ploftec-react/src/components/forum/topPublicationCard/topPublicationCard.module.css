@@ -1,0 +1,29 @@
+.topQuestion {
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    align-items: start;
+    text-align: left;
+    color: #fff;
+}
+
+.topQuestionText {
+    margin-left: 10px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.topQuestionSpan {
+    color: deepskyblue;
+    cursor: pointer;
+}
+
+.topQuestionSpan:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 720px) {
+    .topQuestions{
+        margin-left: 0;
+    }
+}

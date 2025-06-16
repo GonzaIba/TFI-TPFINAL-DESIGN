@@ -25,6 +25,12 @@
     connectionId: string | null;
   }
 
+  export interface DeleteAnswerRequest {
+    codePublication: number;
+    answerCode: number;
+    connectionId: string | null;
+  }
+
   /* ------------------------------------------- RESPONSE -------------------------------------------*/
   
   export interface UsersForumResponse {
@@ -86,6 +92,7 @@
     correctAnswer: boolean;
     votes: number;
     votedPositive?: boolean;
+    isAuthor: boolean;
     files: FilesResponse[];
   }
   

@@ -1,67 +1,110 @@
 // src/app/Forum/Publications/page.tsx
-
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { SkeletonPublication, SkeletonAvatarAndName, SkeletonCircle, SkeletonAnswerCard, SkeletonEditorComment } from '@/components'
+import { SkeletonPublication, SkeletonAvatarAndName, PanelSection, TopPublicationCard, SkeletonLine } from '@/components'
 import PublicationCard from '@/components/forum/publicationCard/publicationCard'
 import PublicationDetailCard from '@/components/forum/publicationDetail/publicationDetail'
 import TopUserCard from '@/components/forum/topUserCard/topUserCard'
 import Button from '@/components/buttonComponent/button'
 import { useErrorHandler } from '@/hooks/errors/useErrorHandler'
 import { publicationsService } from '@/lib/services/forum/publicationsService'
-import { usuariosForoService } from '@/lib/services/forum/usuariosForoService'
-import { PublicationResponse, UsersForumPreviewResponse, PublicationDetailResponse, AddAnswerRequest } from '@/lib/types/forum'
+import { PublicationResponse, PublicationDetailResponse } from '@/lib/types/forum'
 import { AvatarCrownEnum } from '@/lib/types/enum'
 import { Add, Bookmark, BookmarkBorder, BorderColor, BorderColorOutlined } from '@mui/icons-material';
 import { Colors } from '@/theme/colors'
 import { motion, AnimatePresence } from 'framer-motion';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { publicationsKeys } from '@/lib/query/keys';
+import {
+  usePublications,
+  useTopPublications,
+  useTopUsers,
+  useSavedPublications,
+  useCreatedPublications,
+} from '@/lib/query/hooks';
+
+type Filter = 'all' | 'saved' | 'created';
 
 export default function PublicationsPage() {
   const router = useRouter()
   const scrollRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
-  const [publicaciones, setPublicaciones] = useState<PublicationResponse[]>([])
   const [currentPublication, setCurrentPublication] = useState<PublicationDetailResponse>()
-  const [usuariosTop, setUsuariosTop] = useState<UsersForumPreviewResponse[]>([])
-  const [loadingPubs, setLoadingPubs] = useState<boolean>(true)
-  const [loadingTopUsers, setLoadingTopusers] = useState<boolean>(true)
   const [showPublicationDetail, setShowPublicationDetail] = useState(false)
-  const [showSaved, setShowSaved] = useState(false);
-  const [showCreated, setChowCreated] = useState(false);
   const [selectedPublicationId, setSelectedPublicationId] = useState<number | null>(null);
+  const [filter, setFilter] = useState<Filter>('all');
+
+  /* ---------- Queries ---------- */
+  const {
+    data: publicacionesAll = [],
+    isLoading: loadingAll,
+  } = usePublications();
+
+  const {
+    data: publicacionesSaved = [],
+    isLoading: loadingSavedInitial,
+    isFetching: fetchingSaved,
+  } = useSavedPublications(filter === 'saved');
+
+  const loadingSaved = loadingSavedInitial || fetchingSaved;
+
+  const {
+    data: publicacionesCreated = [],
+    isLoading: loadingCreated,
+  } = useCreatedPublications(filter === 'created');
+
+  const publicacionesData =
+    filter === 'saved'
+      ? publicacionesSaved
+      : filter === 'created'
+      ? publicacionesCreated
+      : publicacionesAll;
+
+  const loadingPubs =
+    filter === 'saved'
+      ? loadingSaved
+      : filter === 'created'
+      ? loadingCreated
+      : loadingAll;
+
+  const {
+    data: publicacionesTop = [],
+    isLoading: loadingTopPubs,
+  } = useTopPublications();
+
+  const {
+    data: usuariosTop = [],
+    isLoading: loadingTopUsers,
+  } = useTopUsers();
+
+  // 👉 Manejo centralizado de errores
+  // useErrorHandler(pubsError ?? topPubsError ?? topUsersError);
 
   const handleError = useErrorHandler();
+  const queryClient = useQueryClient();
+
+  const toggleFilter = (f: Filter) => {
+    setFilter(prev => (prev === f ? 'all' : f));   // si vuelven a pulsar, vuelve a 'all'
+  };
+
+  const { mutate: toggleSave } = useMutation({
+    mutationFn: async ({ codePub, isSaved }: { codePub: number; isSaved: boolean }) =>
+      isSaved
+        ? publicationsService.deleteSavedPublication(codePub)
+        : publicationsService.savePublication(codePub),
+
+    onSuccess: () => {
+      // refrescamos las listas afectadas:
+      queryClient.invalidateQueries({ queryKey: publicationsKeys.list() });
+      queryClient.invalidateQueries({ queryKey: publicationsKeys.saved() });
+    },
+
+    onError: handleError,
+  });
+
   const onNewPublication = async () => {
     // lógica para abrir modal o redireccionar
-  }
-
-  const onShowSaved = async () => {
-    setShowSaved(!showSaved)
-    setLoadingPubs(true);
-
-    let publicationsSaved: PublicationResponse[];
-    if(!showSaved)
-      publicationsSaved = (await publicationsService.getSavedPublications()).data as PublicationResponse[];
-    else
-      publicationsSaved = (await publicationsService.getPublications()).data as PublicationResponse[];
-
-    setPublicaciones(publicationsSaved);
-    setLoadingPubs(false);
-  }
-
-  const onShowCreated = async () => {
-    setChowCreated(!showCreated)
-    setLoadingPubs(true);
-
-    let publicationsSaved: PublicationResponse[];
-    if(!showCreated)
-      publicationsSaved = (await publicationsService.getCreatedPublications()).data as PublicationResponse[];
-    else
-      publicationsSaved = (await publicationsService.getPublications()).data as PublicationResponse[];
-
-    setPublicaciones(publicationsSaved);
-    setLoadingPubs(false);
   }
 
   const onSeeTopUser = async () => {
@@ -70,30 +113,6 @@ export default function PublicationsPage() {
 
   const onClickUser = async () => {
     // lógica para ver publicaciones creadas
-  }
-
-  const onToggleSave = async (codePub: number, isSaved: boolean) => {
-    // lógica para redirigir al perfil del usuario top
-    //revisar casuistica cuando falla el guardado de la publi
-    // setLoadingPubs(true);
-    let result: any;
-    if (isSaved) {
-      result = await publicationsService.deleteSavedPublication(codePub);
-    } else {
-      result = await publicationsService.savePublication(codePub);
-    }
-
-    setPublicaciones(prevPubs =>
-      prevPubs.map(pub =>
-        pub.codePublication === codePub
-          ? { ...pub, isSaved: !pub.isSaved }
-          : pub)
-    )
-
-    // if(result){
-    //   setPublicaciones(await publicationsService.getPublications());
-    // }
-    // setLoadingPubs(false);
   }
 
   const onClickTitle = (codigo: number) => {
@@ -110,6 +129,8 @@ export default function PublicationsPage() {
         return;
       }
 
+      const response2 = await publicationsService.getRelatedPublications(codigo);
+
       setCurrentPublication(response.data as PublicationDetailResponse);
     } catch (error) {
         console.error('Error al obtener detalle de publicación:', error);
@@ -121,28 +142,6 @@ export default function PublicationsPage() {
     setCurrentPublication(undefined)
     //await fetchPublications()
   }
-  
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const result = await publicationsService.getPublications()
-        const response = await usuariosForoService.obtenerTopUsuariosUltimaSemana()
-        if (response.errors?.errorsList?.length > 0) {
-          handleError(response.errors.errorsList);
-          return;
-        }
-        setPublicaciones(result.data ?? [])
-        setUsuariosTop(response.data ?? [])
-      } catch (error) {
-        console.error('Error cargando publicaciones/top usuarios:', error)
-      } finally {
-        setLoadingPubs(false)
-        setLoadingTopusers(false)
-      }
-    }
-    
-    fetchData()
-  }, [])
   
   // console.log('Page publications Main:')
   
@@ -190,10 +189,12 @@ export default function PublicationsPage() {
                     icon={<Add fontSize="medium" />}
                     width="200px"
                   />
+
+                  {/* Guardadas */}
                   <Button
-                    onClick={onShowSaved}
+                    onClick={() => toggleFilter('saved')}
                     icon={
-                      showSaved ? (
+                      filter === 'saved' ? (
                         <Bookmark sx={{ color: Colors.primary }} fontSize="medium" />
                       ) : (
                         <BookmarkBorder sx={{ color: Colors.white }} fontSize="medium" />
@@ -202,10 +203,12 @@ export default function PublicationsPage() {
                     transparent
                     width="40px"
                   />
+
+                  {/* Creadas */}
                   <Button
-                    onClick={onShowCreated}
+                    onClick={() => toggleFilter('created')}
                     icon={
-                      showCreated ? (
+                      filter === 'created' ? (
                         <BorderColor sx={{ color: Colors.primary }} fontSize="medium" />
                       ) : (
                         <BorderColorOutlined sx={{ color: Colors.white }} fontSize="medium" />
@@ -216,7 +219,7 @@ export default function PublicationsPage() {
                   />
                 </div>
 
-                {/* ––– LISTA PUBLICACIONES (sin AnimatePresence anidado) ––– */}
+                {/* ––– LISTA PUBLICACIONES ––– */}
                 {loadingPubs ? (
                   <>
                     <SkeletonPublication />
@@ -224,8 +227,8 @@ export default function PublicationsPage() {
                     <SkeletonPublication />
                     <SkeletonPublication />
                   </>
-                ) : publicaciones.length ? (
-                  publicaciones.map((pub, i) => (
+                ) : publicacionesData.length ? (
+                  publicacionesData.map((pub, i) => (
                     <motion.div
                       key={`${pub.codePublication}-${pub.codeUser}`}
                       initial={{ opacity: 0, y: 40 }}
@@ -233,15 +236,15 @@ export default function PublicationsPage() {
                       exit={{ opacity: 0, y: -20 }}
                       transition={{ duration: 0.7, delay: i * 0.1, ease: 'easeOut' }}
                     >
-                      <PublicationCard
-                        publication={pub}
-                        onClickTitle={async () => { await onClickTitle(pub.codePublication); }}
-                        onClickUser={onClickUser}
-                        onToggleSave={() => onToggleSave(pub.codePublication, pub.isSaved)}
-                      />
+                    <PublicationCard
+                      publication={pub}
+                      onClickTitle={async () => onClickTitle(pub.codePublication)}
+                      onClickUser={onClickUser}
+                      onToggleSave={async () => { toggleSave({ codePub: pub.codePublication, isSaved: pub.isSaved }); }}
+                    />
                     </motion.div>
                   ))
-                ) : showCreated ? (
+                ) : filter === 'created' ? (
                   <p>
                     Aún no tenés publicaciones creadas<br />
                     ¡Creá una y gana puntos!
@@ -256,77 +259,67 @@ export default function PublicationsPage() {
 
               {/* —————— Lado derecho (top-users y top-questions) —————— */}
               <div className="forum-right">
-                <div className="top-users">
-                  <div className="top-users-square">
-                    <div>
-                      <div className="top-users-title">Top usuarios esta semana</div>
-                      <div className="top-users-container">
-                        <div className="top-users-elements">
-                          {loadingTopUsers ? (
-                            <>
-                              <div className="top-user-skeleton">
-                                <SkeletonAvatarAndName hasCrown crown={AvatarCrownEnum.gold} />
-                              </div>
-                              <div className="top-user-skeleton">
-                                <SkeletonAvatarAndName hasCrown crown={AvatarCrownEnum.silver} />
-                              </div>
-                              <div className="top-user-skeleton">
-                                <SkeletonAvatarAndName hasCrown crown={AvatarCrownEnum.bronze} />
-                              </div>
-                            </>
-                          ) : (
-                            usuariosTop.length > 0 ? (
-                              usuariosTop.map((usuario, i) => (
-                                <TopUserCard
-                                  key={`${usuario.dateFrom}-${usuario.initials}`}
-                                  image={usuario.image}
-                                  initials={usuario.initials}
-                                  shortDescription={usuario.shortDescription}
-                                  longDescription={usuario.longDescription}
-                                  fullName={usuario.completeName}
-                                  score={usuario.score}
-                                  since={usuario.dateFrom}
-                                  index={i}
-                                  onClickName={onSeeTopUser}
-                                />
-                              ))
-                            ) : (
-                              <p>
-                                Aún no hay usuarios con puntos esta semana.
-                                <br />
-                                ¡Se el primero!
-                              </p>
-                            )
-                          )}
+                
+                <PanelSection
+                  title="Top usuarios esta semana"
+                  items={usuariosTop}
+                  loading={loadingTopUsers}
+                  getKey={(usuario) => `${usuario.dateFrom}-${usuario.completeName}`}
+                  /* ---------- loading ---------- */
+                  renderLoading={(
+                    <>
+                      {(['gold', 'silver', 'bronze'] as Array<keyof typeof AvatarCrownEnum>).map((crown, i) => (
+                        <div key={crown} className="top-user-skeleton">
+                          <SkeletonAvatarAndName hasCrown crown={AvatarCrownEnum[crown]} />
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                      ))}
+                    </>
+                  )}
+                  /* ---------- item ---------- */
+                  renderItem={(usuario, i) => (
+                    <TopUserCard
+                      image={usuario.image}
+                      initials={usuario.initials}
+                      shortDescription={usuario.shortDescription}
+                      longDescription={usuario.longDescription}
+                      fullName={usuario.completeName}
+                      score={usuario.score}
+                      since={usuario.dateFrom}
+                      index={i}
+                      onClickName={onSeeTopUser}
+                    />
+                  )}
+                  /* ---------- vacío ---------- */
+                  emptyMessage={
+                    <p>
+                      Aún no hay usuarios con puntos esta semana.
+                      <br />
+                      ¡Sé el primero!
+                    </p>
+                  }
+                />
 
-                <div className="top-questions">
-                  <div className="top-questions-square">
-                    <div>
-                      <div className="top-questions-title">Top Preguntas</div>
-                      <div className="top-questions-container">
-                        <div className="top-questions-elements">
-                          <div className="top-question">
-                            <div className="top-question-text">
-                              <span className="top-question-span">
-                                Como hacer para que cuando haga un save changes hacerlo por partes y no todo junto?
-                              </span>
-                            </div>
-                            <div className="top-question-user">
-                              <span className="asd">
-                                Que significa 2 mas 2 por 5?
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <PanelSection
+                  isDownCard
+                  title="Top Preguntas esta semana"
+                  items={publicacionesTop}
+                  loading={loadingTopPubs}
+                  getKey={(publication : PublicationResponse) => `${publication.codePublication}-${publication.createdDate}`}
+                  renderLoading={
+                    <>
+                      <SkeletonLine internal/>
+                      <SkeletonLine internal/>
+                      <SkeletonLine internal/>
+                    </>
+                  }
+                  renderItem={(publication : PublicationResponse,i) => (
+                    <TopPublicationCard
+                      publication={publication}
+                      onClickTitle={async () => { await onClickTitle(publication.codePublication); }}
+                    />
+                  )}
+                  emptyMessage={<p>No hay preguntas destacadas todavía.</p>}
+                />
               </div>
             </div>
           </motion.div>

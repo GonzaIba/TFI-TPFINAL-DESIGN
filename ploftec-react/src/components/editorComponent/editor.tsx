@@ -156,7 +156,7 @@ const EditorInput = ({ onComment } : Props) => {
           content={content ?? ''}
           onChangeContent={setContent}
           extensions={extensions}
-          useEditorOptions={{immediatelyRender: false}}
+          useEditorOptions={{immediatelyRender: true}}
           minHeight={900}
           dark
           // Puedes personalizar otras propiedades según tus necesidades
