@@ -11,7 +11,7 @@ import "@/styles/site.css";
 import "./globals.css";
 import { QueryProvider } from "@/providers/queryProvider";
 import { AuthProvider } from "@/providers/authProvider";
-import { ErrorProvider } from "@/providers/errorProvider";
+import { SnackBarProvider } from "@/providers/snackBarProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -86,7 +86,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <QueryProvider>
           <AuthProvider>
-            <ErrorProvider />
+            <SnackBarProvider />
             {children}
           </AuthProvider>
         </QueryProvider>

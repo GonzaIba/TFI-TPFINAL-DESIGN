@@ -26,6 +26,7 @@ import {
   DeleteAnswerRequest
 } from '@/lib/types/forum'
 import { isWithinLastHour } from '@/lib/helpers/timeHelper';
+import useSnackBarStore from '@/store/slices/snackBarStore/snackbarStore';
 // import { motion } from "motion/react"
 
 interface PublicationDetailProps {
@@ -48,6 +49,7 @@ function PublicationDetail({
   const [loadingUpVote, setLoadingUpVote] = useState(false);
   const [loadingDownVote, setLoadingDownVote] = useState(false);
   const [showModalDelete, setShowModalDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [newAnswerId, setNewAnswerId] = useState<number | null>(null);
   const [editorKey, setEditorKey] = useState<number>(0);
   const isVoting = loadingUpVote || loadingDownVote;
@@ -236,8 +238,41 @@ function PublicationDetail({
     }
   };
 
+  const handleOnClicDeleteAnswer = async () => {
+    try {
+      setIsDeleting(true);
+      let response = await deleteAnswer();
+      if (response.errors?.errorsList?.length > 0) {
+        handleError(response.errors.errorsList);
+        return;
+      }
+
+      if(response?.data?.success) {
+
+        useSnackBarStore.getState().showToast({
+          message: 'Se eliminó la respuesta correctamente.',
+          variant: 'success',
+        });
+
+        setPublication(p =>
+          p
+            ? {
+                ...p,
+                answers: p.answers.filter(a => a.codeAnswer !== selectedAnswerToDelete?.codeAnswer),
+              }
+            : p,
+        );
+      }
+    } catch (error) {
+      console.error('Error al votar la respuesta:', error);
+    } finally {
+      setIsDeleting(false);
+      setShowModalDelete(false);
+      setSelectedAnswerToDelete(null);
+    }
+  };
+
   const votePublication = async (isPositive : boolean) => {
-    console.log(publication);
     if (!publication) {
       throw new Error("Publication is undefined");
     }
@@ -251,7 +286,6 @@ function PublicationDetail({
   }
 
   const voteAnswer = async (isPositive: boolean, answerCode: number) => {
-    console.log(publication);
     if (!publication) {
       throw new Error("Publication is undefined");
     }
@@ -262,6 +296,19 @@ function PublicationDetail({
       connectionId: connectionId
     }
     const response = await publicationsService.voteAnswer(request);
+    return response;
+  }
+
+  const deleteAnswer = async () => {
+    if (!publication || !selectedAnswerToDelete) {
+      throw new Error("Publication is undefined");
+    }
+    const request: DeleteAnswerRequest = {
+      codePublication: publication.codePublication,
+      answerCode: selectedAnswerToDelete.codeAnswer,
+      connectionId: connectionId
+    };
+    const response = await publicationsService.deleteMyAnswer(request);
     return response;
   }
 
@@ -380,7 +427,7 @@ function PublicationDetail({
                 <h3>¡Sé el primero en responder!</h3>
               ) : (
                 <>
-                  <h3>{publication?.answers?.length} Respuesta{publication?.answers?.length > 1 ? 's' : ''}</h3>
+                  <h3 className={styles.answersTitle}>{publication?.answers?.length} Respuesta{publication?.answers?.length > 1 ? 's' : ''}</h3>
                   {(publication?.answers ?? []).map(respuesta => (
                     <div
                       key={respuesta.codeAnswer}
@@ -411,23 +458,15 @@ function PublicationDetail({
       </div>
 
       <ModalComponent open={showModalDelete} onClose={() => setShowModalDelete(false)}>
-        <h2>¿Estás seguro de eliminar esta respuesta?</h2>
-        <p>Ten en cuenta que esta accion es irreversible.</p>
-        <Button
-          onClick={async () => {
-            if (!selectedAnswerToDelete) return;
-
-            const request: DeleteAnswerRequest = {
-              codePublication: publication?.codePublication ?? 0,
-              answerCode: selectedAnswerToDelete?.codeAnswer,
-              connectionId: connectionId
-            };
-            await publicationsService.deleteMyAnswer(request);
-            setShowModalDelete(false);
-            setSelectedAnswerToDelete(null);
-          }}
-          text="Eliminar"
-        />
+        <div className={styles.forumDeleteAnswer}>
+          <h2>¿Estás seguro de eliminar esta respuesta?</h2>
+          <p>Ten en cuenta que esta accion es irreversible.</p>
+          <Button
+            onClick={async () => await handleOnClicDeleteAnswer()}
+            text="Eliminar"
+            loading={isDeleting}
+          />
+        </div>
       </ModalComponent>
     </div>
     </>

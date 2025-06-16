@@ -199,8 +199,8 @@
     display: none;
 }
 
-.forumLeft {
-    /* Placeholder if needed for layout */
+.answersTitle{
+    margin-bottom: 1rem;
 }
 
 .publicationSection {
@@ -216,6 +216,9 @@
     height: 100%;
 }
 
-.forumRight {
-    /* Placeholder if needed for layout */
+.forumDeleteAnswer{
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
 }

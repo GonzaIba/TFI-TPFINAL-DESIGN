@@ -2,7 +2,7 @@
 import { useCallback } from "react";
 import { ExceptionBase } from "@/lib/types/exception";
 import { getMappedError } from "@/lib/utils/getMappedError";
-import useErrorStore from "@/store/slices/errorStore/errorStore"; // lo creamos abajo
+import useErrorStore from "@/store/slices/snackBarStore/snackbarStore"; // lo creamos abajo
 
 export function useErrorHandler() {
   const { showToast, showModal } = useErrorStore();
@@ -15,7 +15,7 @@ export function useErrorHandler() {
     console.log("Error manejado:", exception);
     switch (config.type) {
       case "toast":
-        showToast(exception.message || "Error inesperado");
+        showToast({ message:  exception.message || "Error inesperado", variant: 'error'});
         break;
       case "modal":
         showModal({

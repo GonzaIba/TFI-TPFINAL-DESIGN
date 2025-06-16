@@ -6,7 +6,7 @@ import { ExceptionBase } from "../types/exception";
 import { UserApplication } from "../types/application";
 import { getMappedError } from "@/lib/utils/getMappedError";
 import { getClientIp } from '@/lib/utils/getClientIp';
-import useErrorStore from "@/store/slices/errorStore/errorStore";
+import useErrorStore from "@/store/slices/snackBarStore/snackbarStore";
 
 export type ApiRequest<T> = {
   method: "GET" | "POST" | "PUT" | "DELETE";
