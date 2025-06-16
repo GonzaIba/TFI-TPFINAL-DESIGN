@@ -24,6 +24,13 @@ import {
   useSavedPublications,
   useCreatedPublications,
 } from '@/lib/query/hooks';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+  TabsContents,
+} from '@/components/animate-ui/components/tabs';
 
 type Filter = 'all' | 'saved' | 'created';
 
@@ -148,6 +155,16 @@ export default function PublicationsPage() {
   return (
     <div className="slider__contents">
       <AnimatePresence mode="wait">
+        <Tabs>
+  <TabsList>
+    <TabsTrigger value="tab1">Tab 1</TabsTrigger>
+    <TabsTrigger value="tab2">Tab 2</TabsTrigger>
+  </TabsList>
+  <TabsContents>
+    <TabsContent value="tab1">Content 1</TabsContent>
+    <TabsContent value="tab2">Content 2</TabsContent>
+  </TabsContents>
+</Tabs>
         {showPublicationDetail ? (
           /* ——— VISTA DETALLE ——— */
           <motion.div
