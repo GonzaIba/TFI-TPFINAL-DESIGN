@@ -27,6 +27,7 @@ import {
 } from '@/lib/types/forum'
 import { isWithinLastHour } from '@/lib/helpers/timeHelper';
 import useSnackBarStore from '@/store/slices/snackBarStore/snackbarStore';
+import { AddAnswerEvent } from '@/lib/types/events'
 // import { motion } from "motion/react"
 
 interface PublicationDetailProps {
@@ -50,8 +51,11 @@ function PublicationDetail({
   const [loadingDownVote, setLoadingDownVote] = useState(false);
   const [showModalDelete, setShowModalDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [scrollToNewest, setScrollToNewest] = useState(false);
+  const [showNewAnswerAlert, setShowNewAnswerAlert] = useState(false);
   const [newAnswerId, setNewAnswerId] = useState<number | null>(null);
   const [editorKey, setEditorKey] = useState<number>(0);
+  const newAnswerElRef = useRef<HTMLDivElement | null>(null);
   const isVoting = loadingUpVote || loadingDownVote;
   const isPositiveVoted = publication?.votedPositive;
 
@@ -64,45 +68,81 @@ function PublicationDetail({
     );
   }, []);
 
-  const handleVoteAnswerChanged = useCallback((answerId: number, newVotes: number) => {
+  const handleVoteAnswerChanged = useCallback((codeAnswer: number, newVotes: number) => {
     setPublication(p =>
       p
         ? {
             ...p,
             answers: p.answers.map(a =>
-              a.codeAnswer === answerId ? { ...a, votes: newVotes } : a,
+              a.codeAnswer === codeAnswer ? { ...a, votes: newVotes } : a,
             ),
           }
         : p,
     );
   }, []);
 
-  const handleCommentAdded = useCallback((newComment: AnswerResponse) => {}, []);
+  const handleCommentAdded = useCallback((newComment: AddAnswerEvent) => {
+    setPublication(p =>
+      p
+        ? {
+            ...p,
+            answers: [
+              ...p.answers,
+              {
+                codeAnswer: newComment.codeAnswer,
+                votes: newComment.votes,
+                user: newComment.user,
+                textResponse: newComment.textResponse,
+                createdDate: newComment.createdDate,
+                correctAnswer: newComment.correctAnswer,
+                isAuthor: false, //Es false, porque esto se le notifica a los demás usuarios NO al que los generó
+                votedPositive: newComment.votedPositive,
+                files: newComment.files ?? [],
+              }
+            ]
+          }
+        : p,
+    );
+
+    setNewAnswerId(newComment.codeAnswer);
+    setScrollToNewest(false);
+    setShowNewAnswerAlert(true);
+  }, []);
+
+  const handleCommentDeleted = useCallback((codeAnswer: number) => {
+    setPublication(p =>
+      p
+        ? {
+            ...p,
+            answers: p.answers.filter(a => a.codeAnswer !== codeAnswer),
+          }
+        : p,
+    );
+  }, []);
 
   const connectionId = usePublicationSignalR(
     publication
       ? {
           publicationId: publication.codePublication,
           onVotePublicationChanged: handleVotePublicationChanged,
-          onVoteAnswerChanged:     handleVoteAnswerChanged,
-          onCommentAdded:          handleCommentAdded,
+          onVoteAnswerChanged: handleVoteAnswerChanged,
+          onCommentAdded: handleCommentAdded,
+          onCommentDeleted: handleCommentDeleted
         }
       : null
   );
 
-  const handleComment = useCallback((text: string) => {
-    if (!publication) return;
-    const newAnswer: AddAnswerRequest = {
-      codePublication: publication.codePublication,
-      textResponse: text,
-      connectionId: connectionId
-    };
-    handleOnAddAnswer(newAnswer);
-  }, [publication]);
-
-  const handleOnAddAnswer = async (request: AddAnswerRequest) => {
+  const handleOnAddAnswer = async (text: string) => {
     try {
-      const result = await publicationsService.addAnswer(request)
+      if (!publication) {
+        throw new Error("Publication is undefined");
+      }
+      const newAnswer: AddAnswerRequest = {
+        codePublication: publication.codePublication,
+        textResponse: text,
+        connectionId: connectionId
+      };
+      const result = await publicationsService.addAnswer(newAnswer)
 
       if (result.errors?.errorsList?.length > 0) {
         handleError(result.errors.errorsList);
@@ -119,6 +159,8 @@ function PublicationDetail({
             : p,
         );
         setNewAnswerId(result.data.codeAnswer);
+        setScrollToNewest(true);
+        setShowNewAnswerAlert(false);
       }
     } catch (error) {
       console.error('Error al agregar respuesta:', error)
@@ -313,32 +355,29 @@ function PublicationDetail({
   }
 
   useEffect(() => {
-    if (!newAnswerId || !scrollRef?.current) return;
+    if (!scrollToNewest || !newAnswerId || !scrollRef?.current) return;
 
     const el = scrollRef.current;
-    const alreadyInDOM = !!document.body.contains(el);
-    
-    const scrollToEl = () => {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
 
-    if (alreadyInDOM) {
+    const scrollToEl = () =>
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    if (document.body.contains(el)) {
       scrollToEl();
+      setScrollToNewest(false);          // ✅ resetea el flag
     } else {
-      const observer = new MutationObserver(() => {
+      const obs = new MutationObserver(() => {
         if (document.body.contains(el)) {
           scrollToEl();
-          observer.disconnect();
+          setScrollToNewest(false);
+          obs.disconnect();
         }
       });
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true,
-      });
-
-      return () => observer.disconnect();
+      obs.observe(document.body, { childList: true, subtree: true });
+      return () => obs.disconnect();
     }
-  }, [newAnswerId, publication?.answers?.length]);
+  }, [newAnswerId, publication?.answers?.length, scrollToNewest]);
+
 
   const renderRef = useRef(0);
   renderRef.current++;
@@ -352,8 +391,55 @@ function PublicationDetail({
     }
   }, [publicationProp]);
 
+  const handleOnClickScrollDown = () => {
+    setShowNewAnswerAlert(false);
+    if (scrollRef?.current) {
+      scrollRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  useEffect(() => {
+    const onScroll = () => {
+      if (!showNewAnswerAlert || !scrollRef?.current) return;
+
+      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+      // a 50 px del fondo es “suficiente”
+      if (scrollHeight - scrollTop - clientHeight < 50) {
+        setShowNewAnswerAlert(false);
+      }
+    };
+
+    window.addEventListener('scroll', onScroll);
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [showNewAnswerAlert]);
+
+  useEffect(() => {
+    if (!showNewAnswerAlert || !newAnswerElRef.current) return;
+
+    const el = newAnswerElRef.current;
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShowNewAnswerAlert(false);  // 👋 oculta la alerta
+          io.disconnect();
+        }
+      },
+      { threshold: 0.4 }  // 40 % visible basta; ajusta si quieres
+    );
+
+    io.observe(el);
+    return () => io.disconnect();
+  }, [showNewAnswerAlert, newAnswerId]);
+
   return (
     <>
+    {showNewAnswerAlert && newAnswerId && (
+      <div className="new-answer-alert">
+        <p>¡Hay nuevas respuestas!</p>
+        <Button onClick={handleOnClickScrollDown} icon={<ArrowBack />} circular />
+      </div>
+    )}
     <div className={styles.forumDetailContainer}>
       <div className='forum-left'>
         <div className={styles.publicationSection}>
@@ -405,7 +491,7 @@ function PublicationDetail({
               <div className={`${styles.publicationReplyInputContainer} ${styles.pubContainer}`}>
                 <div className={styles.publicationReplyInput}>
                   <div className={styles.responseContainer}>
-                    <EditorInput key={editorKey} onComment={handleComment} />
+                    <EditorInput key={editorKey} onComment={handleOnAddAnswer} />
                   </div>
                 </div>
               </div>
@@ -431,7 +517,16 @@ function PublicationDetail({
                   {(publication?.answers ?? []).map(respuesta => (
                     <div
                       key={respuesta.codeAnswer}
-                      ref={respuesta.codeAnswer === newAnswerId ? scrollRef ?? undefined : undefined}
+                      ref={
+                        respuesta.codeAnswer === newAnswerId
+                          ? (node) => {
+                              if (scrollRef && node) {
+                                scrollRef.current = node;          // ya lo usas para scroll
+                              }
+                              newAnswerElRef.current = node;     // 👈 referencia para el observer
+                            }
+                          : undefined
+                      }
                     >
                       <AnswerCard
                         answer={respuesta}

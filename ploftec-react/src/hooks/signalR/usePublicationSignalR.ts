@@ -7,6 +7,7 @@ interface PublicationSignalRProps {
   onVotePublicationChanged: (newVotes: number) => void;
   onVoteAnswerChanged: (answerId: number, newVotes: number) => void;
   onCommentAdded: (newComment: any) => void;
+  onCommentDeleted: (commentDeleted: any) => void;
 }
 
 export function usePublicationSignalR(
@@ -48,12 +49,30 @@ export function usePublicationSignalR(
       connectionRef.current = conn;
       roomIdRef.current = pubId;
 
-      conn.on('VotePublicationChanged', d => d.publicationId === pubId && props.onVotePublicationChanged(d.newVoteCount));
-      conn.on('VoteAnswerChanged', d => {
+      conn.on('VotePublicationChanged', d => {
+        console.log("JEJE");
         if (d.connectionId === conn.connectionId) return;  // ya la actualicé localmente
-        if (d.publicationId === pubId) props.onVoteAnswerChanged(d.answerId, d.newVoteCount);
+        console.log("UUU");        
+        if (d.codePublication === pubId) props.onVotePublicationChanged(d.newVoteCount)
+      });
+      conn.on('VoteAnswerChanged', d => {
+        console.log("JEJE");
+        if (d.connectionId === conn.connectionId) return;  // ya la actualicé localmente
+        console.log("UUU");        
+        if (d.codePublication === pubId) props.onVoteAnswerChanged(d.answerId, d.newVoteCount);
       });      
-      conn.on('AnswerAdded', d => d.publicationId === pubId && props.onCommentAdded(d));
+      conn.on('AnswerAdded', d => {
+        console.log("JEJE");
+        if (d.connectionId === conn.connectionId) return;  // ya la actualicé localmente
+        console.log("UUU");
+        if (d.codePublication === pubId) props.onCommentAdded(d)
+      });
+      conn.on('AnswerDeleted', d => {
+        console.log("JEJE");
+        if (d.connectionId === conn.connectionId) return;  // ya la actualicé localmente
+        console.log("UUU");        
+        if (d.codePublication === pubId) props.onCommentDeleted(d.codeAnswer)
+      });
 
       conn.start()
         .then(() => conn.invoke('JoinPublicationRoom', pubId))
