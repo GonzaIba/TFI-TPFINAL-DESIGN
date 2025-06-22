@@ -6,6 +6,7 @@ import {
   PublicationVoteRequest,
   AddAnswerRequest,
   DeleteAnswerRequest,
+  EditAnswerRequest,
   PublicationDetailResponse,
   PublicationResponse,
   SuccessfulResponse,
@@ -32,8 +33,8 @@ export const publicationsService = {
     return response;
   },
 
-  async getRelatedPublications(code: number): Promise<GenericApiResponse<PublicationDetailResponse>> {
-    const response = await apiBaseService.execute<PublicationDetailResponse, undefined>({
+  async getRelatedPublications(code: number): Promise<GenericApiResponse<PublicationResponse[]>> {
+    const response = await apiBaseService.execute<PublicationResponse[], undefined>({
       method: "GET",
       url: `ApiForum/ObtenerPublicacionesRelacionadas?codePublication=${code}`,
       requireCredentials: true,
@@ -133,6 +134,16 @@ export const publicationsService = {
       requireCredentials: true,
       body: request,
       handleError: true
+    });
+    return response;
+  },
+
+  async editAnswer(request: EditAnswerRequest): Promise<GenericApiResponse<SuccessfulResponse>> {
+    const response = await apiBaseService.execute<SuccessfulResponse, EditAnswerRequest>({
+      method: "DELETE",
+      url: `ApiForum/EditarRespuesta`,
+      requireCredentials: true,
+      body: request,
     });
     return response;
   },

@@ -31,6 +31,7 @@ export default function PublicationsPage() {
   const router = useRouter()
   const scrollRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
   const [currentPublication, setCurrentPublication] = useState<PublicationDetailResponse>()
+  const [relatedPublications, setRelatedPublications] = useState<PublicationResponse[]>()
   const [showPublicationDetail, setShowPublicationDetail] = useState(false)
   const [selectedPublicationId, setSelectedPublicationId] = useState<number | null>(null);
   const [filter, setFilter] = useState<Filter>('all');
@@ -130,10 +131,15 @@ export default function PublicationsPage() {
       }
 
       const response2 = await publicationsService.getRelatedPublications(codigo);
+      if (response2.errors?.errorsList?.length > 0) {
+        handleError(response2.errors.errorsList);
+        return;
+      }
 
+      setRelatedPublications(response2.data)
       setCurrentPublication(response.data as PublicationDetailResponse);
     } catch (error) {
-        console.error('Error al obtener detalle de publicación:', error);
+      console.error('Error al obtener detalle de publicación:', error);
     }
   };
   
@@ -141,6 +147,12 @@ export default function PublicationsPage() {
     setShowPublicationDetail(false)
     setCurrentPublication(undefined)
     //await fetchPublications()
+  }
+
+  const onClicRelatedPub = async (codigo: number) => {
+    setCurrentPublication(undefined)
+    setRelatedPublications(undefined)
+    await fetchPublicationDetail(codigo)
   }
   
   // console.log('Page publications Main:')
@@ -165,6 +177,8 @@ export default function PublicationsPage() {
           >
             <PublicationDetailCard
               publication={currentPublication}
+              relatedPublications={relatedPublications}
+              onClicRelatedPub={onClicRelatedPub}
               onBack={handleBackToPublications}
               scrollRef={scrollRef}
             />

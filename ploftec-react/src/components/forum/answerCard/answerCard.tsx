@@ -21,20 +21,24 @@ import 'prism-code-editor-lightweight/themes/github-dark.css';
 
 interface Props {
   answer: AnswerResponse;
-  canDelete: boolean
+  canDelete: boolean;
+  canEdit: boolean;
   isNew?: boolean;
   onUpvote: () => Promise<void>;
   onDownvote: () => Promise<void>;
   onDelete: () => Promise<void>;
+  onEdit: () => Promise<void>;
 }
 
 export default function AnswerCard({ 
   answer,
   canDelete,
+  canEdit,
   isNew = false, 
   onUpvote, 
   onDownvote, 
-  onDelete 
+  onDelete,
+  onEdit
 }: Props) {
 
   const [loadingUpVote, setLoadingUpVote] = useState(false);
@@ -141,13 +145,15 @@ export default function AnswerCard({
           </div>
 
           <div className={styles.cControls}>
-            <Button
-              onClick={() => {}}
-              icon={<EditIcon />}
-              circular={false}
-              width="45px"
-              transparent
-            />
+            {canEdit && (
+              <Button
+                onClick={onEdit}
+                icon={<EditIcon />}
+                circular={false}
+                width="45px"
+                transparent
+              />
+            )}
             {canDelete && (
               <Button
                 onClick={onDelete}

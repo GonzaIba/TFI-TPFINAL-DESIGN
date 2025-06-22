@@ -31,6 +31,13 @@
     connectionId: string | null;
   }
 
+  export interface EditAnswerRequest {
+    codePublication: number;
+    answerCode: number;
+    textResponse: string;
+    connectionId: string | null;
+  }
+
   /* ------------------------------------------- RESPONSE -------------------------------------------*/
   
   export interface UsersForumResponse {

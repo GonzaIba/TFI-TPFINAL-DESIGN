@@ -15,7 +15,7 @@ import { Colors } from '@/theme/colors'
 import { usePublicationSignalR } from '@/hooks';
 import { VoteNumber } from '@/components/labelComponent/numberMotionComponent/numberMotion'
 import { useErrorHandler } from '@/hooks/errors/useErrorHandler'
-import { SkeletonAnswerCard, SkeletonEditorComment, ModalComponent } from '@/components'
+import { SkeletonAnswerCard, SkeletonEditorComment, ModalComponent, PanelSection, SkeletonLine } from '@/components'
 import {
   PublicationDetailResponse,
   AnswerResponse, 
@@ -23,21 +23,26 @@ import {
   AnswerVoteRequest, 
   AnswerPublicationVoteResponse,
   AddAnswerRequest,
-  DeleteAnswerRequest
+  DeleteAnswerRequest,
+  PublicationResponse
 } from '@/lib/types/forum'
 import { isWithinLastHour } from '@/lib/helpers/timeHelper';
 import useSnackBarStore from '@/store/slices/snackBarStore/snackbarStore';
 import { AddAnswerEvent } from '@/lib/types/events'
-// import { motion } from "motion/react"
+import { AnimatePresence, motion } from 'framer-motion';
 
 interface PublicationDetailProps {
   publication?: PublicationDetailResponse;
+  relatedPublications?: PublicationResponse[];
+  onClicRelatedPub: (codNumber: number) => Promise<void>
   scrollRef?: React.RefObject<HTMLDivElement>
   onBack: () => Promise<void>
 }
 
 function PublicationDetail({
   publication: publicationProp,
+  relatedPublications,
+  onClicRelatedPub,
   scrollRef,
   onBack,
 }: PublicationDetailProps) {
@@ -56,6 +61,8 @@ function PublicationDetail({
   const [newAnswerId, setNewAnswerId] = useState<number | null>(null);
   const [editorKey, setEditorKey] = useState<number>(0);
   const newAnswerElRef = useRef<HTMLDivElement | null>(null);
+  const [editingAnswerId, setEditingAnswerId] = useState<number | null>(null);
+  const [editDraft, setEditDraft] = useState<string>('');
   const isVoting = loadingUpVote || loadingDownVote;
   const isPositiveVoted = publication?.votedPositive;
 
@@ -432,6 +439,48 @@ function PublicationDetail({
     return () => io.disconnect();
   }, [showNewAnswerAlert, newAnswerId]);
 
+
+  const handleSaveEdit = async () => {
+    if (!publication || editingAnswerId === null) return;
+    // suponiendo que tu API exponga editAnswer:
+    await publicationsService.editAnswer({
+      codePublication: publication.codePublication,
+      answerCode: editingAnswerId,
+      textResponse: editDraft,
+      connectionId
+    });
+    // refresca el estado con el nuevo texto
+    setPublication(p =>
+      p
+        ? {
+            ...p,
+            answers: p.answers.map(a =>
+              a.codeAnswer === editingAnswerId
+                ? { ...a, textResponse: editDraft }
+                : a
+            ),
+          }
+        : p
+    );
+    setEditingAnswerId(null);
+  };
+
+  // cancelar edición
+  const handleCancelEdit = () => {
+    setEditingAnswerId(null);
+    setEditDraft('');
+  };
+
+  // arrancar edición
+  const handleStartEdit = async (answer: AnswerResponse) => {
+    setEditDraft(answer.textResponse);
+    setEditingAnswerId(answer.codeAnswer);
+  };
+
+
+
+
+
   return (
     <>
     {showNewAnswerAlert && newAnswerId && (
@@ -440,10 +489,12 @@ function PublicationDetail({
         <Button onClick={handleOnClickScrollDown} icon={<ArrowBack />} circular />
       </div>
     )}
+    <div className={styles.buttonBack}>
+      <Button onClick={onBack} icon={<ArrowBack />} circular />
+    </div>
     <div className={styles.forumDetailContainer}>
       <div className='forum-left'>
         <div className={styles.publicationSection}>
-          <Button onClick={onBack} icon={<ArrowBack />} circular />
 
           {publication ? (
             <div className={styles.commentSection}>
@@ -514,33 +565,61 @@ function PublicationDetail({
               ) : (
                 <>
                   <h3 className={styles.answersTitle}>{publication?.answers?.length} Respuesta{publication?.answers?.length > 1 ? 's' : ''}</h3>
-                  {(publication?.answers ?? []).map(respuesta => (
-                    <div
-                      key={respuesta.codeAnswer}
-                      ref={
-                        respuesta.codeAnswer === newAnswerId
-                          ? (node) => {
-                              if (scrollRef && node) {
-                                scrollRef.current = node;          // ya lo usas para scroll
-                              }
-                              newAnswerElRef.current = node;     // 👈 referencia para el observer
-                            }
-                          : undefined
-                      }
-                    >
-                      <AnswerCard
-                        answer={respuesta}
-                        canDelete={isWithinLastHour(respuesta.createdDate) && respuesta.isAuthor}
-                        isNew={respuesta.codeAnswer === newAnswerId}
-                        onUpvote={async () => await handleOnClicUpVoteAnswer(respuesta.codeAnswer)}
-                        onDownvote={async () => await handleOnClicDownVoteAnswer(respuesta.codeAnswer)}
-                        onDelete={async () => {
-                          setSelectedAnswerToDelete(respuesta);
-                          setShowModalDelete(true);
+                  <AnimatePresence initial={false}>
+                    {(publication?.answers ?? []).map(answer => (
+                      <motion.div
+                        key={answer.codeAnswer}
+                        layout
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3 }}
+                        className={styles.answerWrapper}
+                        ref={node => {
+                          if (answer.codeAnswer === newAnswerId && node) {
+                            scrollRef!.current = node;
+                            newAnswerElRef.current = node;
+                          }
                         }}
-                      />
-                    </div>
-                  ))}
+                      >
+                        {editingAnswerId === answer.codeAnswer ? (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <EditorInput
+                              isInternal
+                              initialContent={editDraft}
+                              onComment={setEditDraft}
+                            />
+                            <div className={styles.editActions}>
+                              <Button text="Guardar" onClick={handleSaveEdit} />
+                              <Button
+                                text="Cancelar"
+                                onClick={handleCancelEdit}
+                              />
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <AnswerCard
+                            answer={answer}
+                            canDelete={isWithinLastHour(answer.createdDate) && answer.isAuthor}
+                            canEdit={isWithinLastHour(answer.createdDate) && answer.isAuthor}
+                            isNew={answer.codeAnswer === newAnswerId}
+                            onUpvote={async () => await handleOnClicUpVoteAnswer(answer.codeAnswer)}
+                            onDownvote={async () => await handleOnClicDownVoteAnswer(answer.codeAnswer)}
+                            onEdit={async () => await handleStartEdit(answer)}
+                            onDelete={async () => {
+                              setSelectedAnswerToDelete(answer);
+                              setShowModalDelete(true);
+                            }}
+                          />
+                        )}
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
                 </>
               )}
             </div>
@@ -549,7 +628,27 @@ function PublicationDetail({
       </div>
 
       <div className='forum-right'>
-        {/* Cualquier contenido a la derecha */}
+        <PanelSection
+          title="Publicaciones relacionadas"
+          items={relatedPublications ?? []}
+          loading={!relatedPublications}
+          getKey={(pub) => `${pub.codePublication}-${pub.createdDate}`}
+          renderLoading={(
+            <>
+              <SkeletonLine internal/>
+            </>
+          )}
+          renderItem={(pub, i) => (
+            <div className={styles.relatedPub} onClick={async()=> {onClicRelatedPub(pub.codePublication)}}>
+              {pub.title}
+            </div>
+          )}
+          emptyMessage={
+            <p>
+              No se encontraron publicaciones relacionadas.
+            </p>
+          }
+        />
       </div>
 
       <ModalComponent open={showModalDelete} onClose={() => setShowModalDelete(false)}>

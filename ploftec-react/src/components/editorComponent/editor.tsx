@@ -67,13 +67,15 @@ import { SkeletonEditorComment } from '@/components'
 import Button from '@/components/buttonComponent/button'
 
 type Props = {
+  initialContent?: string;
+  isInternal?: boolean;
   onComment: (content: string) => void;
 };
 
-const EditorInput = ({ onComment } : Props) => {
+const EditorInput = ({ initialContent = '<p>Inserte aquí su respuesta...</p>', isInternal = false, onComment } : Props) => {
   const { isReady, editor, editorRef } = useEditorState();
   console.log('EditorInput isReady:', isReady);
-  const [content, setContent] = useState<string | null>('<p>Inserte aquí su respuesta...</p>');
+  const [content, setContent] = useState<string | null>(initialContent);
 
   console.log('EditorInput content:');
 
@@ -175,7 +177,7 @@ const EditorInput = ({ onComment } : Props) => {
         />
         {!isReady && <SkeletonEditorComment isInEditorComponent={true} />}
       </div>
-      {isReady && <Button text='Comentar' onClick={() => onComment(content ?? '')} width='100%' />}
+      {isReady && (!isInternal && <Button text='Comentar' onClick={() => onComment(content ?? '')} width='100%' />)}
     </>
   );
 }

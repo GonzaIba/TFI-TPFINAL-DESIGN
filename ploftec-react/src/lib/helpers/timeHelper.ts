@@ -45,6 +45,13 @@ export function isWithinLastHour(dateStr: string): boolean {
     return false;
   }
 
+  // Milisegundos transcurridos desde la fecha dada hasta ahora
   const diffMs = Date.now() - parsed.getTime();
-  return diffMs <= 60 * 60 * 24000; // 1 hora en milisegundos
+
+  // 1 hora en milisegundos = 60 seg * 60 min * 1000 ms = 3_600_000
+  const oneHourMs = 60 * 60 * 1000;
+
+  // Si ha pasado menos de una hora, estamos “within last hour”
+  return diffMs < oneHourMs;
 }
+
