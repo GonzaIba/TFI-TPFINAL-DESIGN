@@ -1,5 +1,3 @@
-// src/components/forum/publicationDetail/publicationDetail.tsx
-
 'use client'
 
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react'
@@ -594,7 +592,7 @@ function PublicationDetail({
                               initialContent={editDraft}
                               onComment={setEditDraft}
                             />
-                            <div className={styles.editActions}>
+                            <div className={`buttonList ${styles.editActions}`}>
                               <Button text="Guardar" onClick={handleSaveEdit} />
                               <Button
                                 text="Cancelar"
@@ -655,11 +653,17 @@ function PublicationDetail({
         <div className={styles.forumDeleteAnswer}>
           <h2>¿Estás seguro de eliminar esta respuesta?</h2>
           <p>Ten en cuenta que esta accion es irreversible.</p>
-          <Button
-            onClick={async () => await handleOnClicDeleteAnswer()}
-            text="Eliminar"
-            loading={isDeleting}
-          />
+          <div className='buttonList'>
+            <Button
+              onClick={async () => await handleOnClicDeleteAnswer()}
+              text="Eliminar"
+              loading={isDeleting}
+            />
+            <Button
+              onClick={()=>setShowModalDelete(false)}
+              text="Cancelar"
+            />
+          </div>
         </div>
       </ModalComponent>
     </div>

@@ -232,3 +232,12 @@
     color: #644bff;
     text-align: center;
 }
+
+.editActions{
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    align-items: center;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}

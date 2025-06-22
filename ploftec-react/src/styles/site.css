@@ -1,3 +1,9 @@
 ol, ul {
     padding-left: 0 !important;
 }
+
+.buttonList{
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+}
