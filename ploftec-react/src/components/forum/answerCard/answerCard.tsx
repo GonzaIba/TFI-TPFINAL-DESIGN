@@ -10,14 +10,16 @@ import styles from '../publicationDetail/publicationDetail.module.css';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { Colors } from '@/theme/colors';
-import {VoteNumber} from '@/components';
-import { motion } from 'framer-motion';
+import { VoteNumber, SkeletonEditorComment } from '@/components';
+import { motion, AnimatePresence } from 'framer-motion';
 import 'react-image-crop/dist/ReactCrop.css';
 import 'reactjs-tiptap-editor/style.css';
 
 import 'prism-code-editor-lightweight/layout.css'; 
 import 'prism-code-editor-lightweight/themes/github-dark.css'; 
 
+import dynamic from 'next/dynamic'
+import { Suspense } from 'react'
 
 interface Props {
   answer: AnswerResponse;
@@ -27,7 +29,7 @@ interface Props {
   onUpvote: () => Promise<void>;
   onDownvote: () => Promise<void>;
   onDelete: () => Promise<void>;
-  onEdit: () => Promise<void>;
+  onSaveEdit?: (newText: string, answerCode: number) => Promise<void>;
 }
 
 export default function AnswerCard({ 
@@ -38,12 +40,15 @@ export default function AnswerCard({
   onUpvote, 
   onDownvote, 
   onDelete,
-  onEdit
+  onSaveEdit
 }: Props) {
 
   const [loadingUpVote, setLoadingUpVote] = useState(false);
   const [loadingDownVote, setLoadingDownVote] = useState(false);
   const [animateNew, setAnimateNew] = useState(false);
+  /** Nuevos estados para inline edit */
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(answer.textResponse);
   const isVoting = loadingUpVote || loadingDownVote;
   const isPositiveVoted = answer.votedPositive;
 
@@ -59,6 +64,31 @@ export default function AnswerCard({
     setLoadingDownVote(false);
   }
 
+  const startEdit = () => {
+    setDraft(answer.textResponse);
+    setIsEditing(true);
+  };
+  const cancelEdit = () => setIsEditing(false);
+  const saveEdit = async () => {
+    if (onSaveEdit) {
+      await onSaveEdit(draft, answer.codeAnswer);
+      setIsEditing(false);
+    }
+  };
+
+  // cargamos el editor **solo** cuando isEditing===true
+  const EditorInput = dynamic(
+    () => import('@/components/editorComponent/editor'),
+    {
+      ssr: false,
+      loading: () => (
+        <div style={{ padding: 16 }}>
+          <SkeletonEditorComment isInEditorComponent />
+        </div>
+      )
+    }
+  )
+
   useEffect(() => {
     if (isNew) {
       // Espera un frame para montar con animación
@@ -67,6 +97,7 @@ export default function AnswerCard({
       });
     }
   }, [isNew]);
+  
   return (
     <motion.div
       initial={isNew ? { opacity: 0, scale: 0.95, boxShadow: '0 0 0px rgba(0, 195, 255, 0)' } : undefined}
@@ -119,12 +150,8 @@ export default function AnswerCard({
                 arrow: true
               }}
             />
-
-            {/* <p className={styles.scoreNumber}>{answer.votos}</p> */}
             <VoteNumber value={answer.votes} />       
-            {answer.correctAnswer && (
-              <CheckCircle className="text-green-500" size={34} />
-            )}
+            {answer.correctAnswer && ( <CheckCircle className="text-green-500" size={34} />)}
             <Button
               width="45px"
               text=""
@@ -147,7 +174,7 @@ export default function AnswerCard({
           <div className={styles.cControls}>
             {canEdit && (
               <Button
-                onClick={onEdit}
+                onClick={startEdit}
                 icon={<EditIcon />}
                 circular={false}
                 width="45px"
@@ -163,13 +190,6 @@ export default function AnswerCard({
                 transparent
               />
             )}
-            {/* <Button
-              onClick={() => {}}
-              icon={<ReplyIcon />}
-              circular={false}
-              width="45px"
-              transparent
-            /> */}
           </div>
 
           <div className={styles.cUser}>
@@ -184,9 +204,58 @@ export default function AnswerCard({
             <p className={styles.cmntAt}>{answer.createdDate.toString()}</p>
           </div>
 
-          <div className={styles.cText}>
-            <div className="tiptap" dangerouslySetInnerHTML={{ __html: answer.textResponse }} />
-          </div>
+          <AnimatePresence initial={false}>
+            {isEditing ? (
+              <motion.div
+                key="editor"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{
+                  opacity: 0,
+                  height: 0,
+                }}
+                transition={{
+                  // primero se desvanece rápido...
+                  opacity: { duration: 0.15, ease: 'easeInOut' },
+                  // luego, con un spring más “suave”, colapsa la altura
+                  height: {
+                    type: 'spring',
+                    stiffness: 200,
+                    damping: 25,
+                    mass: 0.5,
+                    delay: 0.1
+                  }
+                }}
+                className={styles.inlineEditor}
+              >
+                <Suspense fallback={<SkeletonEditorComment isInEditorComponent />}>
+                  <EditorInput
+                    isInternal
+                    initialContent={draft}
+                  />
+                </Suspense>
+                <div className={`buttonList ${styles.editActions}`}>
+                  <Button text="Guardar" onClick={saveEdit} />
+                  <Button
+                    text="Cancelar"
+                    onClick={cancelEdit}
+                  />
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="view"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <div
+                  className={styles.cText}
+                  dangerouslySetInnerHTML={{ __html: answer.textResponse }}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
 
         </div>
       </div>

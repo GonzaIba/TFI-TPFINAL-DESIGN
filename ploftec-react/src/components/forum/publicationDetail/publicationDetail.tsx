@@ -59,8 +59,6 @@ function PublicationDetail({
   const [newAnswerId, setNewAnswerId] = useState<number | null>(null);
   const [editorKey, setEditorKey] = useState<number>(0);
   const newAnswerElRef = useRef<HTMLDivElement | null>(null);
-  const [editingAnswerId, setEditingAnswerId] = useState<number | null>(null);
-  const [editDraft, setEditDraft] = useState<string>('');
   const isVoting = loadingUpVote || loadingDownVote;
   const isPositiveVoted = publication?.votedPositive;
 
@@ -319,6 +317,11 @@ function PublicationDetail({
     }
   };
 
+  const handleOnCancelDelete = () => {
+    setShowModalDelete(false);
+    setSelectedAnswerToDelete(null);
+  }
+
   const votePublication = async (isPositive : boolean) => {
     if (!publication) {
       throw new Error("Publication is undefined");
@@ -438,13 +441,13 @@ function PublicationDetail({
   }, [showNewAnswerAlert, newAnswerId]);
 
 
-  const handleSaveEdit = async () => {
-    if (!publication || editingAnswerId === null) return;
+  const handleSaveEdit = async (text: string, answerCode: number) => {
+    if (!publication || answerCode === null) return;
     // suponiendo que tu API exponga editAnswer:
     await publicationsService.editAnswer({
       codePublication: publication.codePublication,
-      answerCode: editingAnswerId,
-      textResponse: editDraft,
+      answerCode: answerCode,
+      textResponse: text,
       connectionId
     });
     // refresca el estado con el nuevo texto
@@ -453,31 +456,14 @@ function PublicationDetail({
         ? {
             ...p,
             answers: p.answers.map(a =>
-              a.codeAnswer === editingAnswerId
-                ? { ...a, textResponse: editDraft }
+              a.codeAnswer === answerCode
+                ? { ...a, textResponse: text }
                 : a
             ),
           }
         : p
     );
-    setEditingAnswerId(null);
   };
-
-  // cancelar edición
-  const handleCancelEdit = () => {
-    setEditingAnswerId(null);
-    setEditDraft('');
-  };
-
-  // arrancar edición
-  const handleStartEdit = async (answer: AnswerResponse) => {
-    setEditDraft(answer.textResponse);
-    setEditingAnswerId(answer.codeAnswer);
-  };
-
-
-
-
 
   return (
     <>
@@ -580,41 +566,19 @@ function PublicationDetail({
                           }
                         }}
                       >
-                        {editingAnswerId === answer.codeAnswer ? (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.3 }}
-                          >
-                            <EditorInput
-                              isInternal
-                              initialContent={editDraft}
-                              onComment={setEditDraft}
-                            />
-                            <div className={`buttonList ${styles.editActions}`}>
-                              <Button text="Guardar" onClick={handleSaveEdit} />
-                              <Button
-                                text="Cancelar"
-                                onClick={handleCancelEdit}
-                              />
-                            </div>
-                          </motion.div>
-                        ) : (
-                          <AnswerCard
-                            answer={answer}
-                            canDelete={isWithinLastHour(answer.createdDate) && answer.isAuthor}
-                            canEdit={isWithinLastHour(answer.createdDate) && answer.isAuthor}
-                            isNew={answer.codeAnswer === newAnswerId}
-                            onUpvote={async () => await handleOnClicUpVoteAnswer(answer.codeAnswer)}
-                            onDownvote={async () => await handleOnClicDownVoteAnswer(answer.codeAnswer)}
-                            onEdit={async () => await handleStartEdit(answer)}
-                            onDelete={async () => {
-                              setSelectedAnswerToDelete(answer);
-                              setShowModalDelete(true);
-                            }}
-                          />
-                        )}
+                        <AnswerCard
+                          answer={answer}
+                          canDelete={isWithinLastHour(answer.createdDate) && answer.isAuthor}
+                          canEdit={isWithinLastHour(answer.createdDate) && answer.isAuthor}
+                          isNew={answer.codeAnswer === newAnswerId}
+                          onUpvote={async () => await handleOnClicUpVoteAnswer(answer.codeAnswer)}
+                          onDownvote={async () => await handleOnClicDownVoteAnswer(answer.codeAnswer)}
+                          onDelete={async () => {
+                            setSelectedAnswerToDelete(answer);
+                            setShowModalDelete(true);
+                          }}
+                          onSaveEdit={async (newText, answerCode) => { await handleSaveEdit(newText, answerCode)}}
+                        />
                       </motion.div>
                     ))}
                   </AnimatePresence>
@@ -660,7 +624,7 @@ function PublicationDetail({
               loading={isDeleting}
             />
             <Button
-              onClick={()=>setShowModalDelete(false)}
+              onClick={handleOnCancelDelete}
               text="Cancelar"
             />
           </div>

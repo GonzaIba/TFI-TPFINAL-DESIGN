@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 //import { startTransition, useDeferredValue } from 'react';
 // Kit base
 import RichTextEditor, { BaseKit, useEditorState } from 'reactjs-tiptap-editor';
@@ -69,15 +69,32 @@ import Button from '@/components/buttonComponent/button'
 type Props = {
   initialContent?: string;
   isInternal?: boolean;
-  onComment: (content: string) => void;
+  onComment?: (content: string) => void;
+  onChangeContent?: (content: string) => void;
 };
 
-const EditorInput = ({ initialContent = '<p>Inserte aquí su respuesta...</p>', isInternal = false, onComment } : Props) => {
+const EditorInput = ({
+  initialContent = '<p>Inserte aquí su respuesta…</p>',
+  isInternal = false,
+  onComment,
+  onChangeContent,
+}: Props) => {
   const { isReady, editor, editorRef } = useEditorState();
-  console.log('EditorInput isReady:', isReady);
-  const [content, setContent] = useState<string | null>(initialContent);
+  const [content, setContent] = useState(initialContent);
 
-  console.log('EditorInput content:');
+  // 1) Cuando cambie initialContent, actualizamos el estado y el editor
+  useEffect(() => {
+    setContent(initialContent);
+    if (editor) {
+      editor.commands.setContent(initialContent);
+    }
+  }, [initialContent, editor]);
+
+  // 2) Al editar, actualizamos estado y notificamos al padre (si existe)
+  const handleChange = (html: string) => {
+    setContent(html);
+    onChangeContent?.(html);
+  };
 
   const extensions = React.useMemo(() => [
     BaseKit.configure({
@@ -153,31 +170,38 @@ const EditorInput = ({ initialContent = '<p>Inserte aquí su respuesta...</p>', 
     <>
       <div className="tiptap-wrapper">
         <RichTextEditor
-          output="html"
+          output='html'
           ref={editorRef}
-          content={content ?? ''}
-          onChangeContent={setContent}
+          content={content}
+          onChangeContent={handleChange}
           extensions={extensions}
-          useEditorOptions={{immediatelyRender: true}}
-          minHeight={900}
+          useEditorOptions={{ immediatelyRender: true }}
+          minHeight={isInternal ? 200 : 900}
           dark
-          // Puedes personalizar otras propiedades según tus necesidades
-           bubbleMenu={{
-             render({ extensionsNames, editor, disabled }, bubbleDefaultDom) {
-               return <>
-               {bubbleDefaultDom}
+          // bubbleMenu={{
+          //    render({ extensionsNames, editor, disabled }, bubbleDefaultDom) {
+          //      return <>
+          //      {bubbleDefaultDom}
 
-               {extensionsNames.includes('mermaid')  ? <BubbleMenuMermaid disabled={disabled}
-                 editor={editor}
-                 key="mermaid"
-               /> : null}
-               </>
-             },
-           }}
+          //      {extensionsNames.includes('mermaid')  ? <BubbleMenuMermaid disabled={disabled}
+          //        editor={editor}
+          //        key="mermaid"
+          //      /> : null}
+          //      </>
+          //    },
+          // }}
         />
         {!isReady && <SkeletonEditorComment isInEditorComponent={true} />}
       </div>
-      {isReady && (!isInternal && <Button text='Comentar' onClick={() => onComment(content ?? '')} width='100%' />)}
+
+      {/* solo en el “nuevo comentario”, no en inline edit */}
+      {isReady && !isInternal && (
+        <Button
+          text="Comentar"
+          onClick={() => onComment?.(content)}
+          width="100%"
+        />
+      )}
     </>
   );
 }
