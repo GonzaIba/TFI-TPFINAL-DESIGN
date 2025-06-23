@@ -31,3 +31,9 @@
     padding: 18px;
     margin-top: 8px;
 }
+
+@media (max-width: 720px){
+    .panelSection {
+          margin-left: 0;
+    }
+}

@@ -128,7 +128,7 @@ export default function AnswerCard({
             }
           : undefined
       }
-      className="answer-card"
+      className={styles.answerCardAnimated}
     >
       <div className={styles.commentWrp}>
         <div className={`${styles.comment} ${styles.pubContainer}`}>

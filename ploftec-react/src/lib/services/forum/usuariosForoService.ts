@@ -8,7 +8,7 @@ import {
   SuccessfulResponse,
   FiltersUserRequest,
 } from "@/lib/types/forum";
-import { ImageHelper }from '@/lib/helpers/imageHelper'
+import { ImageHelper }from '@/lib/helpers'
 import { GenericApiResponse } from '@/lib/types/apiResponse';
 
 

@@ -2,12 +2,12 @@
 
 import { Eye, MessageSquare, ThumbsUp } from 'lucide-react'
 import { PublicationResponse } from '@/lib/types/forum'
-import { getPublicationTimeAgo } from '@/lib/helpers/timeHelper'
-import AvatarUser from '@/components/avatarUserComponent/avatarUser'
-import Button from '@/components/buttonComponent/button'
+import { getPublicationTimeAgo, truncate } from '@/lib/helpers'
+import { Button, AvatarUser} from '@/components'
 import { Bookmark, BookmarkBorder } from '@mui/icons-material';
 import { Colors } from '@/theme/colors'
 import { motion, AnimatePresence } from 'framer-motion';
+import styles from './publicationCard.module.css'
 
 type PublicationCardProps = {
   publication: PublicationResponse
@@ -25,16 +25,16 @@ export default function PublicationCard({
 }: PublicationCardProps) {
 
   return (
-    <div className="question">
-      <div className="avatarUser" onClick={onClickUser}>
+    <div className={styles.question}>
+      <div className={styles.questionAvatarUser} onClick={onClickUser}>
         <AvatarUser tagUser="JL" /> {/*REVISAR INICIALES*/}
       </div>
-      <div className="questionBody">
-        <div className="questionHeader">
+      <div className={styles.questionBody}>
+        <div className={styles.questionHeader}>
           <div onClick={onClickTitle} style={{ display: 'inline-block' }}>
-            <h4>{publication.title}</h4>
+            <h4 className={styles.titleEllipsis}>{publication.title}</h4>
           </div>
-          <div className="saveIcon">
+          <div className={styles.saveIcon}>
             <AnimatePresence mode="wait" initial={false}>
               <motion.div
                 key={publication?.isSaved ? 'saved' : 'unsaved'}
@@ -55,39 +55,39 @@ export default function PublicationCard({
           </div>
         </div>
 
-        <div className="questionStadistics">
-          <div className="question-item">
-            <span className="question-icon">
+        <div className={styles.questionStadistics}>
+          <div className={styles.questionItem}>
+            <span className={styles.questionIcon}>
               <MessageSquare size={16} />
             </span>
-            <span className="question-count">{publication.answers}</span>
-            <span className="question-text">Respuestas</span>
+            <span className={styles.questionCount}>{publication.answers}</span>
+            <span className={styles.questionText}>Respuestas</span>
           </div>
-          <div className="question-item">
-            <span className="question-icon">
+          <div className={styles.questionItem}>
+            <span className={styles.questionIcon}>
               <ThumbsUp size={16} />
             </span>
-            <span className="question-count">{29}</span> {/* REVISAR!!!!!!!! */}
-            <span className="question-text">Votos</span>
+            <span className={styles.questionCount}>{29}</span> {/* REVISAR!!!!!!!! */}
+            <span className={styles.questionText}>Votos</span>
           </div>
-          <div className="question-item">
-            <span className="question-icon">
+          <div className={styles.questionItem}>
+            <span className={styles.questionIcon}>
               <Eye size={16} />
             </span>
-            <span className="question-count">{publication.visits}</span>
-            <span className="question-text">Visitas</span>
+            <span className={styles.questionCount}>{publication.visits}</span>
+            <span className={styles.questionText}>Visitas</span>
           </div>
         </div>
 
-        <div className="questionMore">
-          <div className="tagList">
+        <div className={styles.questionMore}>
+          <div className={styles.tagList}>
             {publication.tags.map((tag, idx) => (
-              <span key={idx} className="tag">
+              <span key={idx} className={styles.tag}>
                 {tag}
               </span>
             ))}
           </div>
-          <div className="questionDate">
+          <div className={styles.questionDate}>
             <span>{getPublicationTimeAgo("Preguntado", new Date(publication.createdDate))}</span>
           </div>
         </div>

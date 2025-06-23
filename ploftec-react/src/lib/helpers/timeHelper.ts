@@ -1,5 +1,3 @@
-// utils/timehelper.ts
-
 /**
  * Retorna el string de la palabra clave concatenada a la palabra clave
  * @param palabraClave Ej. "Publicado hace"
