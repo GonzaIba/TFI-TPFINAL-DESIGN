@@ -118,6 +118,7 @@ export default function PublicationsPage() {
 
   const onClickTitle = (codigo: number) => {
     setCurrentPublication(undefined);
+    setRelatedPublications(undefined)
     setShowPublicationDetail(true);
     setSelectedPublicationId(codigo); // se usará después
   };

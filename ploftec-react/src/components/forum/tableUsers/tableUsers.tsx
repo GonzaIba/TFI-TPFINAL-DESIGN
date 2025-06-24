@@ -20,7 +20,7 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
     const fetchUsers = async () => {
       setIsLoading(true)
       const result = await usuariosForoService.obtenerUsuariosForo()
-      setUsuarios(result)
+      setUsuarios(result.data)
       setIsLoading(false)
       onReloadCompleted()
     }
@@ -30,7 +30,7 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
   const openSheet = async (email: string) => {
     setIsSheetOpen(true)
     const user = await usuariosForoService.obtenerDetalleUsuario(email)
-    setUsuarioSeleccionado(user)
+    setUsuarioSeleccionado(user.data)
   }
 
   const closeSheet = () => {

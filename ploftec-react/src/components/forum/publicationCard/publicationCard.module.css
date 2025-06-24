@@ -26,7 +26,7 @@
     font-size: 22px;
     line-height: 1.2;
     cursor: pointer;
-    padding-right: 10px;
+    padding-right: 12px;
 
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -48,11 +48,16 @@
 }
 
 .saveIcon {
-    display: inline-block;
-    float: right;
     cursor: pointer;
     margin: 8px;
     font-size: 22px;
+    width: 20px;
+}
+
+.buttonSaveContainer {
+    position: absolute;
+    top: 8px;       /* distancia al borde superior */
+    right: 8px;     /* distancia al borde derecho */
 }
 
 .questionStadistics {
@@ -155,13 +160,13 @@
 /* Dispositivos pequeños (retrato de tablets y grandes teléfonos, 600px y más) */
 @media (max-width: 600px) {
     .titleEllipsis {
-        font-size: 16px !important;
+        font-size: 16px;
     }
 }
 
 @media (max-width: 480px){
     .titleEllipsis {
-        font-size: 15px !important;
+        font-size: 15px;
     }
 
     .questionMore,
@@ -196,7 +201,7 @@
     }
 
     .titleEllipsis{
-        font-size: 12px !important;
+        font-size: 12px;
     }
 
     .questionStadistics {

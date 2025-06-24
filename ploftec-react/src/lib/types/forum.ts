@@ -72,6 +72,7 @@
   export interface PublicationResponse {
     codePublication: number;
     codeUser: string;
+    userCreator: UsersForumPreviewResponse;
     title: string;
     content: string;
     reward: number;

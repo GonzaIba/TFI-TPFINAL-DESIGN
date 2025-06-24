@@ -1,5 +1,6 @@
 'use client'
 
+import React, { useState, useEffect } from 'react'
 import { Eye, MessageSquare, ThumbsUp } from 'lucide-react'
 import { PublicationResponse } from '@/lib/types/forum'
 import { getPublicationTimeAgo, truncate } from '@/lib/helpers'
@@ -8,6 +9,7 @@ import { Bookmark, BookmarkBorder } from '@mui/icons-material';
 import { Colors } from '@/theme/colors'
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from './publicationCard.module.css'
+import { useWindowWidth } from '@/hooks';
 
 type PublicationCardProps = {
   publication: PublicationResponse
@@ -24,34 +26,22 @@ export default function PublicationCard({
   onToggleSave,
 }: PublicationCardProps) {
 
+  const width = useWindowWidth();
+  const [isMobile, setIsMobile] = useState(width < 768)
+
+  useEffect(() => {
+    setIsMobile(width < 768)
+  }, [width])
+
   return (
     <div className={styles.question}>
       <div className={styles.questionAvatarUser} onClick={onClickUser}>
-        <AvatarUser tagUser="JL" /> {/*REVISAR INICIALES*/}
+        <AvatarUser tagUser={publication.userCreator?.initials ?? "AU"} /> {/*Anonimous User*/}
       </div>
       <div className={styles.questionBody}>
         <div className={styles.questionHeader}>
           <div onClick={onClickTitle} style={{ display: 'inline-block' }}>
             <h4 className={styles.titleEllipsis}>{publication.title}</h4>
-          </div>
-          <div className={styles.saveIcon}>
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div
-                key={publication?.isSaved ? 'saved' : 'unsaved'}
-                initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
-                animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
-                transition={{ duration: 0.35, ease: 'easeInOut' }}
-              >
-                <Button
-                  transparent
-                  onClick={onToggleSave}
-                  icon={publication?.isSaved ? <Bookmark sx={{ color: Colors.primary }} fontSize='large' /> : <BookmarkBorder sx={{ color: Colors.white }} fontSize='large' />}
-                  width="40px"
-                />
-              </motion.div>
-            </AnimatePresence>
-            {/*REVISAR PORQUE SIEMPRE TRASPARENT TRUE???*/}
           </div>
         </div>
 
@@ -61,21 +51,21 @@ export default function PublicationCard({
               <MessageSquare size={16} />
             </span>
             <span className={styles.questionCount}>{publication.answers}</span>
-            <span className={styles.questionText}>Respuestas</span>
+            {!isMobile && <span className={styles.questionText}>Respuestas</span>}
           </div>
           <div className={styles.questionItem}>
             <span className={styles.questionIcon}>
               <ThumbsUp size={16} />
             </span>
             <span className={styles.questionCount}>{29}</span> {/* REVISAR!!!!!!!! */}
-            <span className={styles.questionText}>Votos</span>
+            {!isMobile && <span className={styles.questionText}>Votos</span>}
           </div>
           <div className={styles.questionItem}>
             <span className={styles.questionIcon}>
               <Eye size={16} />
             </span>
             <span className={styles.questionCount}>{publication.visits}</span>
-            <span className={styles.questionText}>Visitas</span>
+            {!isMobile && <span className={styles.questionText}>Visitas</span>}
           </div>
         </div>
 
@@ -91,6 +81,26 @@ export default function PublicationCard({
             <span>{getPublicationTimeAgo("Preguntado", new Date(publication.createdDate))}</span>
           </div>
         </div>
+      </div>
+
+      <div className={styles.saveIcon}>
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={publication?.isSaved ? 'saved' : 'unsaved'}
+            initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
+            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+            exit={{ opacity: 0, scale: 0.5, rotate: 90 }}
+            transition={{ duration: 0.35, ease: 'easeInOut' }}
+            className={styles.buttonSaveContainer}
+          >
+            <Button
+              transparent
+              onClick={onToggleSave}
+              icon={publication?.isSaved ? <Bookmark sx={{ color: Colors.primary }} fontSize='large' /> : <BookmarkBorder sx={{ color: Colors.white }} fontSize='large' />}
+              width="40px"
+            />
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   )
