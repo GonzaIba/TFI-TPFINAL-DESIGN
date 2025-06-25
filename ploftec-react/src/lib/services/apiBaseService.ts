@@ -36,7 +36,7 @@ function getInternalErrorHandler() {
     const { exception, config } = mapped;
     switch (config.type) {
       case "toast":
-        showToast(exception.message || "Error inesperado");
+        showToast({ message: exception.message || "Error inesperado", variant: "error" });
         break;
       case "modal":
         showModal({

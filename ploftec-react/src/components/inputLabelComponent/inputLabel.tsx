@@ -1,6 +1,7 @@
 'use client';
 
 import React, { ChangeEvent } from 'react';
+import styles from './inputLabel.module.css'
 import Search from '../searchComponent/search';
 
 type InputLabelProps = {
@@ -15,12 +16,12 @@ export default function InputLabel({
   onInput
 }: InputLabelProps) {
   return (
-    <div className="input-label-container">
-      <div className="input-label-lbl">
+    <div className={styles.inputLabelContainer}>
+      <div className={styles.inputLabelLbl}>
         <h4>{labelText}</h4>
       </div>
-      <div className="input-label-ipt">
-        <Search showIcon={false} placeHolder={inputPlaceHolderText} onInput={onInput} />
+      <div className={styles.inputLabelIpt}>
+        <Search useSearch={false} showIcon={false} placeHolder={inputPlaceHolderText} onInput={onInput} />
       </div>
     </div>
   );

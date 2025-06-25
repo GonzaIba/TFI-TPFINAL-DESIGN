@@ -8,6 +8,7 @@ type SearchProps = {
   searchFunction?: (query: string) => void;
   placeHolder?: string;
   showIcon?: boolean;
+  useSearch?: boolean
   onInput?: (event: ChangeEvent<HTMLInputElement>) => void;
 };
 
@@ -15,6 +16,7 @@ export default function Search({
   searchFunction,
   placeHolder = '',
   showIcon = true,
+  useSearch = true,
   onInput
 }: SearchProps) {
 
@@ -67,7 +69,7 @@ export default function Search({
           }}
         />
         <AnimatePresence>
-          {showSearchOptions && (
+          {showSearchOptions && useSearch && (
             <motion.div
               className={styles.searchModal}
               style={{display: 'block'}}

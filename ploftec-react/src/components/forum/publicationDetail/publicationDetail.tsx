@@ -317,6 +317,30 @@ function PublicationDetail({
     }
   };
 
+  const handleSaveEdit = async (text: string, answerCode: number) => {
+    if (!publication || answerCode === null) return;
+    // suponiendo que tu API exponga editAnswer:
+    await publicationsService.editAnswer({
+      codePublication: publication.codePublication,
+      answerCode: answerCode,
+      contenido: text,
+      connectionId
+    });
+    // refresca el estado con el nuevo texto
+    setPublication(p =>
+      p
+        ? {
+            ...p,
+            answers: p.answers.map(a =>
+              a.codeAnswer === answerCode
+                ? { ...a, textResponse: text }
+                : a
+            ),
+          }
+        : p
+    );
+  };
+
   const handleOnCancelDelete = () => {
     setShowModalDelete(false);
     setSelectedAnswerToDelete(null);
@@ -386,11 +410,6 @@ function PublicationDetail({
     }
   }, [newAnswerId, publication?.answers?.length, scrollToNewest]);
 
-
-  const renderRef = useRef(0);
-  renderRef.current++;
-  console.log(`🔁 Render PublicationDetailCard #${renderRef.current}`);
-
   useEffect(() => {
     // Si cambió de publicación (nuevo código) refrescamos el estado interno.
     if (publicationProp?.codePublication !== publication?.codePublication) {
@@ -429,7 +448,7 @@ function PublicationDetail({
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setShowNewAnswerAlert(false);  // 👋 oculta la alerta
+          setShowNewAnswerAlert(false);  // oculta la alerta
           io.disconnect();
         }
       },
@@ -440,30 +459,9 @@ function PublicationDetail({
     return () => io.disconnect();
   }, [showNewAnswerAlert, newAnswerId]);
 
-
-  const handleSaveEdit = async (text: string, answerCode: number) => {
-    if (!publication || answerCode === null) return;
-    // suponiendo que tu API exponga editAnswer:
-    await publicationsService.editAnswer({
-      codePublication: publication.codePublication,
-      answerCode: answerCode,
-      textResponse: text,
-      connectionId
-    });
-    // refresca el estado con el nuevo texto
-    setPublication(p =>
-      p
-        ? {
-            ...p,
-            answers: p.answers.map(a =>
-              a.codeAnswer === answerCode
-                ? { ...a, textResponse: text }
-                : a
-            ),
-          }
-        : p
-    );
-  };
+  const renderRef = useRef(0);
+  renderRef.current++;
+  console.log(`🔁 Render PublicationDetailCard #${renderRef.current}`);
 
   return (
     <>

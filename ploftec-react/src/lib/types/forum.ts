@@ -34,7 +34,13 @@
   export interface EditAnswerRequest {
     codePublication: number;
     answerCode: number;
-    textResponse: string;
+    contenido: string;
+    connectionId: string | null;
+  }
+
+  export interface EditPublicationRequest {
+    codePublication: number;
+    contenido: string;
     connectionId: string | null;
   }
 

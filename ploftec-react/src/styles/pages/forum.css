@@ -533,8 +533,16 @@ input[type="checkbox"] {
     margin-left:20px;
 }
 
-
-
+.question {
+    position: sticky;
+    display: flex;
+    align-items: center;
+    color: #fff;
+    width: 100%;
+    padding-bottom: 2%; /* Puedes ajustar este valor según tus necesidades */
+    background-color: #000;
+    border-radius: 8px;
+}
 
 
 

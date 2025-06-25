@@ -26,11 +26,9 @@ export default function DraggableBottomSheet({
   const controls = useAnimation()
   const dragControls = useDragControls()
   const backdropControls = useAnimation()
-  const MAX_HEIGHT = viewportHeight - 80
   const START_HEIGHT = viewportHeight * 0.75
   const MID_HEIGHT = viewportHeight * 0.6
   const MIN_DRAG_CLOSE = 120
-  const MIN_VISIBLE_HEIGHT = 200 // px desde el bottom hacia arriba (ajustable)
 
   useEffect(() => {
     setViewportHeight(window.innerHeight)
@@ -61,7 +59,7 @@ export default function DraggableBottomSheet({
     const offsetY = info.offset.y
     const velocityY = info.velocity.y
   
-    // ⛔ Si arrastró hacia arriba (negativo), no cerrar jamás
+    // Si arrastró hacia arriba (negativo), no cerrar jamás
     if (offsetY < 0 || velocityY < 0) {
       // Snap al máximo si lo soltó cerca del tope
       await controls.start({ y: 0 })
@@ -69,11 +67,11 @@ export default function DraggableBottomSheet({
       return
     }
   
-    // ✅ Snap al medio si no llegó a cerrar
+    // Snap al medio si no llegó a cerrar
     if (offsetY < MIN_DRAG_CLOSE) {
       await controls.start({ y: viewportHeight - MID_HEIGHT })
     }
-    // ✅ Si arrastró hacia abajo fuerte, cerrar
+    // Si arrastró hacia abajo fuerte, cerrar
     else {
       handleClose()
     }

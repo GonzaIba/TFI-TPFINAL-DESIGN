@@ -1,43 +1,72 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { usuariosForoService } from '@/lib/services/forum/usuariosForoService'
 import { UsersForumResponse, DetailsUserForumResponse } from '@/lib/types/forum'
 import { getPublicationTimeAgo } from '@/lib/helpers/timeHelper'
 import DraggableBottomSheet from '@/components/draggableBottomSheet/draggableBottomSheet'
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import Button from "@/components/buttonComponent/button";
+import { useErrorHandler } from '@/hooks/errors/useErrorHandler'
 import { Colors } from '@/theme/colors'
 import './tableUsers.css'
 
 export default function TableUsers({ reload, onReloadCompleted }: { reload: boolean, onReloadCompleted: () => void }) {
-  const [usuarios, setUsuarios] = useState<UsersForumResponse[]>([])
+  const [usuarios, setUsuarios] = useState<UsersForumResponse[] | undefined>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<DetailsUserForumResponse | null>(null)
+  const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<DetailsUserForumResponse | undefined>(undefined)
   const [isSheetOpen, setIsSheetOpen] = useState(false)
+  const [isTableError, setIsTableError] = useState(false)
+  const handleError = useErrorHandler();
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setIsLoading(true)
+  // 1) Función de fetch aislada (no llama a onReloadCompleted aquí)
+  const fetchUsers = useCallback(async () => {
+    setIsLoading(true)
+    setIsTableError(false)
+    try {
       const result = await usuariosForoService.obtenerUsuariosForo()
-      setUsuarios(result.data)
+      if (result.errors?.errorsList?.length) {
+        setIsTableError(true)
+      } else {
+        setUsuarios(result.data ?? [])
+      }
+    } catch {
+      setIsTableError(true)
+    } finally {
       setIsLoading(false)
-      onReloadCompleted()
     }
-    fetchUsers()
   }, [])
+
+  // 2) Fetch inicial en mount
+  useEffect(() => {
+    fetchUsers()
+  }, [fetchUsers])
+
+  // 3) Fetch al cambiar `reload` a true, y reseteo con onReloadCompleted
+  useEffect(() => {
+    if (!reload) return
+    fetchUsers().then(() => {
+      onReloadCompleted()
+    })
+  }, [reload, fetchUsers, onReloadCompleted])
 
   const openSheet = async (email: string) => {
     setIsSheetOpen(true)
-    const user = await usuariosForoService.obtenerDetalleUsuario(email)
-    setUsuarioSeleccionado(user.data)
+    const result = await usuariosForoService.obtenerDetalleUsuario(email)
+
+    //no manejar error asi solo aca
+    if (result.errors?.errorsList?.length > 0) {
+      handleError(result.errors.errorsList);
+      return;
+    }
+
+    setUsuarioSeleccionado(result.data)
   }
 
   const closeSheet = () => {
     setIsSheetOpen(false)
-    setUsuarioSeleccionado(null)
+    setUsuarioSeleccionado(undefined)
   }
-
 
   return (
     <div className="table-users">
@@ -61,7 +90,17 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
                 ))}
               </tr>
             ))
-          ) : usuarios.length ? (
+          ) : isTableError ? (
+            <tr>
+              <td colSpan={4} className="empty-state">
+                <div className="empty-container">
+                  <i className="bx bx-error" style={{ fontSize: '2rem', color: '#999' }}></i>
+                  <p>Ocurrió un error al obtener los usuarios.</p>
+                </div>
+              </td>
+            </tr>
+          )
+          : usuarios && usuarios.length ? (
             usuarios.map((u, i) => (
               <tr key={i}>
                 <td>{u.name}</td>
@@ -93,65 +132,63 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
       </table>
 
       {isSheetOpen && (
-      <DraggableBottomSheet isOpen={isSheetOpen} onClose={() => closeSheet()}>
-        {usuarioSeleccionado ? (
-        <div className="profile-container">
-          <div className="profile-user-left">
-            <div className="profile-header-user-sheet">
-              <img src={usuarioSeleccionado.imageForum} alt="user" className="profile-photo-user-sheet" />
-              <h1 className="profile-name-user-sheet">{usuarioSeleccionado.name} {usuarioSeleccionado.lastName}</h1>
-              <p className="profile-email-user-sheet">{usuarioSeleccionado.email}</p>
-              <p className="profile-last-connected"><strong>Última vez conectado:</strong> {getPublicationTimeAgo('', new Date(usuarioSeleccionado.lastTimeConnectedForum))}</p>
-              <div className="profile-buttons-user-sheet">
+        <DraggableBottomSheet isOpen={isSheetOpen} onClose={() => closeSheet()}>
+          {usuarioSeleccionado ? (
+          <div className="profile-container">
+            <div className="profile-user-left">
+              <div className="profile-header-user-sheet">
+                <img src={usuarioSeleccionado.imageForum} alt="user" className="profile-photo-user-sheet" />
+                <h1 className="profile-name-user-sheet">{usuarioSeleccionado.name} {usuarioSeleccionado.lastName}</h1>
+                <p className="profile-email-user-sheet">{usuarioSeleccionado.email}</p>
+                <p className="profile-last-connected"><strong>Última vez conectado:</strong> {getPublicationTimeAgo('', new Date(usuarioSeleccionado.lastTimeConnectedForum))}</p>
+                <div className="profile-buttons-user-sheet">
                   <button className="button-updates-user-sheet">Qualified for Updates</button>
                   <button className="button-trials-user-sheet">Trials</button>
+                </div>
+              </div>
+              <div className="profile-details-user-sheet">
+                <h2 style={{ color: 'black' }}>Acerca de</h2>
+                <p>{usuarioSeleccionado.longDescriptionForum}</p>
               </div>
             </div>
-            <div className="profile-details-user-sheet">
-              <h2 style={{ color: 'black' }}>Acerca de</h2>
-              <p>{usuarioSeleccionado.longDescriptionForum}</p>
+            <div className="profile-user-right">
+              <div className="user-properties-user-sheet">
+              <h2>Estadísticas</h2>
+              <div className="profile-user-stadistics">
+                  <p><strong>Puntaje:</strong> {usuarioSeleccionado.score}</p>
+                  <p><strong>Respuestas:</strong> {usuarioSeleccionado.quantityResponses}</p>
+                  <p><strong>Publicaciones:</strong> {usuarioSeleccionado.numberPostsCreated}</p>
+              </div>
+              </div>
+              <div className="medals-user-sheet">
+              <h2>Medallas</h2>
+              <div className="medals-user">
+                  {usuarioSeleccionado.medals?.length ? usuarioSeleccionado.medals.map((med, i) => (
+                  <div key={i} className="medals-user-container">
+                      <div className="medal-card">
+                      <div className="medal-message">{med.nameMedal}</div>
+                      <div className="medal-date">{new Date(med.dateObtained).toLocaleDateString()}</div>
+                      <div className="medal-image">
+                          <img src={med.imageMedal} alt="medal" />
+                      </div>
+                      </div>
+                  </div>
+                  )) : (
+                  <div className="no-medals-card">
+                      <div className="no-medals-message">Este usuario aún no tiene ninguna medalla.</div>
+                  </div>
+                  )}
+              </div>
+              </div>
             </div>
           </div>
-          <div className="profile-user-right">
-            <div className="user-properties-user-sheet">
-            <h2>Estadísticas</h2>
-            <div className="profile-user-stadistics">
-                <p><strong>Puntaje:</strong> {usuarioSeleccionado.score}</p>
-                <p><strong>Respuestas:</strong> {usuarioSeleccionado.quantityResponses}</p>
-                <p><strong>Publicaciones:</strong> {usuarioSeleccionado.numberPostsCreated}</p>
+          ) : (
+            <div className="profile-container">
+              
             </div>
-            </div>
-            <div className="medals-user-sheet">
-            <h2>Medallas</h2>
-            <div className="medals-user">
-                {usuarioSeleccionado.medals?.length ? usuarioSeleccionado.medals.map((med, i) => (
-                <div key={i} className="medals-user-container">
-                    <div className="medal-card">
-                    <div className="medal-message">{med.nameMedal}</div>
-                    <div className="medal-date">{new Date(med.dateObtained).toLocaleDateString()}</div>
-                    <div className="medal-image">
-                        <img src={med.imageMedal} alt="medal" />
-                    </div>
-                    </div>
-                </div>
-                )) : (
-                <div className="no-medals-card">
-                    <div className="no-medals-message">Este usuario aún no tiene ninguna medalla.</div>
-                </div>
-                )}
-            </div>
-            </div>
-          </div>
-        </div>
-        ) : (
-          <div className="profile-container">
-            
-          </div>
-        )}
-      </DraggableBottomSheet>
-      )}
-
-     
+          )}
+        </DraggableBottomSheet>
+      )}    
     </div>
   )
 }

@@ -8,4 +8,5 @@
     userName: string;
     email: string;
     roleName: string;
+    isOnboarded: boolean;
   }

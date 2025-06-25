@@ -31,7 +31,7 @@ export const usuariosForoService = {
     return response;
   },
 
-  async obtenerDetalleUsuario(email: string): Promise<GenericApiResponse<DetailsUserForumResponse | null>> {
+  async obtenerDetalleUsuario(email: string): Promise<GenericApiResponse<DetailsUserForumResponse>> {
     const response = await apiBaseService.execute<DetailsUserForumResponse, undefined>({
       method: "GET",
       url: `ApiForum/ObtenerDetalleUsuarioForos?userEmail=${email}`,

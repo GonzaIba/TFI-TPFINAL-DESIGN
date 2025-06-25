@@ -38,10 +38,12 @@ export default function UsersPage() {
   }
 
   const handleResetearFiltros = async () => {
-    await usuariosForoService.eliminarFiltroUsuario(GroupEnum.ForumUserTable)
-    const filtrosActualizados = (await usuariosForoService.obtenerFiltrosUsuario()).data
-    setUserFilters(filtrosActualizados ?? [])
-    setShouldReloadUsers(true)
+    if(userFilters.length > 0) {
+      await usuariosForoService.eliminarFiltroUsuario(GroupEnum.ForumUserTable)
+      const filtrosActualizados = (await usuariosForoService.obtenerFiltrosUsuario()).data
+      setUserFilters(filtrosActualizados ?? [])
+      setShouldReloadUsers(true)
+    }
   }
 
   const handleEliminarFiltro = async (codigoFiltro: number) => {
