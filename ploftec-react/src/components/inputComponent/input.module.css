@@ -112,6 +112,13 @@
   transform: scale(1.1);
 }
 
+.errorText {
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  padding-left: 4px; /* opcional, para alinear con el input */
+}
+
+
 @media (max-width: 1024px) {
   .searchInput input {
     font-size: 13px;

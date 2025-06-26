@@ -20,6 +20,8 @@ interface ButtonPloftecProps {
   disabled?: boolean;
   circular?: boolean;
   width?: string;
+  height?: string
+  borderRadius?: string
   transparent?: boolean;
   backgroundColor?: string;
   tooltipOptions?: TooltipOptions;
@@ -42,6 +44,8 @@ export default function ButtonPloftec({
   disabled = false,
   circular = false,
   width = '170px',
+  height = '45px',
+  borderRadius = '5px',
   transparent = false,
   backgroundColor = Colors.primary,
   tooltipOptions, // 👈 se recibe
@@ -65,9 +69,9 @@ export default function ButtonPloftec({
     disabled={disabled || loading}
     sx={{
       width: circular ? '45px' : width,
-      height: '45px',
+      height: height,
       minWidth: 0,
-      borderRadius: circular ? '50%' : '5px',
+      borderRadius: circular ? '50%' : borderRadius,
       backgroundColor: transparent ? 'transparent' : backgroundColor,
       color: transparent ? backgroundColor : '#fff',
       boxShadow: transparent ? 'none' : '0 5px 10px rgba(255, 255, 255, 0.1)',

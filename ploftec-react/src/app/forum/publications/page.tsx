@@ -1,13 +1,21 @@
 // src/app/Forum/Publications/page.tsx
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { SkeletonPublication, SkeletonAvatarAndName, PanelSection, TopPublicationCard, SkeletonLine } from '@/components'
+import { 
+  SkeletonPublication, 
+  SkeletonAvatarAndName, 
+  PanelSection, 
+  TopPublicationCard, 
+  SkeletonLine,
+  ModalComponent,
+  Button
+} from '@/components'
 import PublicationCard from '@/components/forum/publicationCard/publicationCard'
 import PublicationDetailCard from '@/components/forum/publicationDetail/publicationDetail'
+import CreatePublicationComponent from '@/components/forum/createPublicationModal/createPublicationModal'
 import TopUserCard from '@/components/forum/topUserCard/topUserCard'
-import Button from '@/components/buttonComponent/button'
 import { useErrorHandler } from '@/hooks/errors/useErrorHandler'
 import { publicationsService } from '@/lib/services/forum/publicationsService'
 import { PublicationResponse, PublicationDetailResponse } from '@/lib/types/forum'
@@ -17,6 +25,7 @@ import { Colors } from '@/theme/colors'
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { publicationsKeys } from '@/lib/query/keys';
+import { useWindowWidth } from '@/hooks';
 import {
   usePublications,
   useTopPublications,
@@ -34,7 +43,15 @@ export default function PublicationsPage() {
   const [relatedPublications, setRelatedPublications] = useState<PublicationResponse[]>()
   const [showPublicationDetail, setShowPublicationDetail] = useState(false)
   const [selectedPublicationId, setSelectedPublicationId] = useState<number | null>(null);
+  const [showModalNewPub, setShowModalNewPub] = useState(false);
   const [filter, setFilter] = useState<Filter>('all');
+
+  const width = useWindowWidth();
+  const [isMobile, setIsMobile] = useState(width < 768)
+
+  useEffect(() => {
+    setIsMobile(width < 768)
+  }, [width])
 
   /* ---------- Queries ---------- */
   const {
@@ -79,9 +96,6 @@ export default function PublicationsPage() {
     isLoading: loadingTopUsers,
   } = useTopUsers();
 
-  // 👉 Manejo centralizado de errores
-  // useErrorHandler(pubsError ?? topPubsError ?? topUsersError);
-
   const handleError = useErrorHandler();
   const queryClient = useQueryClient();
 
@@ -106,6 +120,7 @@ export default function PublicationsPage() {
 
   const onNewPublication = async () => {
     // lógica para abrir modal o redireccionar
+    setShowModalNewPub(true)
   }
 
   const onSeeTopUser = async () => {
@@ -148,6 +163,10 @@ export default function PublicationsPage() {
     setShowPublicationDetail(false)
     setCurrentPublication(undefined)
     //await fetchPublications()
+  }
+
+  const handleOnCreatePublication = async () => {
+
   }
 
   const onClicRelatedPub = async (codigo: number) => {
@@ -340,6 +359,15 @@ export default function PublicationsPage() {
           </motion.div>
         )}
       </AnimatePresence>
+      <ModalComponent 
+        closeIcon
+        title='Crear Publicación'
+        styles={{width: isMobile ? '100%' : '70%', marginTop: '100px'}} 
+        open={showModalNewPub} 
+        onClose={() => setShowModalNewPub(false)}
+      >
+        <CreatePublicationComponent onSubmit={handleOnCreatePublication}/>
+      </ModalComponent>
     </div>
   )
 }

@@ -513,6 +513,7 @@ function PublicationDetail({
                         descripcionCorta={publication.user?.shortDescription}
                         descripcionLarga={publication.user?.longDescription}
                         nombreCompleto={publication.user?.completeName}
+                        direction='right'
                       />
                       <p className={styles.usrName}>{publication.user?.completeName}</p>
                       <p className={styles.cmntAt}>{getPublicationTimeAgo('Respondido', new Date(publication.createdDate))}</p>
@@ -611,7 +612,7 @@ function PublicationDetail({
         />
       </div>
 
-      <ModalComponent open={showModalDelete} onClose={() => setShowModalDelete(false)}>
+      <ModalComponent open={showModalDelete} onClose={() => setShowModalDelete(false)} styles={{width: '500px'}}>
         <div className={styles.forumDeleteAnswer}>
           <h2>¿Estás seguro de eliminar esta respuesta?</h2>
           <p>Ten en cuenta que esta accion es irreversible.</p>

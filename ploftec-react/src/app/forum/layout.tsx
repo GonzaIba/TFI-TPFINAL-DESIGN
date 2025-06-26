@@ -8,10 +8,6 @@ import { usuariosForoService } from '@/lib/services/forum/usuariosForoService';
 import { obtenerIniciales } from '@/lib/helpers/forumHelper';
 import { UserApplication } from '@/lib/types/application';
 import { DetailsUserForumResponse } from '@/lib/types/forum';
-import Search from '@/components/searchComponent/search';
-import AvatarUser from '@/components/avatarUserComponent/avatarUser';
-import { SkeletonLine } from '@/components';
-import Loading from '@/components/loadingComponent/loading';
 import Footer from '@/components/footerComponent/footer';
 import useAuthStore from "@/store/slices/authStore/authStore";
 import ProtectedRoute from "@/components/auth/protectedRoute";
@@ -21,7 +17,7 @@ import {
   enableTdTextSelection,
   preventHorizontalScrollWheel,
 } from '@/lib/utils/tabBar';
-import { Chatbot } from '@/components';
+import { Chatbot, Input, SkeletonLine, AvatarUser, Loading } from '@/components';
 import { RobotIntro } from '@/components/chatbotComponent/robotIntro/robotIntro';
 
 export default function ForumLayout({ children }: { children: React.ReactNode }) {
@@ -126,9 +122,9 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
           </label>
           <div className="logo">PLOFTEC</div>
           <div className="align-items-lg-start searchContainer">
-            <Search
+            <Input
               placeHolder="Escriba algo..."
-              searchFunction={async () => {}}
+              submitFunction={async () => {}}
             />
           </div>
           {isUserLoading ? (

@@ -1,0 +1,23 @@
+/* chipComponent.module.css */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  background-color: #53535f61;
+  border-radius: 20px;
+  padding: 4px 8px;
+  height: 40px;
+  margin-top: 4px;
+}
+
+.label {
+  margin-right: 4px;
+  font-size: 0.875rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  /* si quieres distanciar el botón del texto: */
+  margin-right: 8px;
+}

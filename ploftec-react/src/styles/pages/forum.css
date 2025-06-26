@@ -118,50 +118,8 @@ input[type="checkbox"] {
 }
 
 
-/* Parte del buscador */
-.ant-tabs-content-holder{
-    background-color: #212121;
-}
-
-.ant-tabs-tab-btn, .mud-tabs-toolbar {
-    top: 100px !important;
-    color: #fff;
-}
-
-.ant-tabs-nav::before {
-    border-bottom: none !important;
-}
-
-.ant-tabs-nav-wrap{
-    height:70px;
-}
-
-.ant-tabs-nav, .mud-tabs-toolbar {
-    z-index: 1 !important;
-    /*    position: relative !important;*/
-    margin-top: 80px !important;
-}
-/*-----------------------------*/
-
-
 
 /* Parte del buscador */
-.search-button {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.5em;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    background-color: #f2f2f2;
-    color: #333;
-}
-
-.searchBtn:hover {
-    color: #bb86fe !important;
-}
-
 .searchContainer {
     padding-left: 8px;
     display: inline-block;
@@ -169,21 +127,6 @@ input[type="checkbox"] {
 
     flex: 2;
     justify-content: center;
-}
-
-.search-button-icon {
-    position: absolute;
-    left: 0.5em;
-}
-
-.searchTxt {
-    width: calc(100% - 65px);
-}
-
-.custom-card {
-    position: relative !important;
-    overflow: hidden !important;
-    box-shadow: none !important; /* Elimina la sombra del RadzenCard */
 }
 /*-----------------------------*/
 
@@ -380,38 +323,6 @@ input[type="checkbox"] {
 /*-----------------------------*/
 
 
-/* Skeleton */
-.ant-skeleton{
-    margin-left: 5px !important;
-}
-
-.ant-skeleton-header{
-    width: 10% ;
-}
-
-.ant-skeleton-paragraph li:nth-child(1){
-    width: 40% !important;
-}
-/*-----------------------------*/
-
-
-
-
-
-.button-container {
-    display: flex;
-    padding-top: 4px;
-}
-
-.ant-carousel{
-    height:100%;
-}
-
-.ant-carousel .slick-slide h3 {
-    color: #fff;
-}
-
-
 .tab-menu {
     /*width: 100%;
     height: 100%;*/
@@ -547,20 +458,6 @@ input[type="checkbox"] {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 .tab-menu-bar {
     position: absolute;
     bottom: 0;
@@ -578,9 +475,6 @@ input[type="checkbox"] {
     flex: 1 1 auto;
 }
 
-.ant-carousel .slick-dots-bottom {
-    display: none !important;
-}
 
 @media (max-width: 1366px) {
 
@@ -648,10 +542,6 @@ input[type="checkbox"] {
     #click:checked ~ .menu-btn i:before {
         content: "\f00d";
     }
-
-    /*    #click:checked ~ .ant-tabs {
-        display:none !important;
-    }*/
 
     .navBar-container {
         padding: 0 1rem;
@@ -739,12 +629,6 @@ input[type="checkbox"] {
         width: calc(100% - 25px);
     }
 
-    .custom-card {
-        position: relative !important;
-        overflow: hidden !important;
-        box-shadow: none !important; /* Elimina la sombra del RadzenCard */
-    }
-
     .forumContainer {
         flex-wrap: wrap; /*La propiedad flex-wrap: wrap; se utiliza para permitir que los elementos flexibles se envuelvan en múltiples líneas si el espacio horizontal es insuficiente. Esto significa que los elementos flexibles se ajustarán automáticamente para caber en el contenedor sin requerir una dirección de apilamiento explícita.*/
         width: 100%;
@@ -785,10 +669,6 @@ input[type="checkbox"] {
     .tab-menu {
         font-size: 11px;
     }
-
-    /*.tab-menu-item{
-        padding: 10px 5px;
-    }*/
 
     .tab-menu-bar {
         width: 80px; /* Ancho inicial de la barra */

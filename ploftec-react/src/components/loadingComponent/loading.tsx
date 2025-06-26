@@ -7,7 +7,7 @@ interface LoadingProps {
   show: boolean;
 }
 
-export default function Loading({ show }: LoadingProps) {
+export function Loading({ show }: LoadingProps) {
 
   return (
     <div className={`${styles.overlay} ${show ? styles.show : styles.fadeOut}`}>

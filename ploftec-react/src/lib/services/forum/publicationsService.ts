@@ -129,7 +129,7 @@ export const publicationsService = {
 
   async deleteMyAnswer(request: DeleteAnswerRequest): Promise<GenericApiResponse<SuccessfulResponse>> {
     const response = await apiBaseService.execute<SuccessfulResponse, DeleteAnswerRequest>({
-      method: "POST",
+      method: "DELETE",
       url: `ApiForum/EliminarRespuestaPropia`,
       requireCredentials: true,
       body: request,
@@ -140,10 +140,19 @@ export const publicationsService = {
 
   async editAnswer(request: EditAnswerRequest): Promise<GenericApiResponse<SuccessfulResponse>> {
     const response = await apiBaseService.execute<SuccessfulResponse, EditAnswerRequest>({
-      method: "DELETE",
+      method: "PUT",
       url: `ApiForum/EditarRespuesta`,
       requireCredentials: true,
       body: request,
+    });
+    return response;
+  },
+
+  async predictLabel(request: string): Promise<GenericApiResponse<SuccessfulResponse>> {
+    const response = await apiBaseService.execute<SuccessfulResponse, undefined>({
+      method: "POST",
+      url: `ApiForum/EditarRespuesta?texto=${request}`,
+      requireCredentials: true,
     });
     return response;
   },

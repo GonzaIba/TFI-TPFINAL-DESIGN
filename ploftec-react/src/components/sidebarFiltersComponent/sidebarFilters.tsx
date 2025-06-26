@@ -5,8 +5,7 @@ import { useEffect, useState } from "react";
 import { GroupEnum } from "@/lib/types/enum";
 import { GroupResponse } from "@/lib/types/forum";
 import { filtrosService } from "@/lib/services/forum/filtrosService";
-import InputLabel from "@/components/inputLabelComponent/inputLabel";
-import Button from "@/components/buttonComponent/button";
+import { Button, InputLabel } from "@/components";
 import styles from "./sideBarFilters.module.css";
 import CloseIcon from '@mui/icons-material/Close';
 import { Colors } from '@/theme/colors'

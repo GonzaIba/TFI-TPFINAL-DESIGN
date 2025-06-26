@@ -36,7 +36,13 @@ export default function PublicationCard({
   return (
     <div className={styles.question}>
       <div className={styles.questionAvatarUser} onClick={onClickUser}>
-        <AvatarUser tagUser={publication.userCreator?.initials ?? "AU"} /> {/*Anonimous User*/}
+        <AvatarUser 
+          tagUser={publication.userCreator?.initials ?? "AU"} 
+          imageUser={publication.userCreator?.image}
+          descripcionCorta={publication.userCreator?.shortDescription ?? ''}
+          descripcionLarga={publication.userCreator?.longDescription ?? ''}
+          nombreCompleto={publication.userCreator?.completeName ?? ''}
+          direction='right' /> {/*Anonimous User*/}
       </div>
       <div className={styles.questionBody}>
         <div className={styles.questionHeader}>

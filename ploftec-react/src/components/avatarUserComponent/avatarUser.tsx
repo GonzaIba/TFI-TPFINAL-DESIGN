@@ -3,6 +3,12 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import styles from "./avatarUser.module.css";
+import { styled } from '@mui/material/styles';
+import Button from '@mui/material/Button';
+import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
+import Typography from '@mui/material/Typography';
+
+type Direction = 'top' | 'down' | 'left' | 'right';
 
 interface AvatarUserProps {
   tagUser: string;
@@ -11,6 +17,7 @@ interface AvatarUserProps {
   descripcionLarga?: string;
   nombreCompleto?: string;
   showDetails?: boolean;
+  direction?: Direction;
 }
 
 const colors = [
@@ -40,65 +47,120 @@ export default function AvatarUser({
   descripcionLarga,
   nombreCompleto,
   showDetails = true,
+  direction,
 }: AvatarUserProps) {
   const [avatarBg, setAvatarBg] = useState("#000");
+
+  const HtmlTooltip = styled(
+    ({ className, title, children, ...props }: any) => (
+      <Tooltip
+        {...props}
+        classes={{ popper: className }}
+        title={title}
+        placement={direction}
+        arrow
+        leaveDelay={300}
+      >
+        {children}
+      </Tooltip>
+    )
+  )(({ theme }) => ({
+    [`& .${tooltipClasses.tooltip}`]: {
+      backgroundColor: '#f5f5f9',
+      color: 'rgba(0, 0, 0, 0.87)',
+      minWidth: 400,
+      fontSize: theme.typography.pxToRem(12),
+      border: '1px solid #dadde9',
+    },
+  }));
 
   useEffect(() => {
     setAvatarBg(getAvatarBackgroundColor(tagUser));
   }, [tagUser]);
 
   return (
-    <div className={styles.containerAvatar}>
-      <div
-        className={styles.profile}
-        style={{
-          backgroundImage: imageUser ? `url(${imageUser})` : undefined,
-          backgroundColor: imageUser ? undefined : avatarBg,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          width: "40px",
-          height: "40px",
-          borderRadius: "50%",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontWeight: "bold",
-          fontSize: "16px",
-          color: "#fff",
-        }}
-      >
-        {!imageUser && tagUser}
-
-        {/* Tooltip solo se renderiza si showDetails es true */}
-        {showDetails && (
-          <div className={styles.contentAvatar}>
-            <div className={styles.header}>
-              {imageUser ? (
-                <img
-                  className={styles.imageUser}
-                  src={imageUser}
-                  alt={tagUser}
-                />
-              ) : (
-                <div
-                  className={styles.avatarUser}
-                  style={{ backgroundColor: avatarBg }}
-                >
-                  {tagUser}
+    <>
+    {showDetails ? (
+      <HtmlTooltip
+        title={
+          <React.Fragment>
+            <div className={styles.contentAvatar}>
+              <div className={styles.header}>
+                {imageUser ? (
+                  <img
+                    className={styles.imageUser}
+                    src={imageUser}
+                    alt={tagUser}
+                  />
+                ) : (
+                  <div
+                    className={styles.avatarUser}
+                    style={{ backgroundColor: avatarBg }}
+                  >
+                    {tagUser}
+                  </div>
+                )}
+                <div className={styles.infos}>
+                  <h3 className={styles.name}>{nombreCompleto}</h3>
+                  <p className={styles.title}>{descripcionCorta}</p>
                 </div>
-              )}
-              <div className={styles.infos}>
-                <h3 className={styles.name}>{nombreCompleto}</h3>
-                <p className={styles.title}>{descripcionCorta}</p>
+              </div>
+              <div className={styles.body}>
+                <p>{descripcionLarga}</p>
               </div>
             </div>
-            <div className={styles.body}>
-              <p>{descripcionLarga}</p>
-            </div>
+          </React.Fragment>
+        }
+      >
+        <div className={styles.containerAvatar}>
+          <div
+            className={styles.profile}
+            style={{
+              backgroundImage: imageUser ? `url(${imageUser})` : undefined,
+              backgroundColor: imageUser ? undefined : avatarBg,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              width: "40px",
+              height: "40px",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: "bold",
+              fontSize: "16px",
+              color: "#fff",
+            }}
+          >
+            {!imageUser && tagUser}
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      </HtmlTooltip>
+      ) : (
+        <div className={styles.containerAvatar}>
+          <div
+            className={styles.profile}
+            style={{
+              backgroundImage: imageUser ? `url(${imageUser})` : undefined,
+              backgroundColor: imageUser ? undefined : avatarBg,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+              width: "40px",
+              height: "40px",
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontWeight: "bold",
+              fontSize: "16px",
+              color: "#fff",
+            }}
+          >
+            {!imageUser && tagUser}
+          </div>
+        </div>
+      )}
+    </>
   );
 }

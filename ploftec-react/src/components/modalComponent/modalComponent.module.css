@@ -18,3 +18,20 @@
   overflow-y: auto;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
 }
+
+.closeModalButton {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.modalTitle {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+.titleModal {
+  padding: 8px;
+  width: 100%;
+}

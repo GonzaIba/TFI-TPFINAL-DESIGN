@@ -37,6 +37,7 @@ export default function TopUserCard({
           descripcionLarga={longDescription}
           nombreCompleto={fullName}
           showDetails={true}
+          direction='left'
         />
       </div>
       <div className="top-user-data">

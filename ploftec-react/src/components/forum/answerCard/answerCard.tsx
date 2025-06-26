@@ -199,6 +199,7 @@ export default function AnswerCard({
               descripcionCorta={answer.user?.shortDescription ?? ''}
               descripcionLarga={answer.user?.longDescription ?? ''}
               nombreCompleto={answer.user?.completeName ?? ''}
+              direction='right'
             />
             <p className={styles.usrName}>{answer.user?.completeName}</p>
             <p className={styles.cmntAt}>{answer.createdDate.toString()}</p>

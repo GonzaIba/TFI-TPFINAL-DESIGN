@@ -2,14 +2,17 @@
 
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import styles from './modalComponent.module.css'
+import CloseIcon from '@mui/icons-material/Close';
+import style from './modalComponent.module.css'
+import { Button } from '@/components';
 
 type ModalComponentProps = {
   open: boolean
+  title?: string
   onClose: () => void
   children: React.ReactNode
-  width?: string
-  height?: string
+  closeIcon?: boolean;
+  styles?: React.CSSProperties
 }
 
 const backdropVariants = {
@@ -28,15 +31,16 @@ export function ModalComponent ({
   open,
   onClose,
   children,
-  width = '500px',
-  height = 'auto'
+  closeIcon = false,
+  title,
+  styles
 }: ModalComponentProps) {
   return (
     <AnimatePresence>
       {open && (
         // WRAPPER: cubre toda la ventana y centra con flex
         <motion.div
-          className={styles.wrapper}
+          className={style.wrapper}
           variants={backdropVariants}
           initial="hidden"
           animate="visible"
@@ -44,17 +48,36 @@ export function ModalComponent ({
           transition={{ duration: 0.25 }}
           onClick={onClose}          /* clic fuera = cerrar */
         >
+          
           {/* Caja — detenemos el clic para que no burbujee */}
           <motion.div
-            className={styles.modal}
+            className={style.modal}
             variants={modalVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
             transition={{ duration: 0.25 }}
             onClick={e => e.stopPropagation()}
-            style={{ width, height }}
+            style={styles}
           >
+            {/* Botón de cerrar */}
+            {closeIcon && title && (
+              <div className={style.modalTitle}>
+                <div className={style.titleModal}>
+                  {title}
+                </div>
+                <div className={style.closeModalButton}>
+                  <Button
+                    onClick={onClose}
+                    icon={<CloseIcon fontSize='small'/>}
+                    width='35px'
+                    height='35px'
+                    borderRadius='35px'
+                  />
+                </div>
+              </div>
+
+            )}
             {children}
           </motion.div>
         </motion.div>
