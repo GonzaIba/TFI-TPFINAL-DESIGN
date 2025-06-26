@@ -148,10 +148,10 @@ export const publicationsService = {
     return response;
   },
 
-  async predictLabel(request: string): Promise<GenericApiResponse<SuccessfulResponse>> {
-    const response = await apiBaseService.execute<SuccessfulResponse, undefined>({
+  async predictLabels(request: string): Promise<GenericApiResponse<string[]>> {
+    const response = await apiBaseService.execute<string[], undefined>({
       method: "POST",
-      url: `ApiForum/EditarRespuesta?texto=${request}`,
+      url: `ApiForum/PredecirEtiquetas?texto=${request}`,
       requireCredentials: true,
     });
     return response;

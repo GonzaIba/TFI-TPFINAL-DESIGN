@@ -1,6 +1,6 @@
 // src/components/forum/createPublicationComponent.tsx
 
-import React, { useState, ChangeEvent } from 'react'
+import React, { useState, ChangeEvent, useEffect } from 'react'
 import EditorInput from '@/components/editorComponent/editor'
 import { Button, Input, ChipComponent } from '@/components';
 import Tooltip from '@mui/material/Tooltip';
@@ -8,15 +8,13 @@ import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import styles from './createPublicationModal.module.css'
+import { publicationsService } from '@/lib/services/forum/publicationsService';
+import { useDebounce } from '@/hooks/useDebounce';
 import { motion, AnimatePresence } from 'framer-motion'
+import { GenericApiResponse } from '@/lib/types/apiResponse';
 
 export interface CreatePublicationProps {
-  /** Contenido inicial para el editor (por ejemplo borrador) */
   initialDraft?: string
-  /**
-   * Callback que recibe { title, content, tags }
-   * cuando el usuario hace submit.
-   */
   onSubmit: (data: {
     title: string
     content: string
@@ -40,6 +38,32 @@ const CreatePublicationComponent: React.FC<CreatePublicationProps> = ({
   const [tags, setTags] = useState<string[]>([])
   const [errorTag, setErrorTag] = useState(false)
   const [errorTagText, setErrorTagText] = useState('Ingresa al menos una etiqueta')
+  
+  // --- nuevo estado para sugerencias ---
+  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
+
+  // Debounce sobre tagsText (500 ms tras última pulsación)
+  const debouncedTagsText = useDebounce(tagsText, 500);
+
+  // Efecto que llama a predictLabels cuando el usuario deja de escribir
+  useEffect(() => {
+    if (!debouncedTagsText.trim()) {
+      setSuggestedTags([]);
+      return;
+    }
+
+    const fetchPredictedLabels = async () => {
+      try {
+        const res = await publicationsService.predictLabels(debouncedTagsText);
+        setSuggestedTags(res.data || []);
+      }
+    catch (err) {
+        console.error('Error al predecir etiquetas:', err);
+    }
+    }
+
+    fetchPredictedLabels();
+  }, [debouncedTagsText]);
 
   // Validación de largo máximo
   const isTitleTooLong = title.length > 150;
