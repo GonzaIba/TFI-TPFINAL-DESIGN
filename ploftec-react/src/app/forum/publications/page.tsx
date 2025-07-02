@@ -18,7 +18,7 @@ import CreatePublicationComponent from '@/components/forum/createPublicationModa
 import TopUserCard from '@/components/forum/topUserCard/topUserCard'
 import { useErrorHandler } from '@/hooks/errors/useErrorHandler'
 import { publicationsService } from '@/lib/services/forum/publicationsService'
-import { PublicationResponse, PublicationDetailResponse } from '@/lib/types/forum'
+import { PublicationResponse, PublicationDetailResponse, CreatePublicationRequest } from '@/lib/types/forum'
 import { AvatarCrownEnum } from '@/lib/types/enum'
 import { Add, Bookmark, BookmarkBorder, BorderColor, BorderColorOutlined } from '@mui/icons-material';
 import { Colors } from '@/theme/colors'
@@ -42,9 +42,12 @@ export default function PublicationsPage() {
   const [currentPublication, setCurrentPublication] = useState<PublicationDetailResponse>()
   const [relatedPublications, setRelatedPublications] = useState<PublicationResponse[]>()
   const [showPublicationDetail, setShowPublicationDetail] = useState(false)
+  const [loadingCreatePublication, setLoadingCreatePublication] = useState(false)
   const [selectedPublicationId, setSelectedPublicationId] = useState<number | null>(null);
   const [showModalNewPub, setShowModalNewPub] = useState(false);
   const [filter, setFilter] = useState<Filter>('all');
+  const [currentPage, setCurrentPage] = useState(1)
+  const postsPerPage = 2
 
   const width = useWindowWidth();
   const [isMobile, setIsMobile] = useState(width < 768)
@@ -98,6 +101,11 @@ export default function PublicationsPage() {
 
   const handleError = useErrorHandler();
   const queryClient = useQueryClient();
+
+  const indexOfLast = currentPage * postsPerPage
+  const indexOfFirst = indexOfLast - postsPerPage
+  const currentPubs = publicacionesData.slice(indexOfFirst, indexOfLast)
+  const totalPages = Math.ceil(publicacionesData.length / postsPerPage)
 
   const toggleFilter = (f: Filter) => {
     setFilter(prev => (prev === f ? 'all' : f));   // si vuelven a pulsar, vuelve a 'all'
@@ -165,8 +173,16 @@ export default function PublicationsPage() {
     //await fetchPublications()
   }
 
-  const handleOnCreatePublication = async () => {
-
+  const handleOnCreatePublication = async (data : CreatePublicationRequest) => {
+    try {
+      setLoadingCreatePublication(true);
+      await publicationsService.createPublication(data);
+    } catch(error) {
+      console.error(error)
+    } finally {
+      setLoadingCreatePublication(false);
+      setShowModalNewPub(false);
+    }
   }
 
   const onClicRelatedPub = async (codigo: number) => {
@@ -261,8 +277,8 @@ export default function PublicationsPage() {
                     <SkeletonPublication />
                     <SkeletonPublication />
                   </>
-                ) : publicacionesData.length ? (
-                  publicacionesData.map((pub, i) => (
+                ) : currentPubs.length ? (
+                  currentPubs.map((pub, i) => (
                     <motion.div
                       key={`${pub.codePublication}-${pub.codeUser}`}
                       initial={{ opacity: 0, y: 40 }}
@@ -270,24 +286,49 @@ export default function PublicationsPage() {
                       exit={{ opacity: 0, y: -20 }}
                       transition={{ duration: 0.7, delay: i * 0.1, ease: 'easeOut' }}
                     >
-                    <PublicationCard
-                      publication={pub}
-                      onClickTitle={async () => onClickTitle(pub.codePublication)}
-                      onClickUser={onClickUser}
-                      onToggleSave={async () => { toggleSave({ codePub: pub.codePublication, isSaved: pub.isSaved }); }}
-                    />
+                      <PublicationCard
+                        publication={pub}
+                        onClickTitle={async () => onClickTitle(pub.codePublication)}
+                        onClickUser={onClickUser}
+                        onToggleSave={async () => {
+                          toggleSave({ codePub: pub.codePublication, isSaved: pub.isSaved })
+                        }}
+                      />
                     </motion.div>
                   ))
                 ) : filter === 'created' ? (
-                  <p>
-                    Aún no tenés publicaciones creadas<br />
-                    ¡Creá una y gana puntos!
-                  </p>
+                  <p>Aún no tenés publicaciones creadas…</p>
                 ) : (
-                  <p>
-                    Aún no hay publicaciones cargadas…<br />
-                    ¡Sé el primero y gana puntos!
-                  </p>
+                  <p>Aún no hay publicaciones cargadas…</p>
+                )}
+
+                {/* ––– CONTROLES DE PAGINADO ––– */}
+                {totalPages > 1 && (
+                  <div className="pagination">
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                      disabled={currentPage === 1}
+                    >
+                      ‹ Prev
+                    </button>
+
+                    {Array.from({ length: totalPages }, (_, idx) => (
+                      <button
+                        key={idx + 1}
+                        className={currentPage === idx + 1 ? 'active' : undefined}
+                        onClick={() => setCurrentPage(idx + 1)}
+                      >
+                        {idx + 1}
+                      </button>
+                    ))}
+
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next ›
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -366,7 +407,7 @@ export default function PublicationsPage() {
         open={showModalNewPub} 
         onClose={() => setShowModalNewPub(false)}
       >
-        <CreatePublicationComponent onSubmit={handleOnCreatePublication}/>
+        <CreatePublicationComponent onSubmit={handleOnCreatePublication} close={() => setShowModalNewPub(false) } loadingSubmit={loadingCreatePublication}/>
       </ModalComponent>
     </div>
   )

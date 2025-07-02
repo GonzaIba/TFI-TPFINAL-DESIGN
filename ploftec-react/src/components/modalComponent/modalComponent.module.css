@@ -35,3 +35,18 @@
   padding: 8px;
   width: 100%;
 }
+
+.modal {
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
+
+.modal::-webkit-scrollbar {
+  width: 10px;
+  background: #1B1B1B;
+}
+
+.modal::-webkit-scrollbar-thumb {
+  background: #2e3033;
+  border-radius: 5px;
+}

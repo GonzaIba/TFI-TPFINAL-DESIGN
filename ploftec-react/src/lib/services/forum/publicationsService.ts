@@ -2,6 +2,7 @@
 import { GenericApiResponse } from "@/lib/types/apiResponse";
 import { apiBaseService } from "../apiBaseService";
 import {
+  CreatePublicationRequest,
   AnswerVoteRequest,
   PublicationVoteRequest,
   AddAnswerRequest,
@@ -15,6 +16,16 @@ import {
 } from "@/lib/types/forum";
 
 export const publicationsService = {
+  async createPublication(request : CreatePublicationRequest): Promise<GenericApiResponse<SuccessfulResponse>> {
+    const response = await apiBaseService.execute<SuccessfulResponse, CreatePublicationRequest>({
+      method: "POST",
+      url: "ApiForum/CrearPublicacion",
+      requireCredentials: true,
+      body: request
+    });
+    return response;
+  },
+
   async getPublications(): Promise<GenericApiResponse<PublicationResponse[]>> {
     const response = await apiBaseService.execute<PublicationResponse[], undefined>({
       method: "GET",
@@ -150,7 +161,7 @@ export const publicationsService = {
 
   async predictLabels(request: string): Promise<GenericApiResponse<string[]>> {
     const response = await apiBaseService.execute<string[], undefined>({
-      method: "POST",
+      method: "GET",
       url: `ApiForum/PredecirEtiquetas?texto=${request}`,
       requireCredentials: true,
     });

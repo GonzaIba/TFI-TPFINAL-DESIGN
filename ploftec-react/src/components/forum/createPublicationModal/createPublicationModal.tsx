@@ -12,14 +12,19 @@ import { publicationsService } from '@/lib/services/forum/publicationsService';
 import { useDebounce } from '@/hooks/useDebounce';
 import { motion, AnimatePresence } from 'framer-motion'
 import { GenericApiResponse } from '@/lib/types/apiResponse';
+import { CreatePublicationRequest } from '@/lib/types/forum';
 
 export interface CreatePublicationProps {
   initialDraft?: string
-  onSubmit: (data: {
-    title: string
-    content: string
-    tags: string
-  }) => void
+  loadingSubmit?: boolean
+  onSubmit: (data: CreatePublicationRequest) => void
+  close: () => void;
+}
+
+interface Tag {
+  id: string;
+  tagText: string;
+  isSuggest: boolean;
 }
 
 const chipVariants = {
@@ -30,22 +35,25 @@ const chipVariants = {
 
 const CreatePublicationComponent: React.FC<CreatePublicationProps> = ({
   initialDraft = '',
+  loadingSubmit,
   onSubmit,
+  close
 }) => {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState(initialDraft)
   const [tagsText, setTagsText] = useState('')
-  const [tags, setTags] = useState<string[]>([])
+  const [tags, setTags] = useState<Tag[]>([])
   const [errorTag, setErrorTag] = useState(false)
   const [errorTagText, setErrorTagText] = useState('Ingresa al menos una etiqueta')
+  const [errorTitle, setErrorTitle] = useState(false)
+  const [errorTitleText, setErrorTitleText] = useState('Ingresa al menos una etiqueta')
   
   // --- nuevo estado para sugerencias ---
-  const [suggestedTags, setSuggestedTags] = useState<string[]>([]);
+  const [suggestedTags, setSuggestedTags] = useState<Tag[]>([]);
 
   // Debounce sobre tagsText (500 ms tras última pulsación)
-  const debouncedTagsText = useDebounce(tagsText, 500);
+  const debouncedTagsText = useDebounce(title, 1000);
 
-  // Efecto que llama a predictLabels cuando el usuario deja de escribir
   useEffect(() => {
     if (!debouncedTagsText.trim()) {
       setSuggestedTags([]);
@@ -54,29 +62,71 @@ const CreatePublicationComponent: React.FC<CreatePublicationProps> = ({
 
     const fetchPredictedLabels = async () => {
       try {
-        const res = await publicationsService.predictLabels(debouncedTagsText);
-        setSuggestedTags(res.data || []);
-      }
-    catch (err) {
+        const res = await publicationsService.predictLabels(debouncedTagsText) as GenericApiResponse<string[]>;
+        const predictions = res.data ?? [];
+
+        // 1) Excluimos los tags ya seleccionados
+        const existingSelected = new Set(tags.map(t => t.tagText));
+
+        // 2) Creamos el array completo de sugerencias de la API
+        const apiSuggestions: Tag[] = predictions
+          .filter(p => !existingSelected.has(p))
+          .map(p => ({ id: p, tagText: p, isSuggest: true }));
+
+        // 3) Ahora mezclamos con el estado previo para poner las "nuevas" arriba
+        setSuggestedTags(prev => {
+          // a) identificamos los ids que vinieron de la API
+          const apiIds = new Set(apiSuggestions.map(s => s.id));
+
+          // b) cuáles de las apiSuggestions no estaban ya en prev → estas son "nuevas"
+          const justArrived = apiSuggestions.filter(s => !prev.some(p => p.id === s.id));
+
+          // c) cuáles de los prev siguen en la lista de la API → las mantenemos
+          const stillValid = prev.filter(p => apiIds.has(p.id));
+
+          return [...justArrived, ...stillValid];
+        });
+      } catch (err) {
         console.error('Error al predecir etiquetas:', err);
-    }
-    }
+      }
+    };
 
     fetchPredictedLabels();
   }, [debouncedTagsText]);
 
-  // Validación de largo máximo
-  const isTitleTooLong = title.length > 150;
-
   const handleSubmit = () => {
-    if (isTitleTooLong) return; // opcional: prevenir submit cuando hay error
-    onSubmit({ title, content, tags: tagsText });
+    let canSubmit = true;
+    if(title === ""){
+      setErrorTitle(true)
+      setErrorTitleText("Ingrese un título")
+      canSubmit = false
+    }
+    if(tags.length == 0){
+      setErrorTag(true)
+      setErrorTagText('Ingresa al menos un tag')
+      canSubmit = false
+    }
+
+    if(canSubmit)
+      onSubmit({ title, content, labels: tags.map(x=> x.tagText) });
   };
 
   const handleOnInput = (e:any) => {
     setTagsText(e.target.value)
     if(errorTag)
       setErrorTag(false)
+  }
+
+  const handleSetTitle = (text : string) => {
+    if(text.length > 150){
+      setErrorTitle(true)
+      setErrorTitleText("Maximo 150 caracteres")
+    }
+
+    setTitle(text)
+
+    if(errorTitle)
+      setErrorTitle(false)
   }
 
   const handleAddTag = () => {
@@ -91,14 +141,35 @@ const CreatePublicationComponent: React.FC<CreatePublicationProps> = ({
       return
     }
 
-    setTags(prev => [...prev, tagsText.trim()])
+    setTags(prev => [...prev, { id: crypto.randomUUID(), tagText: tagsText.trim(), isSuggest: false }])
     setTagsText('')
     setErrorTag(false)
   }
 
-  const handleRemoveTag = (index: number) => {
-    setTags(prev => prev.filter((_, i) => i !== index))
+  const handleAddSuggestedTag = (tag: Tag) => {
+    // 1) lo agrego a tags (si querés conservar el mismo id podés reusarlo)
+    setTags(prev => [
+      ...prev, 
+      { ...tag, isSuggest: true, id: crypto.randomUUID() }
+    ])
+    // 2) lo saco de suggestedTags filtrando por id
+    setSuggestedTags(prev => prev.filter(t => t.id !== tag.id))
   }
+
+
+  const handleRemoveTag = (index: number) => {
+    // Capturamos el tag que vamos a eliminar
+    const removedTag = tags[index];
+
+    // 1) Eliminamos de 'tags'
+    setTags(prev => prev.filter((_, i) => i !== index));
+
+    // 2) Si era sugerido, lo volvemos a poner en suggestedTags
+    if (removedTag.isSuggest) {
+      setSuggestedTags(prev => [...prev, removedTag]);
+    }
+  };
+
 
   return (
     <div className={styles.container}>
@@ -114,14 +185,41 @@ const CreatePublicationComponent: React.FC<CreatePublicationProps> = ({
           </label>
           <Input
             placeHolder="¿De que tema querés abordar? Sé específico."
-            onInput={e => setTitle(e.target.value)}
+            onInput={e => handleSetTitle(e.target.value)}
             customStyle={{ height: '50px', fontSize: '16px' }}
             useSearch={false}
             showIcon={false}
-            error={isTitleTooLong}
-            errorText="Maximo 150 caracteres"
+            error={errorTitle}
+            errorText={errorTitleText}
           />
         </div>
+
+        {/* SUGERIDAS */}
+        {title != "" && (
+          <div className={styles.formGroup}>
+            <label htmlFor="title" className={styles.label}>
+              Sugeridos
+            </label>
+            <div className={styles.chipList}>
+              <AnimatePresence>
+                {suggestedTags.map((item, idx) => (
+                  <motion.div
+                    key={item.id}
+                    layout
+                    variants={chipVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                    className={styles.chipContainer}
+                  >
+                    <ChipComponent label={item.tagText} button={<Button width='10px' borderRadius='10px' height='0px' icon={<AddIcon></AddIcon>} transparent onClick={() => handleAddSuggestedTag(item)} />}></ChipComponent>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          </div>
+        )}
 
         {/* ETIQUETAS */}
         <div className={styles.formGroup}>
@@ -148,12 +246,14 @@ const CreatePublicationComponent: React.FC<CreatePublicationProps> = ({
             <div className={styles.addTag}>
               <Button circular onClick={handleAddTag} icon={<AddIcon></AddIcon>}/>
             </div>
+
             {/* Aquí animamos los chips */}
             <div className={styles.chipList}>
               <AnimatePresence>
                 {tags.map((item, idx) => (
                 <motion.div
-                  key={item + idx}
+                  key={item.id}
+                  layout
                   variants={chipVariants}
                   initial="hidden"
                   animate="visible"
@@ -161,7 +261,7 @@ const CreatePublicationComponent: React.FC<CreatePublicationProps> = ({
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   className={styles.chipContainer}
                 >
-                  <ChipComponent label={item} button={<Button width='10px' borderRadius='10px' height='0px' icon={<CloseIcon></CloseIcon>} transparent onClick={() => handleRemoveTag(idx)} />}></ChipComponent>
+                  <ChipComponent label={item.tagText} button={<Button width='10px' borderRadius='10px' height='0px' icon={<CloseIcon></CloseIcon>} transparent onClick={() => handleRemoveTag(idx)} />}></ChipComponent>
                 </motion.div>
                 ))}
               </AnimatePresence>
@@ -182,13 +282,15 @@ const CreatePublicationComponent: React.FC<CreatePublicationProps> = ({
             <EditorInput
               isInternal
               initialContent={content}
+              onChangeContent={(data) => {setContent(data)}}
             />
           </div>
         </div>
 
         {/* BOTÓN DE ENVÍO */}
         <div className={styles.formActions}>
-          <Button onClick={handleSubmit} text='Publicar'/>
+          <Button onClick={handleSubmit} text='Publicar' loading={loadingSubmit}/>
+          <Button onClick={close} text='Cancelar'/>
         </div>
       </div>
     </div>

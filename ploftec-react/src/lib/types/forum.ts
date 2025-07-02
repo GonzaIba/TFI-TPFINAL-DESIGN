@@ -5,6 +5,12 @@
     filters_CodeValue: Record<number, string>;
   }
 
+  export interface CreatePublicationRequest {
+    title: string;
+    content: string;
+    labels: string[]
+  }
+
   export interface PublicationVoteRequest {
     codePublication: number;
     isPositive: boolean;
