@@ -10,7 +10,8 @@ import {
   TopPublicationCard, 
   SkeletonLine,
   ModalComponent,
-  Button
+  Button,
+  Paginator
 } from '@/components'
 import PublicationCard from '@/components/forum/publicationCard/publicationCard'
 import PublicationDetailCard from '@/components/forum/publicationDetail/publicationDetail'
@@ -47,7 +48,7 @@ export default function PublicationsPage() {
   const [showModalNewPub, setShowModalNewPub] = useState(false);
   const [filter, setFilter] = useState<Filter>('all');
   const [currentPage, setCurrentPage] = useState(1)
-  const postsPerPage = 2
+  const postsPerPage = 1
 
   const width = useWindowWidth();
   const [isMobile, setIsMobile] = useState(width < 768)
@@ -59,6 +60,7 @@ export default function PublicationsPage() {
   /* ---------- Queries ---------- */
   const {
     data: publicacionesAll = [],
+    isFetching: fetchingAll,
     isLoading: loadingAll,
   } = usePublications();
 
@@ -98,6 +100,12 @@ export default function PublicationsPage() {
     data: usuariosTop = [],
     isLoading: loadingTopUsers,
   } = useTopUsers();
+
+  const isPageLoading =
+    (filter==='all'    && (loadingAll    || fetchingAll))   ||
+    (filter==='saved'  && loadingSaved)                     ||
+    (filter==='created'&& loadingCreated)                   ||
+    loadingTopPubs  || loadingTopUsers
 
   const handleError = useErrorHandler();
   const queryClient = useQueryClient();
@@ -303,33 +311,12 @@ export default function PublicationsPage() {
                 )}
 
                 {/* ––– CONTROLES DE PAGINADO ––– */}
-                {totalPages > 1 && (
-                  <div className="pagination">
-                    <button
-                      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                      disabled={currentPage === 1}
-                    >
-                      ‹ Prev
-                    </button>
-
-                    {Array.from({ length: totalPages }, (_, idx) => (
-                      <button
-                        key={idx + 1}
-                        className={currentPage === idx + 1 ? 'active' : undefined}
-                        onClick={() => setCurrentPage(idx + 1)}
-                      >
-                        {idx + 1}
-                      </button>
-                    ))}
-
-                    <button
-                      onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                      disabled={currentPage === totalPages}
-                    >
-                      Next ›
-                    </button>
-                  </div>
-                )}
+                   <Paginator
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                    isComponentLoading={isPageLoading}
+                  />
               </div>
 
               {/* —————— Lado derecho (top-users y top-questions) —————— */}

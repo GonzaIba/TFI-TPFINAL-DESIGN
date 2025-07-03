@@ -1,0 +1,46 @@
+.paginator {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	margin: 1rem 0;
+    bottom: 1rem;
+    margin-top: auto;
+}
+
+.paginatorArrow {
+	cursor: pointer;
+	background: none;
+	border: none;
+	font-size: 1.5rem;
+}
+
+.paginatorList {
+	display: flex;
+	list-style: none;
+	margin: 0 0.5rem;
+	padding: 0;
+}
+
+.paginatorItem {
+	position: relative;
+	margin: 0 0.25rem;
+}
+
+.paginatorButton {
+	position: relative;
+	z-index: 1;
+	background: none;
+	border: none;
+	padding: 0.5rem 0.75rem;
+	cursor: pointer;
+}
+
+.paginatorHighlight {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	border-radius: 0.25rem;
+	background: rgba(255, 255, 255, 0.1);
+}
