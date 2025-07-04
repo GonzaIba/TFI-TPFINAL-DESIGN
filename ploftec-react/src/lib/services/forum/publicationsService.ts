@@ -1,5 +1,5 @@
 // src/lib/services/publicacionesService.ts
-import { GenericApiResponse } from "@/lib/types/apiResponse";
+import { GenericApiResponse, PaginatedList } from "@/lib/types/apiResponse";
 import { apiBaseService } from "../apiBaseService";
 import {
   CreatePublicationRequest,
@@ -26,14 +26,18 @@ export const publicationsService = {
     return response;
   },
 
-  async getPublications(): Promise<GenericApiResponse<PublicationResponse[]>> {
-    const response = await apiBaseService.execute<PublicationResponse[], undefined>({
-      method: "GET",
-      url: "ApiForum/ObtenerPublicaciones",
-      requireCredentials: true,
-    });
-    return response;
-  },
+  async getPublications(pageIndex: number,pageCount: number)
+  : Promise<GenericApiResponse<PaginatedList<PublicationResponse>>> {
+      const response = await apiBaseService.execute<
+        PaginatedList<PublicationResponse>,
+        undefined
+      >({
+        method: "GET",
+        url: `ApiForum/ObtenerPublicaciones?pageIndex=${pageIndex}&pageCount=${pageCount}`,
+        requireCredentials: true,
+      });
+      return response;
+    },
 
   async getDetailPublication(code: number): Promise<GenericApiResponse<PublicationDetailResponse>> {
     const response = await apiBaseService.execute<PublicationDetailResponse, undefined>({
@@ -53,19 +57,21 @@ export const publicationsService = {
     return response;
   },
 
-  async getCreatedPublications(): Promise<GenericApiResponse<PublicationResponse[]>> {
-    const response = await apiBaseService.execute<PublicationResponse[], undefined>({
+  async getCreatedPublications(pageIndex: number, pageCount: number)
+  : Promise<GenericApiResponse<PaginatedList<PublicationResponse>>> {
+    const response = await apiBaseService.execute<PaginatedList<PublicationResponse>, undefined>({
       method: "GET",
-      url: "ApiForum/ObtenerPublicacionesCreadasPorUsuario",
+      url: `ApiForum/ObtenerPublicacionesCreadasPorUsuario?pageIndex=${pageIndex}&pageCount=${pageCount}`,
       requireCredentials: true,
     });
     return response;
   },
 
-  async getSavedPublications(): Promise<GenericApiResponse<PublicationResponse[]>> {
-    const response = await apiBaseService.execute<PublicationResponse[], undefined>({
+  async getSavedPublications(pageIndex: number, pageCount: number)
+  : Promise<GenericApiResponse<PaginatedList<PublicationResponse>>> {
+    const response = await apiBaseService.execute<PaginatedList<PublicationResponse>, undefined>({
       method: "GET",
-      url: "ApiForum/ObtenerPublicacionesGuardadas",
+      url: `ApiForum/ObtenerPublicacionesGuardadas?pageIndex=${pageIndex}&pageCount=${pageCount}`,
       requireCredentials: true,
       forceLogoutIfException: true,
     });

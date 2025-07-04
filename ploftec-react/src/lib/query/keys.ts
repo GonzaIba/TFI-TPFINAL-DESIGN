@@ -1,10 +1,14 @@
 // lib/query/keys.ts
 export const publicationsKeys = {
   all: ['publications'] as const,
-  list: () => [...publicationsKeys.all, 'list'] as const,
-  topWeek: () => [...publicationsKeys.all, 'top-week'] as const,
-  saved: () => [...publicationsKeys.all, 'saved'] as const,
-  created: () => [...publicationsKeys.all, 'created'] as const,
+  list: (page: number, pageSize: number) =>
+    [...publicationsKeys.all, 'paginated', { page, pageSize }] as const,
+  topWeek: (page: number, pageSize: number) => 
+    [...publicationsKeys.all, 'top-week', { page, pageSize }] as const,
+  saved: (page: number, pageSize: number) => 
+    [...publicationsKeys.all, 'saved', { page, pageSize }] as const,
+  created: (page: number, pageSize: number) =>
+     [...publicationsKeys.all, 'created', { page, pageSize }] as const,
 };
 
 export const usersKeys = {

@@ -47,8 +47,13 @@ export default function PublicationsPage() {
   const [selectedPublicationId, setSelectedPublicationId] = useState<number | null>(null);
   const [showModalNewPub, setShowModalNewPub] = useState(false);
   const [filter, setFilter] = useState<Filter>('all');
-  const [currentPage, setCurrentPage] = useState(1)
-  const postsPerPage = 1
+  const [pages, setPages] = useState<{ [key in Filter]: number }>({
+    all: 1,
+    saved: 1,
+    created: 1,
+  })
+  const currentPage = pages[filter]
+  const postsPerPage = 3
 
   const width = useWindowWidth();
   const [isMobile, setIsMobile] = useState(width < 768)
@@ -59,37 +64,43 @@ export default function PublicationsPage() {
 
   /* ---------- Queries ---------- */
   const {
-    data: publicacionesAll = [],
-    isFetching: fetchingAll,
+    data: paginatedPubs,
     isLoading: loadingAll,
-  } = usePublications();
+    isFetching: fetchingAll,
+  } = usePublications(currentPage, postsPerPage)
 
   const {
-    data: publicacionesSaved = [],
-    isLoading: loadingSavedInitial,
+    data: paginatedSaved,
+    isLoading: loadingSaved,
     isFetching: fetchingSaved,
-  } = useSavedPublications(filter === 'saved');
-
-  const loadingSaved = loadingSavedInitial || fetchingSaved;
+  } = useSavedPublications(filter === 'saved', currentPage, postsPerPage)
 
   const {
-    data: publicacionesCreated = [],
+    data: paginatedCreated,
     isLoading: loadingCreated,
-  } = useCreatedPublications(filter === 'created');
+  } = useCreatedPublications(filter === 'created', currentPage, postsPerPage)
 
+  // determinar datos y totalPages según filtro
   const publicacionesData =
-    filter === 'saved'
-      ? publicacionesSaved
-      : filter === 'created'
-      ? publicacionesCreated
-      : publicacionesAll;
+    filter === 'all'
+      ? paginatedPubs?.list ?? []
+      : filter === 'saved'
+      ? paginatedSaved?.list ?? []
+      : paginatedCreated?.list ?? []
+
+  const totalPages =
+    filter === 'all'
+      ? paginatedPubs?.totalPages ?? 1
+      : filter === 'saved'
+      ? paginatedSaved?.totalPages ?? 1
+      : paginatedCreated?.totalPages ?? 1
 
   const loadingPubs =
-    filter === 'saved'
-      ? loadingSaved
-      : filter === 'created'
-      ? loadingCreated
-      : loadingAll;
+    filter === 'all'
+      ? loadingAll || fetchingAll
+      : filter === 'saved'
+      ? loadingSaved || fetchingSaved
+      : loadingCreated
 
   const {
     data: publicacionesTop = [],
@@ -102,22 +113,22 @@ export default function PublicationsPage() {
   } = useTopUsers();
 
   const isPageLoading =
-    (filter==='all'    && (loadingAll    || fetchingAll))   ||
-    (filter==='saved'  && loadingSaved)                     ||
-    (filter==='created'&& loadingCreated)                   ||
-    loadingTopPubs  || loadingTopUsers
+    (filter === 'all' && (loadingAll || fetchingAll)) ||
+    (filter === 'saved' && loadingSaved) ||
+    (filter === 'created' && loadingCreated) ||
+    loadingTopPubs ||
+    loadingTopUsers
 
   const handleError = useErrorHandler();
   const queryClient = useQueryClient();
 
-  const indexOfLast = currentPage * postsPerPage
-  const indexOfFirst = indexOfLast - postsPerPage
-  const currentPubs = publicacionesData.slice(indexOfFirst, indexOfLast)
-  const totalPages = Math.ceil(publicacionesData.length / postsPerPage)
-
   const toggleFilter = (f: Filter) => {
     setFilter(prev => (prev === f ? 'all' : f));   // si vuelven a pulsar, vuelve a 'all'
   };
+
+  const onPageChange = (newPage: number) => {
+    setPages(prev => ({ ...prev, [filter]: newPage }))
+  }
 
   const { mutate: toggleSave } = useMutation({
     mutationFn: async ({ codePub, isSaved }: { codePub: number; isSaved: boolean }) =>
@@ -127,8 +138,8 @@ export default function PublicationsPage() {
 
     onSuccess: () => {
       // refrescamos las listas afectadas:
-      queryClient.invalidateQueries({ queryKey: publicationsKeys.list() });
-      queryClient.invalidateQueries({ queryKey: publicationsKeys.saved() });
+      queryClient.invalidateQueries({ queryKey: publicationsKeys.list(currentPage, postsPerPage) });
+      queryClient.invalidateQueries({ queryKey: publicationsKeys.saved(currentPage, postsPerPage) });
     },
 
     onError: handleError,
@@ -285,8 +296,8 @@ export default function PublicationsPage() {
                     <SkeletonPublication />
                     <SkeletonPublication />
                   </>
-                ) : currentPubs.length ? (
-                  currentPubs.map((pub, i) => (
+                ) : publicacionesData?.length ? (
+                  publicacionesData?.map((pub, i) => (
                     <motion.div
                       key={`${pub.codePublication}-${pub.codeUser}`}
                       initial={{ opacity: 0, y: 40 }}
@@ -310,13 +321,12 @@ export default function PublicationsPage() {
                   <p>Aún no hay publicaciones cargadas…</p>
                 )}
 
-                {/* ––– CONTROLES DE PAGINADO ––– */}
-                   <Paginator
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={setCurrentPage}
-                    isComponentLoading={isPageLoading}
-                  />
+                <Paginator
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={onPageChange}
+                  isComponentLoading={isPageLoading}
+                />
               </div>
 
               {/* —————— Lado derecho (top-users y top-questions) —————— */}

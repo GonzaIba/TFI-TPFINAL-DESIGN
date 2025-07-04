@@ -15,3 +15,11 @@ export type GenericApiResponse<T> = {
   data?: T;
   errors: Errors;
 };
+
+export interface PaginatedList<T> {
+  pageIndex:  number;
+  pageCount:  number;
+  totalCount: number;
+  totalPages: number;
+  list:       T[];
+}
