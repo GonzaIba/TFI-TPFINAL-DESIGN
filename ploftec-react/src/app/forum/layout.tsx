@@ -19,6 +19,7 @@ import {
 } from '@/lib/utils/tabBar';
 import { Chatbot, Input, SkeletonLine, AvatarUser, Loading } from '@/components';
 import { RobotIntro } from '@/components/chatbotComponent/robotIntro/robotIntro';
+import { publicationsService } from '@/lib/services/forum/publicationsService';
 
 export default function ForumLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -110,6 +111,13 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
     setShowRobot(true);
   };
 
+  const handleOnSubmitSearch = async (query: string) => {
+    //setIsLoading(true);
+    //await publicationsService.getPublicationsWithFilter(query, 0, 10);
+    router.push(`/forum/publications?search=${encodeURIComponent(query)}`)
+    //setIsLoading(false);
+  }
+
   return (
     <div className="forum">
       {showIntro && <RobotIntro onComplete={handleIntroComplete} />}
@@ -124,7 +132,7 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
           <div className="align-items-lg-start searchContainer">
             <Input
               placeHolder="Escriba algo..."
-              submitFunction={async () => {}}
+              submitFunction={handleOnSubmitSearch}
             />
           </div>
           {isUserLoading ? (

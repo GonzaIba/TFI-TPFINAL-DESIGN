@@ -78,10 +78,11 @@ export const publicationsService = {
     return response;
   },
 
-  async getPublicationsWithFilter(texto: string): Promise<GenericApiResponse<PublicationResponse[]>> {
-    const response = await apiBaseService.execute<PublicationResponse[], undefined>({
+  async getPublicationsWithFilter(rawQuery: string, pageIndex: number, pageCount: number)
+  : Promise<GenericApiResponse<PaginatedList<PublicationResponse>>>{
+    const response = await apiBaseService.execute<PaginatedList<PublicationResponse>, undefined>({
       method: "GET",
-      url: `ApiForum/BuscarPublicacionesConFiltro?texto=${texto}`,
+      url: `ApiForum/BuscarPublicaciones?rawQuery=${rawQuery}&pageIndex=${pageIndex}&pageCount=${pageCount}`,
       requireCredentials: false,
     });
     return response;

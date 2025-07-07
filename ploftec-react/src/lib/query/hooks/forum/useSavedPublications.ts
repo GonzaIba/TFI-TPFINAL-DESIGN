@@ -9,9 +9,11 @@ export function useSavedPublications(
   pageSize: number
 ) {  return useQuery({
     queryKey: publicationsKeys.saved(page, pageSize),
-    queryFn: () => publicationsService.getSavedPublications(page, pageSize),
-    enabled,
-    select: res => res.data!, // Solo corre cuando enabled=true
-    staleTime: 1000 * 60, // 1 min de refresh
+    queryFn: async () => {
+      const res = await publicationsService.getSavedPublications(page, pageSize)
+      return res.data!
+    },
+    enabled, 
+    staleTime: 60_000 
   });
 }

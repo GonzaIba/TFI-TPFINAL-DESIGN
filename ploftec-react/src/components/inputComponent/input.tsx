@@ -108,13 +108,13 @@ export function Input({
             >
               <div className={styles.searchOptionsLeft}>
                 <div className={styles.searchOption}>[etiqueta] buscar dentro de una etiqueta</div>
-                <div className={styles.searchOption}>user:1234 buscar por autor</div>
+                <div className={styles.searchOption}>usuario:Pepe buscar por autor</div>
                 <div className={styles.searchOption}>"palabras aquí" frase exacta</div>
               </div>
               <div className={styles.searchOptionsRight}>
-                <div className={styles.searchOption}>answers:0 preguntas sin respuestas</div>
-                <div className={styles.searchOption}>score:3 publicaciones con una puntuación de +3</div>
-                <div className={styles.searchOption}>isaccepted:yes buscar dentro de un estado</div>
+                <div className={styles.searchOption}>respuestas:0 preguntas sin respuestas</div>
+                <div className={styles.searchOption}>recompensa:3 publicaciones con una puntuación de +3</div>
+                <div className={styles.searchOption}>fecha:21/2/2024</div>
               </div>
             </motion.div>
           )}

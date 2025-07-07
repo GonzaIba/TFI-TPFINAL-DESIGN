@@ -2,6 +2,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation'
 import { 
   SkeletonPublication, 
@@ -19,7 +20,8 @@ import CreatePublicationComponent from '@/components/forum/createPublicationModa
 import TopUserCard from '@/components/forum/topUserCard/topUserCard'
 import { useErrorHandler } from '@/hooks/errors/useErrorHandler'
 import { publicationsService } from '@/lib/services/forum/publicationsService'
-import { PublicationResponse, PublicationDetailResponse, CreatePublicationRequest } from '@/lib/types/forum'
+import { PublicationResponse, PublicationDetailResponse, CreatePublicationRequest, SuccessfulResponse } from '@/lib/types/forum'
+import { PaginatedList, GenericApiResponse } from '@/lib/types/apiResponse'
 import { AvatarCrownEnum } from '@/lib/types/enum'
 import { Add, Bookmark, BookmarkBorder, BorderColor, BorderColorOutlined } from '@mui/icons-material';
 import { Colors } from '@/theme/colors'
@@ -39,6 +41,8 @@ type Filter = 'all' | 'saved' | 'created';
 
 export default function PublicationsPage() {
   const router = useRouter()
+  const searchParams = useSearchParams();
+  const search = searchParams.get('search') ?? '';
   const scrollRef = useRef<HTMLDivElement>(null) as React.RefObject<HTMLDivElement>;
   const [currentPublication, setCurrentPublication] = useState<PublicationDetailResponse>()
   const [relatedPublications, setRelatedPublications] = useState<PublicationResponse[]>()
@@ -67,7 +71,7 @@ export default function PublicationsPage() {
     data: paginatedPubs,
     isLoading: loadingAll,
     isFetching: fetchingAll,
-  } = usePublications(currentPage, postsPerPage)
+  } = usePublications(currentPage, postsPerPage, search)
 
   const {
     data: paginatedSaved,
@@ -130,20 +134,56 @@ export default function PublicationsPage() {
     setPages(prev => ({ ...prev, [filter]: newPage }))
   }
 
-  const { mutate: toggleSave } = useMutation({
-    mutationFn: async ({ codePub, isSaved }: { codePub: number; isSaved: boolean }) =>
+  const { mutate: toggleSave } = useMutation<
+    GenericApiResponse<SuccessfulResponse>,
+    Error,
+    { codePub: number; isSaved: boolean; page: number; pageSize: number; filter: Filter }
+  >({
+    mutationFn: ({ codePub, isSaved }) =>
       isSaved
         ? publicationsService.deleteSavedPublication(codePub)
         : publicationsService.savePublication(codePub),
 
-    onSuccess: () => {
-      // refrescamos las listas afectadas:
-      queryClient.invalidateQueries({ queryKey: publicationsKeys.list(currentPage, postsPerPage) });
-      queryClient.invalidateQueries({ queryKey: publicationsKeys.saved(currentPage, postsPerPage) });
-    },
+    onError: err => handleError([{ message: err.message } as any]),
 
-    onError: handleError,
-  });
+    onSuccess: (_resp, { codePub, isSaved, page, pageSize, filter: currFilter }) => {
+      // parchar “all”
+      queryClient.setQueryData<PaginatedList<PublicationResponse>>(
+        publicationsKeys.list(page, pageSize),
+        prev => {
+          if (!prev) return prev
+          return {
+            ...prev,
+            list: prev.list.map(pub =>
+              pub.codePublication === codePub
+                ? { ...pub, isSaved: !isSaved }
+                : pub
+            )
+          }
+        }
+      )
+
+      // si estoy en “saved”, además lo saco de ahí
+      if (currFilter === 'saved') {
+        queryClient.setQueryData<PaginatedList<PublicationResponse>>(
+          publicationsKeys.saved(page, pageSize),
+          prev => {
+            if (!prev) return prev
+            const newTotal = prev.totalCount - 1
+            return {
+              ...prev,
+              list: prev.list.filter(pub => pub.codePublication !== codePub),
+              totalCount: newTotal,
+              totalPages: Math.max(1, Math.ceil(newTotal / pageSize)),
+            }
+          }
+        )
+      }
+      else {
+        queryClient.invalidateQueries({ queryKey : publicationsKeys.saved(page, pageSize)});
+      }
+    }
+  })
 
   const onNewPublication = async () => {
     // lógica para abrir modal o redireccionar
@@ -309,9 +349,15 @@ export default function PublicationsPage() {
                         publication={pub}
                         onClickTitle={async () => onClickTitle(pub.codePublication)}
                         onClickUser={onClickUser}
-                        onToggleSave={async () => {
-                          toggleSave({ codePub: pub.codePublication, isSaved: pub.isSaved })
-                        }}
+                        onToggleSave={async () =>
+                          toggleSave({
+                            codePub: pub.codePublication,
+                            isSaved: pub.isSaved,
+                            page: currentPage,
+                            pageSize: postsPerPage,
+                            filter,             // tu estado actual de filtro
+                          })
+                        }
                       />
                     </motion.div>
                   ))
