@@ -203,7 +203,7 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
         </div>
       </div>
 
-      {/* <Footer /> */}
+      <Footer />
       {<Chatbot showRobot={showRobot}></Chatbot>}    
     </div>
   );
