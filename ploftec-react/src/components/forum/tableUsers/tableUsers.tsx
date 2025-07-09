@@ -105,7 +105,7 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
               <tr key={i}>
                 <td>{u.name}</td>
                 <td>{u.score}</td>
-                <td>{u.createdDate}</td>
+                <td>{u.createdDate.substring(0, 10)}</td>
                 <td>
 
                   <Button

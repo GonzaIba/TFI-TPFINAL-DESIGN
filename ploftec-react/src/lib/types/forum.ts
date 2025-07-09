@@ -55,7 +55,7 @@
   export interface UsersForumResponse {
     name: string;
     score: number;
-    createdDate: string;
+    createdDate: date;
     email: string;
   }
   
