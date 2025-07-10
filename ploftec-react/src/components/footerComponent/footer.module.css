@@ -1,11 +1,29 @@
-.footerUl {
-    margin: 0px;
-    padding: 0px;
-}
+
 
 .footerSection {
-    background: #151414;
+    background: #000000;
     position: relative;
+    padding: 2rem;
+}
+
+.footerContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+.footerContainer > div:nth-child(2) {
+  margin: 0 auto;
+}
+
+.footerRow {
+    display: flex;
+    flex-direction: row;
+    /* justify-content: space-between; */
+    padding: 12px;
+}
+
+.footerCta .footerRow {
+    gap: 200px;
 }
 
 .footerCta {
@@ -63,7 +81,13 @@
     font-size: 14px;
     color: #7e7e7e;
     line-height: 28px;
+    padding-right: 2rem;
 }
+
+.footerText .singleLine {
+    white-space: nowrap;
+}
+
 
 .footerSocialIcon span {
     color: #fff;
@@ -166,19 +190,24 @@
     transform: rotate(-6deg);
 }
 
-.copyrightArea {
+/* .copyrightArea {
     background: #202020;
     padding: 25px 0;
-}
+} */
 
 .copyrightText p {
     margin: 0;
     font-size: 14px;
     color: #878787;
+    display: contents;
 }
 
 .copyrightText p a {
     color: #644bff;
+}
+
+.footerMenu {
+    margin-left: 2rem;
 }
 
 .footerMenu li {
@@ -193,4 +222,52 @@
 .footerMenu li a {
     font-size: 14px;
     color: #878787;
+}
+
+.toggleButtonContainer {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin-top: -20px; /* hace que sobresalga */
+  z-index: 5;
+}
+
+.toggleButton {
+  background-color: #644bff;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: transform 0.2s ease;
+}
+
+.toggleButton:hover {
+  transform: scale(1.05);
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 1366px) {
+    .footerCta .footerRow {
+      gap: 100px;
+    }
+}
+
+@media (max-width: 1280px) {
+    .footerCta .footerRow {
+      gap: 50px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .footerSection {
+      padding: 1rem;
+    }
 }
