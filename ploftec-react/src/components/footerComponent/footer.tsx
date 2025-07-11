@@ -13,6 +13,11 @@ const Footer: React.FC = () => {
 
   return (
     <footer className={styles.footerSection}>
+      {/* Botón que sobresale */}
+      <button onClick={toggleFooter} className={styles.toggleButton}>
+        {isExpanded ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+      </button>
+
       <AnimatePresence initial={false}>
         {isExpanded && (
           <motion.div
@@ -115,13 +120,6 @@ const Footer: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Botón que sobresale */}
-      <div className={styles.toggleButtonContainer}>
-        <button onClick={toggleFooter} className={styles.toggleButton}>
-          {isExpanded ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
-        </button>
-      </div>
 
       <div className={styles.copyrightArea}>
         <div className={styles.footerContainer}>

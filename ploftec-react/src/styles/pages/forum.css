@@ -399,7 +399,7 @@ input[type="checkbox"] {
     justify-content: center;
     overflow-x: hidden;
     overflow-y: hidden;
-    z-index: 31;
+    z-index: 28;
 }
 
 .slider__inner {

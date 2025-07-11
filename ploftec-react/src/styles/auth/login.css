@@ -546,6 +546,9 @@ p{
     display: flex;
     flex-direction: row;
     column-gap: 24px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
 .socialButtonLogin ul li a {

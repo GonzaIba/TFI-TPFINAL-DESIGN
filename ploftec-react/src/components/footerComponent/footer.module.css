@@ -1,5 +1,3 @@
-
-
 .footerSection {
     background: #000000;
     position: relative;
@@ -239,16 +237,11 @@
     color: #878787;
 }
 
-.toggleButtonContainer {
-  position: relative;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-top: -20px; /* hace que sobresalga */
-  z-index: 5;
-}
-
 .toggleButton {
+  position: absolute;
+  top: -20px; /* sobresale del footer */
+  left: 50%;
+
   background-color: #644bff;
   border: none;
   border-radius: 50%;
@@ -261,7 +254,9 @@
   cursor: pointer;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
   transition: transform 0.2s ease;
+  z-index: 29; /* se mantiene encima */
 }
+
 
 .toggleButton:hover {
   transform: scale(1.05);
