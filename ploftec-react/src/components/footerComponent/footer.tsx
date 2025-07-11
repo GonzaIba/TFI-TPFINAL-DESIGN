@@ -29,13 +29,13 @@ const Footer: React.FC = () => {
                     <i className="fas fa-map-marker-alt"></i>
                     <div className={styles.ctaText}>
                       <h4>Encontranos en</h4>
-                      <span>Calle falsa 123, Buenos aires, Argentina</span>
+                      <span>Av. Falsa 24, CABA, Argentina</span>
                     </div>
                   </div>
                   <div className={styles.singleCta}>
                     <i className="fas fa-phone"></i>
                     <div className={styles.ctaText}>
-                      <h4>Comunicate con nosotros a</h4>
+                      <h4>Comunicate a</h4>
                       <span>11 1234-5678</span>
                     </div>
                   </div>
@@ -125,7 +125,7 @@ const Footer: React.FC = () => {
 
       <div className={styles.copyrightArea}>
         <div className={styles.footerContainer}>
-          <div className={styles.footerRow}>
+          <div className={styles.footerRowFixed}>
             <div className={styles.copyrightText}>
               <p>
                 Copyright &copy; 2025 Ploftec
