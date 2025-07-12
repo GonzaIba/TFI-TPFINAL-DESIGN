@@ -1,3 +1,5 @@
+/* @import "tailwindcss"; */
+
 :root {
   --background: #444;
   --foreground: #171717;
@@ -15,6 +17,29 @@
     --background: #444;
     --foreground: #ededed;
   }
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+*, :after, :before, ::backdrop, ::file-selector-button {
+    box-sizing: border-box;
+    border: 0 solid;
+    margin: 0;
+    padding: 0;
+}
+
+button, input, select, optgroup, textarea, ::file-selector-button {
+    font: inherit; 
+    font-feature-settings: inherit;
+    font-variation-settings: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    opacity: 1;
+    background-color: #0000;
+    border-radius: 0;
 }
 
 body {

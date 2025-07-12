@@ -254,9 +254,8 @@
   cursor: pointer;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
   transition: transform 0.2s ease;
-  z-index: 29; /* se mantiene encima */
+  /* z-index: 29; */
 }
-
 
 .toggleButton:hover {
   transform: scale(1.05);
