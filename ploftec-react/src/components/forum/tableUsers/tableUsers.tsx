@@ -18,17 +18,19 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
   const [isSheetOpen, setIsSheetOpen] = useState(false)
   const [isTableError, setIsTableError] = useState(false)
   const handleError = useErrorHandler();
+  const [pageIndex, setPageIndex] = useState(1);
+  const [pageCount, setPageCount] = useState(10);
 
   // 1) Función de fetch aislada (no llama a onReloadCompleted aquí)
   const fetchUsers = useCallback(async () => {
     setIsLoading(true)
     setIsTableError(false)
     try {
-      const result = await usuariosForoService.obtenerUsuariosForo()
+      const result = await usuariosForoService.obtenerUsuariosForo(pageIndex, pageCount)
       if (result.errors?.errorsList?.length) {
         setIsTableError(true)
       } else {
-        setUsuarios(result.data ?? [])
+        setUsuarios(result?.data?.list ?? [])
       }
     } catch {
       setIsTableError(true)

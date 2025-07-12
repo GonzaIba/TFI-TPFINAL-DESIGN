@@ -9,7 +9,7 @@ import {
   FiltersUserRequest,
 } from "@/lib/types/forum";
 import { ImageHelper }from '@/lib/helpers'
-import { GenericApiResponse } from '@/lib/types/apiResponse';
+import { GenericApiResponse, PaginatedList } from '@/lib/types/apiResponse';
 
 
 export const usuariosForoService = {
@@ -22,10 +22,10 @@ export const usuariosForoService = {
     return response;
   },
 
-  async obtenerUsuariosForo(): Promise<GenericApiResponse<UsersForumResponse[]>> {
-    const response = await apiBaseService.execute<UsersForumResponse[], undefined>({
+  async obtenerUsuariosForo(pageIndex:number, pageCount:number): Promise<GenericApiResponse<PaginatedList<UsersForumResponse>>> {
+    const response = await apiBaseService.execute<PaginatedList<UsersForumResponse>, undefined>({
       method: "GET",
-      url: "ApiForum/ObtenerUsuariosForos",
+      url: `ApiForum/ObtenerUsuariosForos?pageIndex=${pageIndex}&pageCount=${pageCount}`,
       requireCredentials: true,
     });
     return response;
