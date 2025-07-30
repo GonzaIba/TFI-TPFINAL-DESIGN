@@ -26,7 +26,7 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
     setIsLoading(true)
     setIsTableError(false)
     try {
-      const result = await usuariosForoService.obtenerUsuariosForo(pageIndex, pageCount)
+      const result = await usuariosForoService.getUsersForum(pageIndex, pageCount)
       if (result.errors?.errorsList?.length) {
         setIsTableError(true)
       } else {
@@ -54,7 +54,7 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
 
   const openSheet = async (email: string) => {
     setIsSheetOpen(true)
-    const result = await usuariosForoService.obtenerDetalleUsuario(email)
+    const result = await usuariosForoService.getDetailUser(email)
 
     //no manejar error asi solo aca
     if (result.errors?.errorsList?.length > 0) {
@@ -107,7 +107,13 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
               <tr key={i}>
                 <td>{u.name}</td>
                 <td>{u.score}</td>
-                <td>{u.createdDate.substring(0, 10)}</td>
+                <td>{
+                  typeof u.createdDate === 'string'
+                    ? (u.createdDate as string).substring(0, 10)
+                    : u.createdDate instanceof Date
+                      ? u.createdDate.toISOString().substring(0, 10)
+                      : ''
+                }</td>
                 <td>
 
                   <Button

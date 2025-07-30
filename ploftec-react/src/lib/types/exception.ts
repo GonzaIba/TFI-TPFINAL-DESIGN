@@ -28,6 +28,7 @@
     CourseClosedException: { type: "modal" },
     PublicationNotFoundException: { type: "toast" },
     AnswerVoteExpiredException: { type: "toast" },
+    PublicationVoteExpiredException: { type: "toast" },
     CantDeleteAnswerException: { type: "toast" },
     // Agregá más según tu sistema
   };

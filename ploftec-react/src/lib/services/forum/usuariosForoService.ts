@@ -6,7 +6,9 @@ import {
   DetailsUserForumResponse,
   UserFilterForumResponse,
   SuccessfulResponse,
+  NotificationsResponse,
   FiltersUserRequest,
+  MarkNotificationAsReadRequest
 } from "@/lib/types/forum";
 import { ImageHelper }from '@/lib/helpers'
 import { GenericApiResponse, PaginatedList } from '@/lib/types/apiResponse';
@@ -22,7 +24,7 @@ export const usuariosForoService = {
     return response;
   },
 
-  async obtenerUsuariosForo(pageIndex:number, pageCount:number): Promise<GenericApiResponse<PaginatedList<UsersForumResponse>>> {
+  async getUsersForum(pageIndex:number, pageCount:number): Promise<GenericApiResponse<PaginatedList<UsersForumResponse>>> {
     const response = await apiBaseService.execute<PaginatedList<UsersForumResponse>, undefined>({
       method: "GET",
       url: `ApiForum/ObtenerUsuariosForos?pageIndex=${pageIndex}&pageCount=${pageCount}`,
@@ -31,7 +33,7 @@ export const usuariosForoService = {
     return response;
   },
 
-  async obtenerDetalleUsuario(email: string): Promise<GenericApiResponse<DetailsUserForumResponse>> {
+  async getDetailUser(email: string): Promise<GenericApiResponse<DetailsUserForumResponse>> {
     const response = await apiBaseService.execute<DetailsUserForumResponse, undefined>({
       method: "GET",
       url: `ApiForum/ObtenerDetalleUsuarioForos?userEmail=${email}`,
@@ -41,7 +43,7 @@ export const usuariosForoService = {
     return response;
   },
 
-  async obtenerFiltrosUsuario(): Promise<GenericApiResponse<UserFilterForumResponse[]>> {
+  async getFilterUser(): Promise<GenericApiResponse<UserFilterForumResponse[]>> {
     const response = await apiBaseService.execute<UserFilterForumResponse[], undefined>({
       method: "GET",
       url: "ApiForum/ObtenerFiltrosUsuario",
@@ -50,7 +52,7 @@ export const usuariosForoService = {
     return response;
   },
 
-  async eliminarFiltroUsuario(codigoFiltro: number): Promise<GenericApiResponse<SuccessfulResponse>> {
+  async deleteFilterUser(codigoFiltro: number): Promise<GenericApiResponse<SuccessfulResponse>> {
     const response = await apiBaseService.execute<SuccessfulResponse, undefined>({
       method: "DELETE",
       url: `ApiForum/EliminarFiltroUsuario?filterCode=${codigoFiltro}`,
@@ -59,7 +61,7 @@ export const usuariosForoService = {
     return response;
   },
 
-  async eliminarTodosFiltrosUsuario(grupo: string): Promise<GenericApiResponse<SuccessfulResponse>> {
+  async deleteAllFiltersUser(grupo: string): Promise<GenericApiResponse<SuccessfulResponse>> {
     const response = await apiBaseService.execute<SuccessfulResponse, undefined>({
       method: "DELETE",
       url: `ApiForum/EliminarTodosLosFiltrosUsuario?filter=${grupo}`,
@@ -68,11 +70,30 @@ export const usuariosForoService = {
     return response;
   },
 
-  async agregarFiltrosUsuario(request: FiltersUserRequest): Promise<GenericApiResponse<SuccessfulResponse>> {
+  async addFilterUser(request: FiltersUserRequest): Promise<GenericApiResponse<SuccessfulResponse>> {
     const response = await apiBaseService.execute<SuccessfulResponse, FiltersUserRequest>({
       method: "POST",
       url: "ApiForum/AgregarFiltrosUsuario",
       body: request,
+      requireCredentials: true,
+    });
+    return response;
+  },
+
+  async getNotifications(): Promise<GenericApiResponse<NotificationsResponse[]>> {
+    const response = await apiBaseService.execute<NotificationsResponse[], undefined>({
+      method: "GET",
+      url: "ApiForum/ObtenerNotificacionesForo",
+      requireCredentials: true,
+    });
+    return response;
+  },
+
+  async markNotificationAsRead(body: MarkNotificationAsReadRequest): Promise<GenericApiResponse<SuccessfulResponse>> {
+    const response = await apiBaseService.execute<SuccessfulResponse, MarkNotificationAsReadRequest>({
+      method: "POST",
+      url: "ApiForum/MarcarNotificacionForoLeida",
+      body: body,
       requireCredentials: true,
     });
     return response;

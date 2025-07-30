@@ -17,7 +17,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     const loadFilters = async () => {
-      const filtros = (await usuariosForoService.obtenerFiltrosUsuario()).data
+      const filtros = (await usuariosForoService.getFilterUser()).data
       setUserFilters(filtros ?? [])
     }
     loadFilters()
@@ -31,24 +31,24 @@ export default function UsersPage() {
     const filtered = Object.fromEntries(
       Object.entries(valuePairs).filter(([_, v]) => v.trim() !== '')
     )
-    await usuariosForoService.agregarFiltrosUsuario({ filters_CodeValue: filtered })
-    const nuevosFiltros = (await usuariosForoService.obtenerFiltrosUsuario()).data
+    await usuariosForoService.addFilterUser({ filters_CodeValue: filtered })
+    const nuevosFiltros = (await usuariosForoService.getFilterUser()).data
     setUserFilters(nuevosFiltros ?? [])
     setShouldReloadUsers(true)
   }
 
   const handleResetearFiltros = async () => {
     if(userFilters.length > 0) {
-      await usuariosForoService.eliminarFiltroUsuario(GroupEnum.ForumUserTable)
-      const filtrosActualizados = (await usuariosForoService.obtenerFiltrosUsuario()).data
+      await usuariosForoService.deleteFilterUser(GroupEnum.ForumUserTable)
+      const filtrosActualizados = (await usuariosForoService.getFilterUser()).data
       setUserFilters(filtrosActualizados ?? [])
       setShouldReloadUsers(true)
     }
   }
 
   const handleEliminarFiltro = async (codigoFiltro: number) => {
-    await usuariosForoService.eliminarFiltroUsuario(codigoFiltro)
-    const filtrosActualizados = (await usuariosForoService.obtenerFiltrosUsuario()).data
+    await usuariosForoService.deleteFilterUser(codigoFiltro)
+    const filtrosActualizados = (await usuariosForoService.getFilterUser()).data
     setUserFilters(filtrosActualizados ?? [])
     setShouldReloadUsers(true)
   }

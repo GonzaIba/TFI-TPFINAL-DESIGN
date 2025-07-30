@@ -7,19 +7,21 @@ import { getUserDetails, logout } from '@/lib/services/auth/authenticationServic
 import { usuariosForoService } from '@/lib/services/forum/usuariosForoService';
 import { obtenerIniciales } from '@/lib/helpers/forumHelper';
 import { UserApplication } from '@/lib/types/application';
-import { DetailsUserForumResponse } from '@/lib/types/forum';
+import { DetailsUserForumResponse, NotificationsResponse } from '@/lib/types/forum';
 import Footer from '@/components/footerComponent/footer';
 import useAuthStore from "@/store/slices/authStore/authStore";
 import ProtectedRoute from "@/components/auth/protectedRoute";
+import { useNotificationSignalR } from '@/hooks';
 import {
   moveTabBar,
   moveContentTabBar,
   enableTdTextSelection,
   preventHorizontalScrollWheel,
 } from '@/lib/utils/tabBar';
-import { Chatbot, Input, SkeletonLine, AvatarUser, Loading } from '@/components';
+import { Chatbot, Input, SkeletonLine, AvatarUser, Loading, NotificationDropdown  } from '@/components';
 import { RobotIntro } from '@/components/chatbotComponent/robotIntro/robotIntro';
 import { publicationsService } from '@/lib/services/forum/publicationsService';
+import { NewNotificationEvent, RemoveNotificationEvent } from '@/lib/types/events';
 
 export default function ForumLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -27,19 +29,34 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
 
   const [isUserLoading, setIsUserLoading] = useState(true);
   const [userForum, setUserForum] = useState<DetailsUserForumResponse | null>(null);
+  const [userNotifications, setUserNotifications] = useState<NotificationsResponse[] | null>(null);
   const [activeTab, setActiveTab] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const isAuthLoaded = useAuthStore((state) => state.isAuthLoaded);
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
+  const newNotificationAdded = (d: NewNotificationEvent) => {
+    setUserNotifications(prev => [d, ...(prev ?? [])]);
+  }
+
+  const notificationRemoved = (d: RemoveNotificationEvent) => {
+    setUserNotifications(prev =>
+      prev ? prev.filter(n => n.codeNotification !== d.codeNotification) : null
+    )
+  }
+
+  const connectionId = isAuthenticated ? 
+    useNotificationSignalR({
+      onNewNotificationAdded: newNotificationAdded,
+      onNotificationRemoved: notificationRemoved,
+    })
+    : undefined;
+
   console.log("LAYOUT page:");
 
   const rutasProtegidas = [
     "/forumTest",
-    //"/forum/users",
-    //"/forum/labels",
-    //"/forum/liveHelp",
   ];
 
   useEffect(() => {
@@ -49,7 +66,9 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
 
         if (isAuthenticated && user?.email) {
           try {
-            const res = await usuariosForoService.obtenerDetalleUsuario(user.email);
+            const res = await usuariosForoService.getDetailUser(user.email);
+            const resNotif = await usuariosForoService.getNotifications();
+            setUserNotifications(resNotif.data as NotificationsResponse[]);
             ///////
             setUserForum(res.data as DetailsUserForumResponse);
           } catch (err) {
@@ -80,6 +99,12 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
     }
   }, [pathname, router]);
 
+  useEffect(() => {
+    router.prefetch('/forum/publications');
+    router.prefetch('/forum/users');
+    router.prefetch('/login');
+  }, []);
+
   const changeTab = async (index: number) => {
     setActiveTab(index);
     moveTabBar(index);
@@ -97,12 +122,6 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
 
   const requiereProteccion = rutasProtegidas.includes(pathname);
 
-  useEffect(() => {
-    router.prefetch('/forum/publications');
-    router.prefetch('/forum/users');
-    router.prefetch('/login');
-  }, []);
-
   const [showIntro, setShowIntro] = useState(false);
   const [showRobot, setShowRobot] = useState(true);
 
@@ -117,6 +136,24 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
     router.push(`/forum/publications?search=${encodeURIComponent(query)}`)
     //setIsLoading(false);
   }
+
+  // 3) marcar como leído
+  const markAsRead = async (id: number) => {
+    try {
+      await usuariosForoService.markNotificationAsRead({codeNotification: id});
+      setUserNotifications(prev =>
+        prev
+          ? prev.map(n =>
+              n.codeNotification === id
+                ? { ...n, isRead: true }
+                : n
+            )
+          : null
+      );
+    } catch (err) {
+      console.error('No pude marcar leído', err);
+    }
+  };
 
   return (
     <div className="forum">
@@ -151,9 +188,10 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
                 </div>
               </li>
               <li>
-                <button className="btn buttonNav">
-                  <i className="fa fa-bell"></i>
-                </button>
+                <NotificationDropdown
+                  notifications={userNotifications}
+                  onMarkAsRead={markAsRead}
+                />
               </li>
               <li>
                 <button className="btn buttonNav" onClick={handleLogout}>

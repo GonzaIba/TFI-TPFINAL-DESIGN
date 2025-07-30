@@ -50,12 +50,16 @@
     connectionId: string | null;
   }
 
+  export interface MarkNotificationAsReadRequest {
+    codeNotification: number;
+  }
+
   /* ------------------------------------------- RESPONSE -------------------------------------------*/
   
   export interface UsersForumResponse {
     name: string;
     score: number;
-    createdDate: date;
+    createdDate: Date;
     email: string;
   }
   
@@ -142,6 +146,15 @@
     codeFilter: number;
     nameFilter: string;
     descriptionFilter: string;
+  }
+
+  export interface NotificationsResponse {
+    codeNotification: number;
+    codeUser: string;
+    //title: string; Revisar
+    message: string;
+    date: Date;
+    readed: boolean;
   }
   
   export interface Medalla {

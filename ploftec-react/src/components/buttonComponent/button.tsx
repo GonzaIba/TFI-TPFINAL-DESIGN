@@ -48,7 +48,7 @@ export default function ButtonPloftec({
   borderRadius = '5px',
   transparent = false,
   backgroundColor = Colors.primary,
-  tooltipOptions, // 👈 se recibe
+  tooltipOptions,
 }: ButtonPloftecProps) {
 
   const {

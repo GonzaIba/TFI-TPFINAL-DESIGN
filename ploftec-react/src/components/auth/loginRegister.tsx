@@ -134,6 +134,7 @@ export default function LoginRegister() {
           <div className="form sign-in-form">
             <form
               className="form"
+              autoComplete="on"
               onSubmit={(e) => {
                 e.preventDefault(); // evita que se recargue la página
                 handleLogin();
@@ -150,21 +151,22 @@ export default function LoginRegister() {
                   <i className="icon fas fa-user" style={{ padding: "0 4px" }}></i>
                   <div className="input-content">
                     <input
+                      id="username"
+                      name="username"
                       type="text"
-                      placeholder=" "
-                      autoComplete="email"
+                      autoComplete="username"
                       className="input-login"
                       value={username}
                       onChange={(e) => {
-                          setUsername(e.target.value);
-                          setShowUsernameError(false);
+                        setUsername(e.target.value);
+                        setShowUsernameError(false);
                       }}
                     />
                     <label className="placeholder-login" placeholder="Usuario"></label>
                   </div>
                 </div>
                   {showUsernameError && (
-                      <div className="error-message">Usuario requerido</div>
+                    <div className="error-message">Usuario requerido</div>
                   )}
               </div>
               <div className="input-container">
@@ -174,12 +176,11 @@ export default function LoginRegister() {
                     <input
                       type={showPassword ? "text" : "password"}
                       placeholder=" "
-                      autoComplete="off"
                       className="input-login"
                       value={password}
                       onChange={(e) => {
-                          setPassword(e.target.value)
-                          setShowPasswordError(false);
+                        setPassword(e.target.value)
+                        setShowPasswordError(false);
                       }}
                     />
                     <label className="placeholder-login" placeholder="Contraseña"></label>

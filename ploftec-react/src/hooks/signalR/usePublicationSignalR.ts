@@ -41,7 +41,7 @@ export function usePublicationSignalR(
 
     cleanupPrev().then(() => {
       const conn = new signalR.HubConnectionBuilder()
-        .withUrl('https://localhost:44352/hubs/publications', { withCredentials: true })
+        .withUrl('https://localhost:44352/hubs/publications', { withCredentials: false })
         .withAutomaticReconnect([0, 2000, 5000, 10000])
         .configureLogging(signalR.LogLevel.Information)
         .build();
@@ -50,27 +50,19 @@ export function usePublicationSignalR(
       roomIdRef.current = pubId;
 
       conn.on('VotePublicationChanged', d => {
-        console.log("JEJE");
         if (d.connectionId === conn.connectionId) return;  // ya la actualicé localmente
-        console.log("UUU");        
         if (d.codePublication === pubId) props.onVotePublicationChanged(d.newVoteCount)
       });
       conn.on('VoteAnswerChanged', d => {
-        console.log("JEJE");
         if (d.connectionId === conn.connectionId) return;  // ya la actualicé localmente
-        console.log("UUU");        
         if (d.codePublication === pubId) props.onVoteAnswerChanged(d.answerId, d.newVoteCount);
       });      
       conn.on('AnswerAdded', d => {
-        console.log("JEJE");
         if (d.connectionId === conn.connectionId) return;  // ya la actualicé localmente
-        console.log("UUU");
         if (d.codePublication === pubId) props.onCommentAdded(d)
       });
       conn.on('AnswerDeleted', d => {
-        console.log("JEJE");
         if (d.connectionId === conn.connectionId) return;  // ya la actualicé localmente
-        console.log("UUU");        
         if (d.codePublication === pubId) props.onCommentDeleted(d.codeAnswer)
       });
 

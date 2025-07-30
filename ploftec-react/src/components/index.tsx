@@ -16,3 +16,4 @@ export { InputLabel } from '@/components/inputLabelComponent/inputLabel';
 export { Input } from '@/components/inputComponent/input';
 export { Loading } from '@/components/loadingComponent/loading';
 export { Paginator } from './paginatorComponent/paginatorComponent';
+export { NotificationDropdown } from './forum/notificationDropdown/notificationDropdown';
