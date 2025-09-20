@@ -34,6 +34,7 @@ export default function UsersPage() {
     const nuevosFiltros = (await filtrosService.getFilterUser(GroupEnum.ForumUserTable)).data
     setUserFilters(nuevosFiltros ?? [])
     setShouldReloadUsers(true)
+    setShowUserFilters(false)
   }
 
   const handleResetearFiltros = async () => {
@@ -42,6 +43,7 @@ export default function UsersPage() {
       const filtrosActualizados = (await filtrosService.getFilterUser(GroupEnum.ForumUserTable)).data
       setUserFilters(filtrosActualizados ?? [])
       setShouldReloadUsers(true)
+      setShowUserFilters(false)
     }
   }
 

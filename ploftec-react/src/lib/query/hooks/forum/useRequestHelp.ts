@@ -7,12 +7,12 @@ import type { CursorPage } from "@/lib/types/apiResponse";
 
 type PageParam = { after?: string; anchor: string; search?: string };
 
-export function useRequestsHelpInfinite(limit = 8, search?: string) {
+export function useRequestsHelpInfinite(limit = 8, search?: string, refresh = 0) {
   // normalizo búsqueda (evita refetch por espacios)
   const normSearch = search?.trim() || undefined;
 
   // ancla fijo por sesión de búsqueda (se regenera cuando cambia `normSearch`)
-  const anchor = useMemo(() => new Date().toISOString(), [normSearch]);
+  const anchor = useMemo(() => new Date().toISOString(), [normSearch, refresh]);
 
   return useInfiniteQuery<
     CursorPage<RequestHelpResponse>, // TQueryFnData
@@ -21,7 +21,7 @@ export function useRequestsHelpInfinite(limit = 8, search?: string) {
     any[],                           // TQueryKey
     PageParam                        // TPageParam
   >({
-    queryKey: ["livehelp", "requests-cursor", { limit, anchor, search: normSearch }],
+    queryKey: ["livehelp", "requests-cursor", { limit, anchor, search: normSearch, refresh }],
     initialPageParam: { after: undefined, anchor, search: normSearch },
     queryFn: async ({ pageParam }) => {
       const { after, anchor, search } = pageParam!;

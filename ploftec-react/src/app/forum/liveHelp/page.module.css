@@ -84,22 +84,31 @@
   justify-content: center;
 }
 
-
-
-
 .filterContainer{
   display: grid;
   grid-template-columns: auto 1fr auto; /* izq | centro | der (espaciador) */
+  grid-template-areas: 'total search spacer';
   align-items: center;
   gap: 1.5rem;
   margin-top: 3rem;
   width: 100%;
 }
 
-.totalBox { justify-self: start; }
+.buttonGroup {
+  display: flex; 
+  gap: 8px;
+}
+
+.totalLabel, .totalValue { 
+  font-size: 1.3rem;
+}
+
+.totalBox { justify-self: start; grid-area: total; }
+.spacer { grid-area: spacer; }
 
 /* BUSCADOR */
 .searchRow {
+  grid-area: search;
   justify-self: center;
   width: 100%;
   max-width: 900px; /* ajustá a gusto para que no se amontone */
@@ -229,7 +238,8 @@
 /* CHIPS */
 .appliedRow{
   display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center;
-  margin-top: 6px;
+  padding-bottom: 24px;
+  padding-top: 24px;
 }
 .chip{
   position: relative;
@@ -237,6 +247,11 @@
   border-radius: 999px; padding: .45rem .7rem .45rem .75rem;
   font-size: .92rem; line-height: 1;
   will-change: transform; backface-visibility: hidden; transform: translateZ(0);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.chip:hover{
+  transform: translateZ(0) scale(1.04);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
 }
 .chipDraft{
   border: 1px dashed #3a3a3a; color: #dcdcdc; background: #101010;
@@ -249,6 +264,36 @@
   display: inline-grid; place-items: center;
   width: 18px; height: 18px; border-radius: 50%;
   background: #1a1a1a; color: #cfcfcf; border: 0; cursor: pointer;
+}
+
+/* Responsive: mover Total debajo del buscador */
+@media (max-width: 1000px){
+  .filterContainer{
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'search'
+      'total';
+    row-gap: 12px;
+  }
+
+  .totalBox { 
+    justify-self: center; 
+  }
+
+  .searchRow { 
+    justify-self: center; 
+  }
+
+  .spacer { 
+    display: none; 
+  }
+
+  .buttonGroup { 
+    justify-content: center; 
+    width: 100%;
+    margin-top: 12px;
+    margin-bottom: 12px;
+  }
 }
 
 /* reduce motion */

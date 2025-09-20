@@ -10,6 +10,7 @@ import styles from "./requestHelpFeed.module.css";
 type Props = {
   pageSize?: number;
   search?: string;
+  refresh?: number;
   onCountChange?: (visible: number, hasMore: boolean) => void;
 };
 
@@ -20,7 +21,7 @@ const itemVariant = {
   exit:   { opacity: 0, y: 10, scale: 0.98 },
 };
 
-export function RequestHelpFeed({ pageSize = 9, search, onCountChange }: Props) {
+export function RequestHelpFeed({ pageSize = 9, search, refresh = 0, onCountChange }: Props) {
   const {
     data: items = [],
     isLoading,
@@ -29,7 +30,7 @@ export function RequestHelpFeed({ pageSize = 9, search, onCountChange }: Props) 
     hasNextPage,
     isError,
     error,
-  } = useRequestsHelpInfinite(pageSize, search);
+  } = useRequestsHelpInfinite(pageSize, search, refresh);
 
   // reporta conteo al padre (para "Total solicitudes")
   useEffect(() => {

@@ -1,7 +1,3 @@
-/* src/components/liveHelp/requestHelpFeed.module.css */
-
-.feed { margin-top: 18px; }
-
 /* 👇 grilla robusta con minmax para que no “empuje” columnas */
 .grid {
   display: grid;

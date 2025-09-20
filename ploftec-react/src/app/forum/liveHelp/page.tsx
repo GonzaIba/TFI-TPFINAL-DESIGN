@@ -10,6 +10,7 @@ import { UserFilterForumResponse } from '@/lib/types/forum';
 import { filtrosService } from "@/lib/services/forum/filtrosService";
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
+import { X } from 'lucide-react';
 import SearchIcon from '@mui/icons-material/Search';
 import { GroupEnum } from '@/lib/types/enum';
 import { Colors } from '@/theme/colors';
@@ -37,6 +38,7 @@ export default function LiveHelpPage() {
   // contador visible en el feed
   const [visibleCount, setVisibleCount] = useState(0);
   const [hasMore, setHasMore] = useState(false);
+  const [refreshCounter, setRefreshCounter] = useState(0);
 
   const handleManageFilters = async () => setShowHelpFilters(p => !p);
 
@@ -74,15 +76,27 @@ export default function LiveHelpPage() {
     const nuevosFiltros = (await filtrosService.getFilterUser(GroupEnum.ForumRequestHelp)).data
     setUserFilters(nuevosFiltros ?? [])
     setShouldReloadUsers(true)
+    setRefreshCounter((c) => c + 1)
+    setShowHelpFilters(false)
   }
 
   const handleResetearFiltros = async () => {
-    if(userFilters.length > 0) {
-      await filtrosService.deleteFilterUser(GroupEnum.ForumUserTable)
-      const filtrosActualizados = (await filtrosService.getFilterUser(GroupEnum.ForumUserTable)).data
+    if (userFilters.length > 0) {
+      await filtrosService.deleteAllFiltersUser(`${GroupEnum.ForumRequestHelp}`)
+      const filtrosActualizados = (await filtrosService.getFilterUser(GroupEnum.ForumRequestHelp)).data
       setUserFilters(filtrosActualizados ?? [])
       setShouldReloadUsers(true)
+      setRefreshCounter((c) => c + 1)
+      setShowHelpFilters(false)
     }
+  }
+
+  const handleEliminarFiltro = async (codigoFiltro: number) => {
+    await filtrosService.deleteFilterUser(codigoFiltro)
+    const filtrosActualizados = (await filtrosService.getFilterUser(GroupEnum.ForumRequestHelp)).data
+    setUserFilters(filtrosActualizados ?? [])
+    setShouldReloadUsers(true)
+    setRefreshCounter((c) => c + 1)
   }
 
   useEffect(() => {
@@ -145,7 +159,7 @@ export default function LiveHelpPage() {
           ))}
         </Grid>
 
-        <div className={styles.filterContainer}>
+        <div className={styles.filterContainer} style={{ paddingBottom: userFilters.length > 0 ? 0 : 24 }}>
           <div className={styles.totalBox}>
             <span className={styles.totalLabel}>Total solicitudes: </span>
             <strong className={styles.totalValue}>
@@ -166,35 +180,37 @@ export default function LiveHelpPage() {
                 //onKeyDown={onKeyDown}
               />
 
-              <Button
-                onClick={applySearch}
-                width="120px"
-                icon={<SearchIcon sx={{ color: Colors.black }} fontSize="medium" />}
-                text="Buscar"
-              />
-
-              {appliedSearch && (
+              <div className={styles.buttonGroup}>
                 <Button
-                  onClick={clearSearch}
-                  icon={<RestartAltIcon sx={{ color: Colors.primary }} fontSize="medium" />}
-                  text="Limpiar"
-                  width="80px"
+                  onClick={applySearch}
+                  width="120px"
+                  icon={<SearchIcon sx={{ color: Colors.black }} fontSize="medium" />}
+                  text="Buscar"
+                />
+
+                {appliedSearch && (
+                  <Button
+                    onClick={clearSearch}
+                    icon={<RestartAltIcon sx={{ color: Colors.primary }} fontSize="medium" />}
+                    text="Limpiar"
+                    width="80px"
+                    transparent
+                  />
+                )}
+
+                <Button
+                  onClick={handleManageFilters}
+                  icon={<FilterAltIcon sx={{ color: Colors.primary }} fontSize="medium" />}
+                  text="Filtros"
+                  width="120px"
                   transparent
                 />
-              )}
-
-              <Button
-                onClick={handleManageFilters}
-                icon={<FilterAltIcon sx={{ color: Colors.primary }} fontSize="medium" />}
-                text="Filtros"
-                width="120px"
-                transparent
-              />
+              </div>
             </div>
           </div>
 
           {/* Espaciador derecho para mantener el centro perfecto */}
-          <div />
+          <div className={styles.spacer} />
         </div>
 
 
@@ -208,11 +224,31 @@ export default function LiveHelpPage() {
           grupo={GroupEnum.ForumRequestHelp}
         />
 
+        {/* Chips de filtros aplicados */}
+        {userFilters.length > 0 && (
+          <div className={styles.appliedRow}>
+            {userFilters.map((f) => (
+              <span key={f.codeFilter} className={`${styles.chip} ${styles.chipApplied}`}>
+                {f.description}: {f.value}
+                <Button
+                  onClick={() => handleEliminarFiltro(f.codeFilter)}
+                  width="18px"
+                  height="18px"
+                  borderRadius="50%"
+                  backgroundColor="#1a1a1a"
+                  icon={<X size={12} color="#cfcfcf" />}
+                />
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Feed */}
         <div className={styles.feedContainer}>
           <RequestHelpFeed
             pageSize={9}
             search={appliedSearch}
+            refresh={refreshCounter}
             onCountChange={(visible, more) => { setVisibleCount(visible); setHasMore(more); }}
           />
         </div>
