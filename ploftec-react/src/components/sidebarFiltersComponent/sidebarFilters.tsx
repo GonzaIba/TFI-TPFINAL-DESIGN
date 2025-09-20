@@ -5,12 +5,15 @@ import { useEffect, useState, Fragment } from "react";
 import { GroupEnum } from "@/lib/types/enum";
 import { GroupResponse, FilterResponse } from "@/lib/types/forum";
 import { filtrosService } from "@/lib/services/forum/filtrosService";
-import { Button, Input, InputLabel } from "@/components";
+import { Button, DateTime, Input, InputLabel } from "@/components";
 import AnimatedSelect, { UiOption } from '@/components/selectComponent/selectComponent';
 import styles from "./sideBarFilters.module.css";
 import CloseIcon from "@mui/icons-material/Close";
 import { Colors } from "@/theme/colors";
 import { FilterTypeEnum } from "@/lib/types/enum";
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
 type SideBarFiltersProps = {
   show?: boolean;
@@ -136,14 +139,15 @@ export function SideBarFilters({
         );
 
       case FilterTypeEnum.DATE:
+        const parsed = value ? new Date(value) : null;
+        const dateValue = parsed && !isNaN(parsed.getTime()) ? parsed : null;
         return (
           <div className={styles.field}>
             <label className={styles.label}>{item.descriptionFilter}</label>
-            <input
-              className={styles.input}
-              type="date"
-              value={value}
-              onChange={(e) => updateFilterValue(item.codeFilter, e.target.value)}
+            <DateTime
+              dateValue={dateValue}
+              item={item}
+              updateFilterValue={updateFilterValue}
             />
           </div>
         );

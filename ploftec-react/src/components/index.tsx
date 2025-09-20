@@ -24,3 +24,4 @@ export { GridItem } from './gridComponent/gridItem';
 export { RequestHelpFeed } from '@/components/liveHelp/requestHelpFeed/requestHelpFeed';
 export { ExpiryTimer } from '@/components/liveHelp/expiryTimer/expiryTimer';
 export { SideBarFilters } from '@/components/sidebarFiltersComponent/sidebarFilters';
+export { DateTime } from '@/components/dateTimeComponent/dateTimePicker/dateTimePicker';

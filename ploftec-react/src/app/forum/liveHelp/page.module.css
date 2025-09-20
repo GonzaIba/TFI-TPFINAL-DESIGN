@@ -246,12 +246,14 @@
   display: inline-flex; align-items: center; gap: .4rem;
   border-radius: 999px; padding: .45rem .7rem .45rem .75rem;
   font-size: .92rem; line-height: 1;
-  will-change: transform; backface-visibility: hidden; transform: translateZ(0);
-  transition: transform .12s ease, box-shadow .12s ease;
+  will-change: transform, box-shadow, border-color, background-color;
+  backface-visibility: hidden; transform: translateZ(0);
+  transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease, background-color .14s ease;
 }
 .chip:hover{
-  transform: translateZ(0) scale(1.04);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+  /* Evitamos escalas grandes que desenfocan el texto */
+  transform: translate3d(0,-1px,0) scale(1.02);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.28);
 }
 .chipDraft{
   border: 1px dashed #3a3a3a; color: #dcdcdc; background: #101010;
@@ -259,6 +261,10 @@
 .chipApplied{
   color: #fff; border: 1px solid #6f58f3;
   background: linear-gradient(135deg, rgba(127,90,240,.18), rgba(44,182,125,.12));
+}
+.chipApplied:hover{
+  border-color: #8b76f7;
+  background: linear-gradient(135deg, rgba(127,90,240,.22), rgba(44,182,125,.16));
 }
 .chipClose{
   display: inline-grid; place-items: center;

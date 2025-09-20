@@ -49,9 +49,13 @@ export function Input({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const isControlled = value !== undefined;
+  const currentValue = isControlled ? (value as string) : searchQuery;
+
+  // Mantener sincronía solo cuando NO es controlado desde fuera
   useEffect(() => {
-    if (value !== undefined) setSearchQuery(value);
-  }, [value]);
+    if (!isControlled && value !== undefined) setSearchQuery(value);
+  }, [value, isControlled]);
 
   const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && submitFunction) submitFunction(searchQuery);
@@ -59,7 +63,7 @@ export function Input({
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (value === undefined) setSearchQuery(e.target.value);
+    if (!isControlled) setSearchQuery(e.target.value);
     onInput?.(e); // propaga hacia afuera
   };
 
@@ -91,7 +95,7 @@ export function Input({
           ref={inputRef}
           type="text"
           placeholder={placeHolder}
-          value={searchQuery}
+          value={currentValue}
           onChange={handleChange}
           onKeyDown={handleKeyPress}
           style={{

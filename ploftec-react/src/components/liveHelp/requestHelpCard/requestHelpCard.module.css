@@ -1,6 +1,9 @@
 /* src/components/liveHelp/requestHelpCard/requestHelpCard.module.css */
 
 .card {
+  /* cursor position vars for border glow */
+  --px: 50%;
+  --py: 0%;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -11,6 +14,37 @@
   gap: 12px;
   min-height: 240px;
   box-sizing: border-box;
+  position: relative;
+  cursor: pointer;
+  will-change: transform, box-shadow, border-color, background;
+  transform-style: preserve-3d;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+}
+
+/* fancy glow border on hover */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  padding: 1.5px;
+  border-radius: 16px;
+  background:
+    radial-gradient(220px 120px at var(--px) var(--py), rgba(127,90,240,.35), transparent 60%),
+    conic-gradient(from var(--angle, 0deg), #7f5af0, #2cb67d, #7f5af0);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes spinGradient {
+  to { --angle: 360deg; }
+}
+
+.card:hover::before {
+  opacity: .9;
+  animation: spinGradient 3s linear infinite;
 }
 
 /* ---- top row ---- */
@@ -139,4 +173,12 @@
 @media (max-width: 720px) {
   .topRow { grid-template-columns: 48px 1fr; }
   .avatar { width: 48px; height: 48px; }
+}
+
+/* hover lift + subtle tilt */
+.card:hover {
+  /* transform now controlled by framer-motion tilt */
+  box-shadow: 0 10px 24px rgba(0,0,0,.45), 0 0 24px rgba(127,90,240,.15);
+  border-color: #2d2d2d;
+  background: radial-gradient(1200px 400px at 50% 0%, rgba(127,90,240,.08), transparent 40%), #151515;
 }

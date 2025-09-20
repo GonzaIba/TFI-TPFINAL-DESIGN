@@ -1,7 +1,7 @@
 // src/components/liveHelp/requestHelpCard/requestHelpCard.tsx
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useSpring, useMotionTemplate } from "framer-motion";
 import styles from "./requestHelpCard.module.css";
 import { Button, ExpiryTimer, AvatarUser } from "@/components";
 import type { RequestHelpResponse } from "@/lib/types/forum";
@@ -41,6 +41,31 @@ export function RequestHelpCard({ item }: Props) {
   const remainingText = formatRemaining(remainingMs);
   const urgency = variantByMs(remainingMs);
 
+  // Reactive tilt + glow using framer-motion
+  const tiltX = useSpring(0, { stiffness: 260, damping: 20, mass: 0.6 });
+  const tiltY = useSpring(0, { stiffness: 260, damping: 20, mass: 0.6 });
+  const glowX = useMotionValue(0);
+  const glowY = useMotionValue(0);
+  const glow = useMotionTemplate`radial-gradient(600px 200px at ${glowX}px ${glowY}px, rgba(127,90,240,0.12), transparent 60%)`;
+  const bg = useMotionTemplate`${glow}, #151515`;
+
+  function onMouseMove(e: React.MouseEvent<HTMLElement>) {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const dx = x / rect.width - 0.5;
+    const dy = y / rect.height - 0.5;
+    tiltX.set(-(dy * 12));
+    tiltY.set(dx * 12);
+    glowX.set(x);
+    glowY.set(y);
+  }
+
+  function onMouseLeave() {
+    tiltX.set(0);
+    tiltY.set(0);
+  }
+
   function onHelp() {
     // TODO: aquí podés abrir modal/detalle o navegar a la solicitud
     console.log("Ayudar clicked", item.titleHelp);
@@ -51,7 +76,18 @@ export function RequestHelpCard({ item }: Props) {
       className={styles.card}
       initial={{ opacity: 0, y: 8, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
+      whileHover={{ scale: 1.02 }}
       transition={{ type: "spring", stiffness: 220, damping: 20 }}
+      style={{
+        rotateX: tiltX,
+        rotateY: tiltY,
+        transformPerspective: 900,
+        background: bg as any,
+        ['--px' as any]: glowX,
+        ['--py' as any]: glowY,
+      }}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
     >
       {/* Top row: avatar + right panel (timer, reward, button) */}
       <div className={styles.topRow}>
