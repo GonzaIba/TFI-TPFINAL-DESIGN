@@ -42,7 +42,8 @@ export default function PublicationCard({
           descripcionCorta={publication.userCreator?.shortDescription ?? ''}
           descripcionLarga={publication.userCreator?.longDescription ?? ''}
           nombreCompleto={publication.userCreator?.completeName ?? ''}
-          direction='right' /> {/*Anonimous User*/}
+          direction='right' 
+        /> {/*Anonimous User*/}
       </div>
       <div className={styles.questionBody}>
         <div className={styles.questionHeader}>

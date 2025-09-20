@@ -12,14 +12,14 @@ interface GridProps {
   colsXl?: number;
 }
 
-const Grid: React.FC<GridProps> = ({
+export function Grid({
   children,
   colsXs = 2,
   colsSm = 4,
   colsMd = 6,
   colsLg = 8,
   colsXl = 12,
-}) => {
+}:GridProps) {
   const style: CSSProperties = {
     ['--cols-xs' as string]: colsXs,
     ['--cols-sm' as string]: colsSm,
@@ -30,5 +30,3 @@ const Grid: React.FC<GridProps> = ({
 
   return <div className="Grid" style={style}>{children}</div>;
 };
-
-export default Grid;

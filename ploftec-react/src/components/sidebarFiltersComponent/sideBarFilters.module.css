@@ -1,3 +1,10 @@
+.title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+}
+
 .sidebarFilters {
   position: fixed;
   height: 100vh;
@@ -10,9 +17,7 @@
   z-index: 33;
 }
 
-.active {
-  right: 0;
-}
+.active { right: 0; }
 
 .sidebarFiltersContainer {
   padding: 20px;
@@ -37,65 +42,79 @@
 .sidebarFiltersRows {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 18px;
 }
 
-.sidebarFiltersRow {
-  display: flex;
+/* === NUEVO: grilla 2 columnas por fila === */
+.fieldsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* 2 por fila */
   gap: 20px;
-  justify-content: flex-start;
+  align-items: start;
 }
 
-.filterColumn {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  flex: 1;
+.field { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 8px; 
 }
+
+.label {
+  margin-left: 2px;
+  font-size: 1.2rem;
+}
+
+.input,
+.select {
+  width: 100%;
+  background: #151515;
+  border: 1px solid #222;
+  border-radius: 10px;
+  padding: 10px 12px;
+  outline: none;
+}
+
+.switchRow {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.switchText { opacity: 0.9; }
+
+.actionsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.filterColumn .buttonPloftecContainer { margin-right: 10px; }
+.filterColumn button, .filterColumn input { width: 100%; }
 
 .overlay {
   position: fixed;
-  top: 80px; /* altura del navbar */
+  top: 80px;
   left: 0;
-  width: 100%; /* suponiendo que el sidebar mide 500px */
+  width: 100%;
   height: calc(100% - 80px);
   background-color: rgba(0, 0, 0, 0.4);
   z-index: 32;
-
   opacity: 0;
   transition: opacity 0.5s ease;
-  pointer-events: none; /* evita clics cuando está oculto */
+  pointer-events: none;
 }
 
-.overlayActive {
-  opacity: 1;
-  pointer-events: auto;
-}
+.overlayActive { opacity: 1; pointer-events: auto; }
 
-
-.filterColumn .buttonPloftecContainer {
-  margin-right: 10px;
-}
-
-.filterColumn button,
-.filterColumn input {
-  width: 100%;
-}
-
-@media (max-width: 768px) {
-  .overlay {
-    width: 0; /* Oculta overlay (porque sidebar ocupa todo) */
-  }
-}
-
-@media (max-width: 720px) {
-  .sidebarFiltersRow {
-    flex-direction: column;
+/* Responsive: 1 columna debajo de 900px */
+@media (max-width: 900px) {
+  .fieldsGrid,
+  .actionsRow {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 480px) {
-  .sidebarFilters {
-    width: 100%;
-  }
+  .sidebarFilters { width: 100%; }
 }

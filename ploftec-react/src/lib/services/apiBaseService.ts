@@ -63,6 +63,7 @@ export const apiBaseService = {
           "Content-Type": "application/json",
           //"User-Agent": userAgent, --> no lo agregamos porque lo hace el navegador automáticamente
           "X-Client-IP": ip ?? "",
+          "X-Page-Path": window.location.pathname,
         },
         withCredentials: req.requireCredentials ?? false,
         data: req.body ?? undefined,

@@ -1,0 +1,117 @@
+/* Badge */
+.wrapper {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #181818;
+  border: 1px solid #2a2a2a;
+  min-height: 44px; /* match botón mediano */
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* estados */
+.ok {
+  border-color: #2d3b27;
+  background: linear-gradient(135deg, rgba(44,182,125,.14), rgba(127,90,240,.10));
+}
+.warn {
+  border-color: #423616;
+  background: linear-gradient(135deg, rgba(255,184,0,.16), rgba(127,90,240,.08));
+}
+.danger {
+  border-color: #3f2020;
+  background: linear-gradient(135deg, rgba(255,80,80,.18), rgba(127,90,240,.06));
+}
+
+/* Reloj */
+.clock {
+  position: relative;
+  display: inline-block;
+}
+
+/* anillo base */
+.ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-sizing: border-box;
+  border: var(--thick) solid #2f2f2f;
+  box-shadow: inset 0 0 6px rgba(0,0,0,.35);
+}
+
+/* halo sutil (respira) */
+.halo {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 68%);
+  animation: halo 2.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* órbita (rota continuamente sin depender del estado React) */
+.orbit {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  animation: spin var(--lap) linear infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+
+/* el punto orbital se coloca en el borde superior y la órbita lo rota */
+.dot {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--thick) / 2);
+  width: var(--orb);
+  height: var(--orb);
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: #eaeaea;
+  /* “cometa”: leve glow + trailing con sombras */
+  box-shadow:
+    0 0 0.5px rgba(0,0,0,.35),
+    0 0 6px rgba(255,255,255,.25),
+    0 0 12px rgba(127,90,240,.22);
+}
+
+/* punto central */
+.center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(4px, calc(var(--orb) * 0.35));
+  height: max(4px, calc(var(--orb) * 0.35));
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #e5e5e5;
+  box-shadow: 0 0 0 2px rgba(0,0,0,.25);
+}
+
+/* texto */
+.timeText {
+  font-size: 13px;
+  color: #eaeaea;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Animaciones */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes halo {
+  0%   { opacity: .8; transform: scale(1); }
+  50%  { opacity: 1;  transform: scale(1.05); }
+  100% { opacity: .8; transform: scale(1); }
+}
+
+/* Respeto reduce-motion */
+@media (prefers-reduced-motion: reduce){
+  .orbit { animation: none; }
+  .halo  { animation: none; }
+}

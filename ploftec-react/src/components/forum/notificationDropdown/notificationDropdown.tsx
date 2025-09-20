@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { NotificationsResponse } from '@/lib/types/forum';
 import { Button } from '@/components';
@@ -18,9 +18,31 @@ interface Props {
 export function NotificationDropdown({ notifications, onMarkAsRead }: Props) {
   const [open, setOpen] = useState(false);
   const unreadCount = notifications?.filter(n => !n.readed)?.length ?? 0;
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpen(false);
+      }
+    };
+
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [open]);
 
   return (
-    <div className={styles.wrapper}>
+    <div ref={dropdownRef} className={styles.wrapper}>
       <Button
         onClick={() => setOpen(o => !o)}
         icon={

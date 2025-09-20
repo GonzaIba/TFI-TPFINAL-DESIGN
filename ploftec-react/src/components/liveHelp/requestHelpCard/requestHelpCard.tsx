@@ -1,0 +1,133 @@
+// src/components/liveHelp/requestHelpCard/requestHelpCard.tsx
+"use client";
+
+import { motion } from "framer-motion";
+import styles from "./requestHelpCard.module.css";
+import { Button, ExpiryTimer, AvatarUser } from "@/components";
+import type { RequestHelpResponse } from "@/lib/types/forum";
+import { useEffect, useMemo, useState } from "react";
+import { Trophy } from "lucide-react";
+import HandshakeIcon from '@mui/icons-material/Handshake';
+
+function formatRemaining(ms: number) {
+  if (ms <= 0) return "0s";
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+  if (h >= 1) return `${h}h`;
+  if (m >= 1) return `${m}m`;
+  return `${s}s`;
+}
+function variantByMs(ms: number) {
+  const h = ms / (1000 * 60 * 60);
+  if (h <= 4) return "danger";
+  if (h <= 12) return "warn";
+  return "ok";
+}
+
+type Props = { item: RequestHelpResponse };
+
+export function RequestHelpCard({ item }: Props) {
+  const created = useMemo(() => new Date(item.createdAt), [item.createdAt]);
+  const expires = useMemo(() => new Date(item.expiresAt), [item.expiresAt]);
+
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const remainingMs = Math.max(0, +expires - now);
+  const remainingText = formatRemaining(remainingMs);
+  const urgency = variantByMs(remainingMs);
+
+  function onHelp() {
+    // TODO: aquí podés abrir modal/detalle o navegar a la solicitud
+    console.log("Ayudar clicked", item.titleHelp);
+  }
+
+  return (
+    <motion.article
+      className={styles.card}
+      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: "spring", stiffness: 220, damping: 20 }}
+    >
+      {/* Top row: avatar + right panel (timer, reward, button) */}
+      <div className={styles.topRow}>
+
+        <AvatarUser 
+          tagUser={item.userCreator?.initials ?? "AU"} 
+          imageUser={item.userCreator?.image}
+          descripcionCorta={item.userCreator?.shortDescription ?? ''}
+          descripcionLarga={item.userCreator?.longDescription ?? ''}
+          nombreCompleto={item.userCreator?.completeName ?? ''}
+          direction='right'
+        /> {/*Anonimous User*/}
+
+        {/* <div className={styles.avatar}>
+          {item.userCreator.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={item.userCreator.image}
+              alt={item.userCreator.completeName}
+            />
+          ) : (
+            <span>{item.userCreator.initials?.[0] ?? "?"}</span>
+          )}
+        </div> */}
+
+        <div className={styles.rightPanel}>
+          <div className={styles.timerAndReward}>
+
+            <ExpiryTimer
+              expiresAt={expires}
+              size={28}  // podés subir a 26/28 si querés más presencia
+              onExpire={() => {
+                // opcional: invalidar query, marcar como expirada, etc.
+                // console.log('expired', item.titleHelp);
+              }}
+            />
+            <div className={styles.rewardBadge}>
+              <Trophy size={16} className={styles.trophy} />
+              <span className={styles.regard}>{item.regard.toFixed(2)}</span>
+            </div>
+          </div>
+          <Button 
+            onClick={onHelp}
+            icon={<HandshakeIcon />}
+            circular
+          />
+        </div>
+      </div>
+
+      {/* Title + description */}
+      <h3 className={styles.title} title={item.titleHelp}>
+        {item.titleHelp}
+      </h3>
+      <p className={styles.description} title={item.message}>
+        {item.message}
+      </p>
+
+      {/* Languages (y opcionalmente labels) */}
+      <div className={styles.tagsRow}>
+        <div className={styles.langRow}>
+          {(item.languages ?? []).map((lang) => (
+            <span key={lang} className={styles.langChip}>
+              {lang}
+            </span>
+          ))}
+        </div>
+
+        <div className={styles.tagRow}>
+          {(item.labels ?? []).slice(0, 6).map((l) => (
+            <span key={l} className={styles.tagChip}>
+              {l}
+            </span>
+          ))}
+        </div>
+      </div>
+     
+    </motion.article>
+  );
+}

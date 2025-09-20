@@ -17,7 +17,7 @@ interface GridItemProps {
   rowSpanXl?: number;
 }
 
-const GridItem: React.FC<GridItemProps> = ({
+export function GridItem({
   children,
   colSpanXs,
   colSpanSm,
@@ -29,7 +29,7 @@ const GridItem: React.FC<GridItemProps> = ({
   rowSpanMd,
   rowSpanLg,
   rowSpanXl,
-}) => {
+}:GridItemProps) {
   const style: CSSProperties = {
     ...(colSpanXs && { ['--col-span-xs' as string]: colSpanXs }),
     ...(colSpanSm && { ['--col-span-sm' as string]: colSpanSm }),
@@ -45,5 +45,3 @@ const GridItem: React.FC<GridItemProps> = ({
 
   return <div className="GridItem" style={style}>{children}</div>;
 };
-
-export default GridItem;

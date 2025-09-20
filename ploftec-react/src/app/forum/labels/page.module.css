@@ -1,0 +1,118 @@
+.labelsPage {
+  display: flex;
+  flex-direction: column;
+  padding: 2rem;
+  color: white;
+  background-color: #1E1E1E;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 2rem;
+}
+
+.description {
+  flex: 1;
+  min-width: 300px;
+}
+
+.description h1 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+  color: #bdaaff;
+}
+
+.description p {
+  font-size: 1rem;
+  color: #cfcfcf;
+  max-width: 600px;
+  margin-bottom: 1rem;
+}
+
+.filterWrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.filterToggle {
+  background: none;
+  border: 1px solid #5e5e5e;
+  padding: 0.5rem 1rem;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.9rem;
+}
+
+.filterToggle:hover {
+  background: #2e2e2e;
+}
+
+.dropdown {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  background: #2c2c2c;
+  border-radius: 6px;
+  padding: 0.5rem 0;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  z-index: 20;
+  overflow: hidden;
+}
+
+.dropdown li {
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  color: white;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.dropdown li:hover {
+  background: #3a3a3a;
+}
+
+.grid {
+  display: grid;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.containerLabel {
+  display: flex;
+  height: 100%;
+  min-height: 220px;
+}
+
+.containerPaginator{
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+
+
+/* 2 columnas en tablet */
+@media (min-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* 3 columnas en laptops */
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* 4 columnas máximo */
+@media (min-width: 1200px) {
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+

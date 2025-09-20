@@ -1,0 +1,55 @@
+/* src/components/liveHelp/requestHelpFeed.module.css */
+
+.feed { margin-top: 18px; }
+
+/* 👇 grilla robusta con minmax para que no “empuje” columnas */
+.grid {
+  display: grid;
+  gap: 16px;
+  align-items: stretch;
+  grid-template-columns: repeat(1, minmax(0, 1fr)); /* móvil por defecto */
+}
+
+/* 2 cols tablet */
+@media (min-width: 640px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* 3 cols desktop */
+@media (min-width: 900px) {
+  .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+.cardWrap {
+  display: flex;
+  min-height: 220px; /* consistente con la altura del card */
+}
+
+/* Skeleton */
+.skeleton {
+  width: 100%;
+  height: 220px;             /* mismo alto que el card */
+  border-radius: 14px;
+  border: 1px solid #232323;
+  background: linear-gradient(90deg, #171717 25%, #1d1d1d 37%, #171717 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.2s infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
+
+.actions { display: flex; justify-content: center; margin-top: 14px; }
+
+.loadMore {
+  background: #2b73ff; color: #fff; border: none; border-radius: 12px;
+  padding: 10px 16px; font-weight: 700; letter-spacing: .2px; cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease, opacity .2s;
+  box-shadow: 0 8px 20px rgba(43,115,255,.15);
+}
+.loadMore:hover { transform: translateY(-1px); }
+.loadMore:active { transform: translateY(0); }
+.loadMore[disabled] { opacity: .6; cursor: not-allowed; }
+
+.error { color: #ff6b6b; padding: 8px 0; }

@@ -6,6 +6,7 @@ export const Colors = {
   white: '#ffffff',
   transparentGray: 'rgba(0, 0, 0, 0.04)',
   blackModal: '#121212',
-  error: '#ff3333'
+  error: '#ff3333',
+  foreground: '#444'
 };
   

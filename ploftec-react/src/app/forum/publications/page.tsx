@@ -337,42 +337,44 @@ export default function PublicationsPage() {
                     <SkeletonPublication />
                   </>
                 ) : publicacionesData?.length ? (
-                  publicacionesData?.map((pub, i) => (
-                    <motion.div
-                      key={`${pub.codePublication}-${pub.codeUser}`}
-                      initial={{ opacity: 0, y: 40 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.7, delay: i * 0.1, ease: 'easeOut' }}
-                    >
-                      <PublicationCard
-                        publication={pub}
-                        onClickTitle={async () => onClickTitle(pub.codePublication)}
-                        onClickUser={onClickUser}
-                        onToggleSave={async () =>
-                          toggleSave({
-                            codePub: pub.codePublication,
-                            isSaved: pub.isSaved,
-                            page: currentPage,
-                            pageSize: postsPerPage,
-                            filter,             // tu estado actual de filtro
-                          })
-                        }
-                      />
-                    </motion.div>
-                  ))
+                  <>
+                    {publicacionesData?.map((pub, i) => (
+                      <motion.div
+                        key={`${pub.codePublication}-${pub.codeUser}`}
+                        initial={{ opacity: 0, y: 40 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.7, delay: i * 0.1, ease: 'easeOut' }}
+                      >
+                        <PublicationCard
+                          publication={pub}
+                          onClickTitle={async () => onClickTitle(pub.codePublication)}
+                          onClickUser={onClickUser}
+                          onToggleSave={async () =>
+                            toggleSave({
+                              codePub: pub.codePublication,
+                              isSaved: pub.isSaved,
+                              page: currentPage,
+                              pageSize: postsPerPage,
+                              filter,             // tu estado actual de filtro
+                            })
+                          }
+                        />
+                      </motion.div>
+                    ))}
+                  
+                    <Paginator
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={onPageChange}
+                      isComponentLoading={isPageLoading}
+                    />
+                  </>
                 ) : filter === 'created' ? (
                   <p>Aún no tenés publicaciones creadas…</p>
                 ) : (
                   <p>Aún no hay publicaciones cargadas…</p>
                 )}
-
-                <Paginator
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={onPageChange}
-                  isComponentLoading={isPageLoading}
-                />
               </div>
 
               {/* —————— Lado derecho (top-users y top-questions) —————— */}

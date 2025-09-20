@@ -261,7 +261,19 @@ const CreatePublicationComponent: React.FC<CreatePublicationProps> = ({
                   transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   className={styles.chipContainer}
                 >
-                  <ChipComponent label={item.tagText} button={<Button width='10px' borderRadius='10px' height='0px' icon={<CloseIcon></CloseIcon>} transparent onClick={() => handleRemoveTag(idx)} />}></ChipComponent>
+                  <ChipComponent 
+                    label={item.tagText} 
+                    button={
+                      <Button 
+                        width='10px' 
+                        borderRadius='10px' 
+                        height='0px' 
+                        icon={<CloseIcon/>} 
+                        transparent 
+                        onClick={() => handleRemoveTag(idx)} 
+                      />
+                    }
+                  />
                 </motion.div>
                 ))}
               </AnimatePresence>

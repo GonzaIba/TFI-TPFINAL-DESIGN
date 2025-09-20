@@ -17,7 +17,7 @@ export function Paginator({ currentPage, totalPages, onPageChange, isComponentLo
 
   if (isComponentLoading) {
     return (
-      <SkeletonLine/>
+      <SkeletonLine internal/>
     )
   } 
 

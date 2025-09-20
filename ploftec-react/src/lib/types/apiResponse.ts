@@ -21,5 +21,14 @@ export interface PaginatedList<T> {
   pageCount:  number;
   totalCount: number;
   totalPages: number;
-  list:       T[];
+  hasPreviousPage?: boolean;
+  hasNextPage?: boolean;
+  list: T[];
+}
+
+export interface CursorPage<T> {
+  items: T[];
+  nextCursor?: string;
+  hasNext?: boolean;
+  anchorUtc?: Date;
 }

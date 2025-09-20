@@ -146,6 +146,8 @@
     codeFilter: number;
     nameFilter: string;
     descriptionFilter: string;
+    typeValue: string;
+    options?: string[]; // si es tipo select, vienen las opciones
   }
 
   export interface NotificationsResponse {
@@ -157,7 +159,7 @@
     readed: boolean;
   }
   
-  export interface Medalla {
+  export interface Medal {
     nameMedal: string;
     description: string;
     imageMedal: string;
@@ -177,9 +179,29 @@
     longDescriptionForum?: string;
     imageForum?: string;
     lastTimeConnectedForum: string;
-    medals: Medalla[];
+    medals: Medal[];
   }
 
   export interface AnswerPublicationVoteResponse extends SuccessfulResponse {
     isVoteCreatedExpired?: boolean;
   }
+
+  export interface LabelResponse {
+    codeLabel: number;
+    name: string;
+    description: string;
+    countThisWeek: number;
+    countTotal: number;
+  }
+
+  export type RequestHelpResponse = {
+    userCreator: UsersForumPreviewResponse;
+    titleHelp: string;
+    message: string;
+    status: string;
+    languages: string[];
+    labels: string[];
+    createdAt: Date;
+    regard: number;
+    expiresAt: Date;
+  };

@@ -11,6 +11,7 @@ import {
   Zoom,
   Fade,
 } from '@mui/material';
+import React from 'react';
 
 interface ButtonPloftecProps {
   text?: string;
@@ -20,11 +21,13 @@ interface ButtonPloftecProps {
   disabled?: boolean;
   circular?: boolean;
   width?: string;
-  height?: string
-  borderRadius?: string
+  height?: string;
+  borderRadius?: string;
   transparent?: boolean;
   backgroundColor?: string;
   tooltipOptions?: TooltipOptions;
+  /** Nuevo: contenido custom. Si se provee, ignora icon/text. */
+  children?: React.ReactNode;
 }
 
 interface TooltipOptions {
@@ -49,8 +52,8 @@ export default function ButtonPloftec({
   transparent = false,
   backgroundColor = Colors.primary,
   tooltipOptions,
+  children,
 }: ButtonPloftecProps) {
-
   const {
     title,
     placement = 'bottom',
@@ -64,73 +67,77 @@ export default function ButtonPloftec({
     transition === 'zoom' ? Zoom : transition === 'fade' ? Fade : undefined;
 
   const buttonContent = (
-  <ButtonMui
-    onClick={onClick}
-    disabled={disabled || loading}
-    sx={{
-      width: circular ? '45px' : width,
-      height: height,
-      minWidth: 0,
-      borderRadius: circular ? '50%' : borderRadius,
-      backgroundColor: transparent ? 'transparent' : backgroundColor,
-      color: transparent ? backgroundColor : '#fff',
-      boxShadow: transparent ? 'none' : '0 5px 10px rgba(255, 255, 255, 0.1)',
-      textTransform: 'none',
-      fontFamily: 'inherit',
-      transition: 'background-color 0.3s ease, transform 0.3s ease, color 0.3s ease',
-      cursor: 'pointer',
-      '&:hover': {
-        backgroundColor: transparent ? 'rgba(255, 255, 255, 0.1)' : `${backgroundColor}cc`,
-      },
-      '&.Mui-disabled': {
+    <ButtonMui
+      onClick={onClick}
+      disabled={disabled || loading}
+      sx={{
+        width: circular ? '45px' : width,
+        height: height,
+        minWidth: 0,
+        borderRadius: circular ? '50%' : borderRadius,
+        backgroundColor: transparent ? 'transparent' : backgroundColor,
+        borderColor: transparent ? backgroundColor : 'transparent',
         color: transparent ? backgroundColor : '#fff',
-        backgroundColor: transparent ? 'transparent' : `${backgroundColor}99`,
-        cursor: 'not-allowed',
-        pointerEvents: 'auto',
-      },
-    }}
-  >
-    {loading ? (
-      <CircularProgress size={24} sx={{ color: 'inherit' }} />
-    ) : (
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="center"
-        spacing={icon && text ? 1 : 0}
-        sx={{ width: '100%', height: '100%' }}
-      >
-        {icon && (
-          <Stack alignItems="center" justifyContent="center" sx={{ display: 'flex' }}>
-            {icon}
+        boxShadow: transparent ? 'none' : '0 5px 10px rgba(255, 255, 255, 0.1)',
+        textTransform: 'none',
+        fontFamily: 'inherit',
+        transition: 'background-color 0.3s ease, transform 0.3s ease, color 0.3s ease',
+        cursor: 'pointer',
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        '&:hover': {
+          backgroundColor: transparent ? 'rgba(255, 255, 255, 0.1)' : `${backgroundColor}cc`,
+        },
+        '&.Mui-disabled': {
+          color: transparent ? backgroundColor : '#fff',
+          backgroundColor: transparent ? 'transparent' : `${backgroundColor}99`,
+          cursor: 'not-allowed',
+          pointerEvents: 'auto',
+        },
+      }}
+    >
+      {loading ? (
+        <CircularProgress size={24} sx={{ color: 'inherit' }} />
+      ) : (
+        // Si children existe, lo usamos tal cual. Si no, usamos el layout original.
+        children ?? (
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="center"
+            spacing={icon && text ? 1 : 0}
+            sx={{ width: '100%', height: '100%' }}
+          >
+            {icon && (
+              <Stack alignItems="center" justifyContent="center" sx={{ display: 'flex' }}>
+                {icon}
+              </Stack>
+            )}
+            {!circular && text && (
+              <Typography variant="body2" sx={{ fontWeight: 500, fontFamily: 'inherit' }}>
+                {text}
+              </Typography>
+            )}
           </Stack>
-        )}
-        {!circular && text && (
-          <Typography variant="body2" sx={{ fontWeight: 500, fontFamily: 'inherit' }}>
-            {text}
-          </Typography>
-        )}
-      </Stack>
-    )}
-  </ButtonMui>
-);
+        )
+      )}
+    </ButtonMui>
+  );
 
-return (tooltipOptions && !loading) ? (
-  <Tooltip
-    title={<div style={{ maxWidth: tooltipWidth }}>{title}</div>}
-    placement={placement}
-    followCursor={followCursor}
-    arrow={arrow}
-    enterDelay={500}
-    leaveDelay={200}
-    slots={{
-      transition: TransitionComponent,
-    }}
-  >
-    {buttonContent}
-  </Tooltip>
-) : (
-  buttonContent
-);
-
+  return tooltipOptions && !loading ? (
+    <Tooltip
+      title={<div style={{ maxWidth: tooltipWidth }}>{title}</div>}
+      placement={placement}
+      followCursor={followCursor}
+      arrow={arrow}
+      enterDelay={500}
+      leaveDelay={200}
+      slots={{ transition: TransitionComponent }}
+    >
+      {buttonContent}
+    </Tooltip>
+  ) : (
+    buttonContent
+  );
 }

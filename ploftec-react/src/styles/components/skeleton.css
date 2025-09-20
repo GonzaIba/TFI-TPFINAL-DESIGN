@@ -6,6 +6,19 @@
     border-radius: 10px;
 }
 
+.label-card-skeleton {
+    border: 1px solid #ffffff22;
+    border-radius: 8px;
+    padding: 1rem;
+    background-color: #1a1a1a;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    width: 100%;
+    animation: fadein 0.3s ease-in;
+}
+
 .card-skeleton .header-skeleton {
     display: flex;
     align-items: center;

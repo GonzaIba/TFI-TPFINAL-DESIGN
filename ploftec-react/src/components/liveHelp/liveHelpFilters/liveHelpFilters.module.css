@@ -1,0 +1,142 @@
+.filters {
+  /* max-width: 1100px; */
+}
+
+.filterContainer{
+  display: flex; 
+  flex-direction: row; 
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  width: 100%;
+  height: 100%;
+}
+
+/* BUSCADOR */
+.searchRow {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+  gap: 12px;
+  width: 600px;
+}
+
+.searchInput {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  background: #121212;
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: .6rem .9rem .6rem 0;
+  color: #e5e5e5;
+  min-width: min(100%, 620px);
+  box-shadow: 0 0 10px rgba(0,0,0,.25);
+}
+.searchInput input {
+  background: transparent; border: 0; outline: none; color: inherit; width: 100%;
+  font-size: .98rem;
+}
+.searchIcon { position: absolute; left: .65rem; opacity: .7; }
+.clearSearch {
+  border: 0; background: #1b1b1b; color: #cfcfcf;
+  border-radius: 8px; width: 28px; height: 28px; display: grid; place-items: center;
+}
+
+/* COMPOSITOR */
+.composerRow {
+  display: flex; 
+  justify-content: center; 
+  margin-bottom: 12px;
+  flex-direction: row;
+}
+
+.inputFilterContainer{
+  display: flex; flex-direction: row; gap: 6px;
+}
+
+.tagComposer {
+  display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap;
+}
+.tagComposer input{
+  flex: 1 1 420px;
+  max-width: 620px;
+  background: #121212; color: #e5e5e5;
+  border: 1px solid #222; border-radius: 12px;
+  padding: .6rem .8rem;
+  outline: none;
+}
+.tagComposer input:focus{ border-color: #333; }
+
+.addBtn{
+  display: inline-flex; gap: .4rem; align-items: center;
+  border: 1px solid #2a2a2a; background: #141414; color: #d9d9d9;
+  padding: .55rem .9rem; border-radius: 12px; cursor: pointer;
+  transition: background-color .18s ease, border-color .18s ease, transform .06s ease;
+}
+.addBtn:hover{ background: #181818; border-color: #333; }
+.addBtn:disabled{ opacity: .45; cursor: not-allowed; }
+
+.draftChips{
+  display: flex; 
+  gap: .5rem; 
+  flex-wrap: wrap; 
+  justify-content: center;
+  min-height: 34px;
+  width: 500px;
+}
+
+.inputFilterContainer{
+  width: 550px;
+}
+
+/* ACCIONES */
+.actions{
+  display: flex; gap: .5rem; justify-content: center; align-items: center; flex-wrap: wrap;
+}
+.applyBtn{
+  display: inline-flex; gap: .5rem; align-items: center;
+  background: #7f5af0; color: #fff; border: 0; border-radius: 12px;
+  padding: .6rem 1rem; cursor: pointer;
+  box-shadow: 0 6px 18px rgba(127,90,240,.25);
+  transition: transform .08s ease;
+}
+.applyBtn:hover{ transform: translateY(-1px); }
+.applyBtn:disabled{ opacity: .6; cursor: not-allowed; }
+.clearAll{
+  border: 1px solid #2a2a2a; background: #141414; color: #d9d9d9;
+  padding: .55rem .9rem; border-radius: 12px; cursor: pointer;
+  transition: background-color .18s ease, border-color .18s ease;
+}
+.clearAll:hover{ background: #181818; border-color: #333; }
+
+/* CHIPS */
+.appliedRow{
+  display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center;
+  margin-top: 6px;
+}
+.chip{
+  position: relative;
+  display: inline-flex; align-items: center; gap: .4rem;
+  border-radius: 999px; padding: .45rem .7rem .45rem .75rem;
+  font-size: .92rem; line-height: 1;
+  will-change: transform; backface-visibility: hidden; transform: translateZ(0);
+}
+.chipDraft{
+  border: 1px dashed #3a3a3a; color: #dcdcdc; background: #101010;
+}
+.chipApplied{
+  color: #fff; border: 1px solid #6f58f3;
+  background: linear-gradient(135deg, rgba(127,90,240,.18), rgba(44,182,125,.12));
+}
+.chipClose{
+  display: inline-grid; place-items: center;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #1a1a1a; color: #cfcfcf; border: 0; cursor: pointer;
+}
+
+/* reduce motion */
+@media (prefers-reduced-motion: reduce){
+  .applyBtn, .addBtn, .chip, .clearAll { transition: none; }
+}

@@ -1,0 +1,257 @@
+.liveHelpContainer{
+  width: 100%;
+  min-height: 100vh;
+}
+
+.headerWrapper {
+  text-align: center;
+  padding: 4rem 1rem;
+}
+
+.filtersContainer{
+  width: 100%;
+  padding-top: 5rem;
+}
+
+.feedContainer { 
+  width: 100%; 
+}
+
+.title {
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  color: #aaa;
+  max-width: 700px;
+  margin: 0 auto 3rem auto;
+  line-height: 1.6;
+}
+
+.stepHeader{
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.stepCard {
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  color: #ddd;
+  text-align: left;
+  /* ⛔️ Evitar "all": no transiciones de transform (Framer se encarga) */
+  transition: box-shadow .18s ease, background-color .18s ease, border-color .18s ease;
+  box-shadow: 0 0 12px rgba(0,0,0,0.35);
+
+  /* 🚀 Performance */
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.stepCard:hover {
+  /* sombra un poco más marcada sin exagerar el blur */
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+.stepCard h3 {
+  color: #fff;
+  font-size: 1.3rem;
+}
+
+.stepCard p {
+  font-size: 0.95rem;
+  color: #aaa;
+}
+
+.stepNumber {
+  background: linear-gradient(135deg, #7f5af0, #2cb67d);
+  color: #fff;
+  font-weight: bold;
+  font-size: 1.2rem;
+  border-radius: 50%;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+
+
+.filterContainer{
+  display: grid;
+  grid-template-columns: auto 1fr auto; /* izq | centro | der (espaciador) */
+  align-items: center;
+  gap: 1.5rem;
+  margin-top: 3rem;
+  width: 100%;
+}
+
+.totalBox { justify-self: start; }
+
+/* BUSCADOR */
+.searchRow {
+  justify-self: center;
+  width: 100%;
+  max-width: 900px; /* ajustá a gusto para que no se amontone */
+}
+
+.searchRowInner{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.searchRowInner :global(button){
+  flex: 0 0 auto;           /* que no se achiquen */
+  white-space: nowrap;      /* evita salto de “Limpiar”, “Filtros” */
+}
+
+/* el input ocupa el espacio disponible sin romper el max-width del grupo */
+.searchRowInner :global(input){
+  flex: 1 1 auto;
+  min-width: 420px;         /* como venías usando */
+}
+
+/* responsive: permití wrap elegante en pantallas chicas */
+@media (max-width: 840px){
+  .searchRow { max-width: 100%; }
+  .searchRowInner{
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+  .searchRowInner :global(input){
+    min-width: min(100%, 420px);
+    flex: 1 1 100%;
+  }
+}
+
+.searchInput {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  background: #121212;
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: .6rem .9rem .6rem 0;
+  color: #e5e5e5;
+  min-width: min(100%, 620px);
+  box-shadow: 0 0 10px rgba(0,0,0,.25);
+}
+.searchInput input {
+  background: transparent; border: 0; outline: none; color: inherit; width: 100%;
+  font-size: .98rem;
+}
+.searchIcon { position: absolute; left: .65rem; opacity: .7; }
+.clearSearch {
+  border: 0; background: #1b1b1b; color: #cfcfcf;
+  border-radius: 8px; width: 28px; height: 28px; display: grid; place-items: center;
+}
+
+/* COMPOSITOR */
+.composerRow {
+  display: flex; 
+  justify-content: center; 
+  margin-bottom: 12px;
+  flex-direction: row;
+}
+
+.inputFilterContainer{
+  display: flex; flex-direction: row; gap: 6px;
+}
+
+.tagComposer {
+  display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap;
+}
+.tagComposer input{
+  flex: 1 1 420px;
+  max-width: 620px;
+  background: #121212; color: #e5e5e5;
+  border: 1px solid #222; border-radius: 12px;
+  padding: .6rem .8rem;
+  outline: none;
+}
+.tagComposer input:focus{ border-color: #333; }
+
+.addBtn{
+  display: inline-flex; gap: .4rem; align-items: center;
+  border: 1px solid #2a2a2a; background: #141414; color: #d9d9d9;
+  padding: .55rem .9rem; border-radius: 12px; cursor: pointer;
+  transition: background-color .18s ease, border-color .18s ease, transform .06s ease;
+}
+.addBtn:hover{ background: #181818; border-color: #333; }
+.addBtn:disabled{ opacity: .45; cursor: not-allowed; }
+
+.draftChips{
+  display: flex; 
+  gap: .5rem; 
+  flex-wrap: wrap; 
+  justify-content: center;
+  min-height: 34px;
+  width: 500px;
+}
+
+.inputFilterContainer{
+  width: 550px;
+}
+
+/* ACCIONES */
+.actions{
+  display: flex; gap: .5rem; justify-content: center; align-items: center; flex-wrap: wrap;
+}
+.applyBtn{
+  display: inline-flex; gap: .5rem; align-items: center;
+  background: #7f5af0; color: #fff; border: 0; border-radius: 12px;
+  padding: .6rem 1rem; cursor: pointer;
+  box-shadow: 0 6px 18px rgba(127,90,240,.25);
+  transition: transform .08s ease;
+}
+.applyBtn:hover{ transform: translateY(-1px); }
+.applyBtn:disabled{ opacity: .6; cursor: not-allowed; }
+.clearAll{
+  border: 1px solid #2a2a2a; background: #141414; color: #d9d9d9;
+  padding: .55rem .9rem; border-radius: 12px; cursor: pointer;
+  transition: background-color .18s ease, border-color .18s ease;
+}
+.clearAll:hover{ background: #181818; border-color: #333; }
+
+/* CHIPS */
+.appliedRow{
+  display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center;
+  margin-top: 6px;
+}
+.chip{
+  position: relative;
+  display: inline-flex; align-items: center; gap: .4rem;
+  border-radius: 999px; padding: .45rem .7rem .45rem .75rem;
+  font-size: .92rem; line-height: 1;
+  will-change: transform; backface-visibility: hidden; transform: translateZ(0);
+}
+.chipDraft{
+  border: 1px dashed #3a3a3a; color: #dcdcdc; background: #101010;
+}
+.chipApplied{
+  color: #fff; border: 1px solid #6f58f3;
+  background: linear-gradient(135deg, rgba(127,90,240,.18), rgba(44,182,125,.12));
+}
+.chipClose{
+  display: inline-grid; place-items: center;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #1a1a1a; color: #cfcfcf; border: 0; cursor: pointer;
+}
+
+/* reduce motion */
+@media (prefers-reduced-motion: reduce){
+  .applyBtn, .addBtn, .chip, .clearAll { transition: none; }
+}

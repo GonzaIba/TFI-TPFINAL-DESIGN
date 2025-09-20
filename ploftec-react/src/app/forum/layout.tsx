@@ -102,6 +102,8 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     router.prefetch('/forum/publications');
     router.prefetch('/forum/users');
+    router.prefetch('/forum/labels');
+    router.prefetch('/forum/liveHelp');
     router.prefetch('/login');
   }, []);
 

@@ -118,6 +118,25 @@
   padding-left: 4px; /* opcional, para alinear con el input */
 }
 
+.clearSearch {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  /* right se setea inline según showIcon */
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+}
+
+.clearSearch:hover {
+  background: rgba(0,0,0,0.06);
+}
 
 @media (max-width: 1024px) {
   .searchInput input {

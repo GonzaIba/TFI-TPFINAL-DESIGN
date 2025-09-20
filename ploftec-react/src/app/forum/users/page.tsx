@@ -1,11 +1,10 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Button from '@/components/buttonComponent/button'
+import { Button, SideBarFilters} from '@/components'
 import ProtectedRoute from "@/components/auth/protectedRoute";
-import { usuariosForoService } from '@/lib/services/forum/usuariosForoService'
+import { filtrosService } from "@/lib/services/forum/filtrosService";
 import { UserFilterForumResponse } from '@/lib/types/forum'
-import SideBarFilters from '@/components/sidebarFiltersComponent/sidebarFilters'
 import TableUsers from '@/components/forum/tableUsers/tableUsers'
 import { GroupEnum } from '@/lib/types/enum'
 import styles from './page.module.css'
@@ -17,7 +16,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     const loadFilters = async () => {
-      const filtros = (await usuariosForoService.getFilterUser()).data
+      const filtros = (await filtrosService.getFilterUser(GroupEnum.ForumUserTable)).data
       setUserFilters(filtros ?? [])
     }
     loadFilters()
@@ -31,24 +30,24 @@ export default function UsersPage() {
     const filtered = Object.fromEntries(
       Object.entries(valuePairs).filter(([_, v]) => v.trim() !== '')
     )
-    await usuariosForoService.addFilterUser({ filters_CodeValue: filtered })
-    const nuevosFiltros = (await usuariosForoService.getFilterUser()).data
+    await filtrosService.addFilterUser({ filters_CodeValue: filtered })
+    const nuevosFiltros = (await filtrosService.getFilterUser(GroupEnum.ForumUserTable)).data
     setUserFilters(nuevosFiltros ?? [])
     setShouldReloadUsers(true)
   }
 
   const handleResetearFiltros = async () => {
     if(userFilters.length > 0) {
-      await usuariosForoService.deleteFilterUser(GroupEnum.ForumUserTable)
-      const filtrosActualizados = (await usuariosForoService.getFilterUser()).data
+      await filtrosService.deleteFilterUser(GroupEnum.ForumUserTable)
+      const filtrosActualizados = (await filtrosService.getFilterUser(GroupEnum.ForumUserTable)).data
       setUserFilters(filtrosActualizados ?? [])
       setShouldReloadUsers(true)
     }
   }
 
   const handleEliminarFiltro = async (codigoFiltro: number) => {
-    await usuariosForoService.deleteFilterUser(codigoFiltro)
-    const filtrosActualizados = (await usuariosForoService.getFilterUser()).data
+    await filtrosService.deleteFilterUser(codigoFiltro)
+    const filtrosActualizados = (await filtrosService.getFilterUser(GroupEnum.ForumUserTable)).data
     setUserFilters(filtrosActualizados ?? [])
     setShouldReloadUsers(true)
   }
