@@ -130,7 +130,7 @@ export function ExpiryTimer({
   const circ = 2 * Math.PI * r;
   // Aguja: 48h -> arriba; 24h -> abajo; 0h -> arriba
   const handAngle = 360 * (1 - progress); // 0° arriba, 90° derecha, 180° abajo, 270° izquierda
-
+  const dash = `${circ} ${circ}`;
   return (
     <div
       className={[
@@ -169,16 +169,17 @@ export function ExpiryTimer({
               <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} className={styles.tick} />
             );
           })}
-          {/* progreso (12 en punto, sentido antihorario para que 24h pinte la izquierda) */}
-          <g style={{ transform: 'rotate(-90deg) scale(-1,1)', transformOrigin: '50px 50px' }}>
+          {/* progreso (12 en punto, sentido antihorario). Usamos dasharray = [longitud visible, resto como gap] */}
+          <g style={{ transform: 'rotate(-90deg)', transformOrigin: '50px 50px' }}>
             <circle
               cx="50"
               cy="50"
               r={r}
               className={styles.progress}
               strokeWidth={stroke}
-              strokeDasharray={circ}
-              strokeDashoffset={circ * (1 - progress)}
+              strokeDasharray={dash}                 // un dash del tamaño de la circunferencia
+              strokeDashoffset={-circ * (1 - progress)} // <-- antihorario (va a la izquierda)
+              strokeLinecap="round"
               filter="url(#glow)"
             />
           </g>

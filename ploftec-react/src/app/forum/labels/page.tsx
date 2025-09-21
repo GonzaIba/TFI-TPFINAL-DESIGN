@@ -51,7 +51,11 @@ export default function LabelsPage() {
   };
 
   const handleOnLabelClick = (labelName: string) => {
-    router.push(`/forum/publications?search=${encodeURIComponent(`[${labelName}]`)}`);
+    const params = new URLSearchParams();
+    const pathname = '/forum/publications';
+    params.set("search", encodeURIComponent(`[${labelName}]`));
+    router.push(`${pathname}?${params.toString()}`);
+    //router.push(`/forum/publications?search=${encodeURIComponent(`[${labelName}]`)}`);
   }
 
   // Cerrar dropdown al click afuera

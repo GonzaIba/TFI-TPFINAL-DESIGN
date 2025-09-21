@@ -43,11 +43,14 @@
 .tagContainer {
   display: flex;
   flex-direction: row;
-  gap: 10px
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .addTag {
   padding-top: 2px;
+  align-self: flex-start;
 }
 
 .input {
@@ -71,16 +74,19 @@
 .formActions {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   gap: 16px;
 }
 
 .chipList{
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .chipContainer {
-  margin-right: 8px;
+  margin-right: 0;
 }
 
 .submitButton {
@@ -99,9 +105,19 @@
 }
 
 @media (max-width: 720px) {
+  .container {
+    padding: 1rem;
+    padding-bottom: 5rem; /* espacio para FAB/chatbot flotante en mobile */
+  }
+
+  .formActions {
+    justify-content: stretch;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
 
   .chipList{
-    display: unset;
     width: 100%;
   }
 }

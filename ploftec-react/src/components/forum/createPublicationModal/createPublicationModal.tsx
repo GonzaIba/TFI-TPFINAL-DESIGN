@@ -8,6 +8,7 @@ import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
 import CloseIcon from '@mui/icons-material/Close';
 import AddIcon from '@mui/icons-material/Add';
 import styles from './createPublicationModal.module.css'
+import { useWindowWidth } from '@/hooks';
 import { publicationsService } from '@/lib/services/forum/publicationsService';
 import { useDebounce } from '@/hooks/useDebounce';
 import { motion, AnimatePresence } from 'framer-motion'
@@ -39,6 +40,8 @@ const CreatePublicationComponent: React.FC<CreatePublicationProps> = ({
   onSubmit,
   close
 }) => {
+  const width = useWindowWidth();
+  const isMobile = width < 720;
   const [title, setTitle] = useState('')
   const [content, setContent] = useState(initialDraft)
   const [tagsText, setTagsText] = useState('')
@@ -231,17 +234,17 @@ const CreatePublicationComponent: React.FC<CreatePublicationProps> = ({
               </Tooltip>
           </label>
           <div className={styles.tagContainer}>
-            <Input
-              placeHolder='p. ej. hacking veracode redhat'
-              value={tagsText}                                   // <— pasas el estado
-              onInput={(e: ChangeEvent<HTMLInputElement>) => handleOnInput(e)}              
-              customStyle={{height: '50px', fontSize: '16px'}}
-              widthContainer='300px'
-              useSearch={false}
-              showIcon={false}
-              error={errorTag}
-              errorText={errorTagText}
-            >
+          <Input
+            placeHolder='p. ej. hacking veracode redhat'
+            value={tagsText}                                   // <— pasas el estado
+            onInput={(e: ChangeEvent<HTMLInputElement>) => handleOnInput(e)}              
+            customStyle={{height: '50px', fontSize: '16px'}}
+            widthContainer={isMobile ? '100%' : '300px'}
+            useSearch={false}
+            showIcon={false}
+            error={errorTag}
+            errorText={errorTagText}
+          >
             </Input>
             <div className={styles.addTag}>
               <Button circular onClick={handleAddTag} icon={<AddIcon></AddIcon>}/>
@@ -301,8 +304,8 @@ const CreatePublicationComponent: React.FC<CreatePublicationProps> = ({
 
         {/* BOTÓN DE ENVÍO */}
         <div className={styles.formActions}>
-          <Button onClick={handleSubmit} text='Publicar' loading={loadingSubmit}/>
-          <Button onClick={close} text='Cancelar'/>
+          <Button onClick={handleSubmit} text='Publicar' loading={loadingSubmit} width={isMobile ? '100%' : '170px'}/>
+          <Button onClick={close} text='Cancelar' width={isMobile ? '100%' : '170px'}/>
         </div>
       </div>
     </div>

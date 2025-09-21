@@ -18,6 +18,8 @@ interface AvatarUserProps {
   nombreCompleto?: string;
   showDetails?: boolean;
   direction?: Direction;
+  /** tamaño del avatar en px (ancho/alto). Default: 40 */
+  size?: number;
 }
 
 const colors = [
@@ -48,6 +50,7 @@ export default function AvatarUser({
   nombreCompleto,
   showDetails = true,
   direction,
+  size = 40,
 }: AvatarUserProps) {
   const [avatarBg, setAvatarBg] = useState("#000");
 
@@ -121,14 +124,14 @@ export default function AvatarUser({
               backgroundSize: "cover",
               backgroundPosition: "center",
               backgroundRepeat: "no-repeat",
-              width: "40px",
-              height: "40px",
+              width: `${size}px`,
+              height: `${size}px`,
               borderRadius: "50%",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontWeight: "bold",
-              fontSize: "16px",
+              fontSize: `${Math.max(12, Math.round(size * 0.4))}px`,
               color: "#fff",
             }}
           >
@@ -146,14 +149,14 @@ export default function AvatarUser({
               backgroundSize: "cover",
               backgroundPosition: "center",
               backgroundRepeat: "no-repeat",
-              width: "40px",
-              height: "40px",
+              width: `${size}px`,
+              height: `${size}px`,
               borderRadius: "50%",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontWeight: "bold",
-              fontSize: "16px",
+              fontSize: `${Math.max(12, Math.round(size * 0.4))}px`,
               color: "#fff",
             }}
           >

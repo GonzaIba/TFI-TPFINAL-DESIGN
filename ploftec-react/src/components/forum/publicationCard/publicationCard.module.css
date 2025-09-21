@@ -185,9 +185,17 @@
         flex-wrap: wrap;
     }
 
+    .questionAvatarUser {
+        width: 40px; /* acompaña el avatar reducido */
+        margin-left: 12px;
+        margin-top: 12px;
+    }
+
     .questionMore,
     .questionBody{
-        padding: 10px;
+        padding-right: 12px;
+        padding-left: 12px;
+        padding-top: 12px;
     }
 
     .titleEllipsis{
@@ -207,5 +215,25 @@
 
     .questionText {
         display: none;
+    }
+
+    .questionDate {
+        padding-top: 12px;
+    }
+
+    /* Alinear el wrapper al mismo lugar que el contenedor animado */
+    .saveIcon {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 40px;   /* igual que el botón */
+        height: 45px;  /* altura del botón */
+        margin: 0;
+    }
+
+    /* El contenedor animado ocupa el (0,0) relativo al wrapper */
+    .buttonSaveContainer {
+        top: 0px;
+        right: 0px;
     }
 }

@@ -61,6 +61,7 @@ export default function PublicationsPage() {
 
   const width = useWindowWidth();
   const [isMobile, setIsMobile] = useState(width < 768)
+  const isTinyPhone = width <= 320
 
   useEffect(() => {
     setIsMobile(width < 768)
@@ -293,10 +294,11 @@ export default function PublicationsPage() {
               <div className="forum-left">
                 <div className="question-create open-modal">
                   <Button
-                    text="Crear Publicación"
+                    text={isTinyPhone ? '' : 'Crear Publicación'}
                     onClick={onNewPublication}
                     icon={<Add fontSize="medium" />}
-                    width="200px"
+                    circular={isTinyPhone}
+                    width={isTinyPhone ? '45px' : '200px'}
                   />
 
                   {/* Guardadas */}

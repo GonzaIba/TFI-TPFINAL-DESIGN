@@ -86,14 +86,26 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     if (pathname === '/forum') {
       router.push('/forum/publications');
+      setActiveTab(0);
+      moveTabBar(0);
     }
-    else if (pathname === '/forum/users') {
+    // Publicaciones (incluye query params o subrutas)
+    else if (pathname.startsWith('/forum/publications')) {
+      setActiveTab(0);
+      moveTabBar(0);
+    }
+    // Usuarios
+    else if (pathname.startsWith('/forum/users')) {
       setActiveTab(1);
       moveTabBar(1);
-    } else if (pathname === '/forum/labels') {
+    }
+    // Etiquetas
+    else if (pathname.startsWith('/forum/labels')) {
       setActiveTab(2);
       moveTabBar(2);
-    } else if (pathname === '/forum/liveHelp') {
+    }
+    // Live Help
+    else if (pathname.startsWith('/forum/liveHelp')) {
       setActiveTab(3);
       moveTabBar(3);
     }

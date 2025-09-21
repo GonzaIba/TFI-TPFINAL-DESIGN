@@ -28,6 +28,7 @@ export default function PublicationCard({
 
   const width = useWindowWidth();
   const [isMobile, setIsMobile] = useState(width < 768)
+  const isSmallPhone = width <= 360; // ajusta avatar en pantallas muy chicas
 
   useEffect(() => {
     setIsMobile(width < 768)
@@ -43,6 +44,7 @@ export default function PublicationCard({
           descripcionLarga={publication.userCreator?.longDescription ?? ''}
           nombreCompleto={publication.userCreator?.completeName ?? ''}
           direction='right' 
+          size={isSmallPhone ? 32 : 40}
         /> {/*Anonimous User*/}
       </div>
       <div className={styles.questionBody}>
