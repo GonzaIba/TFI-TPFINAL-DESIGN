@@ -7,6 +7,7 @@ import { UserApplication } from "../types/application";
 import { getMappedError } from "@/lib/utils/getMappedError";
 import { getClientIp } from '@/lib/utils/getClientIp';
 import useErrorStore from "@/store/slices/snackBarStore/snackbarStore";
+import useAuthStore from "@/store/slices/authStore/authStore";
 
 export type ApiRequest<T> = {
   method: "GET" | "POST" | "PUT" | "DELETE";
@@ -80,7 +81,12 @@ export const apiBaseService = {
 
       if (error.response?.data?.errors?.errorsList?.some((e: ExceptionBase) => e.nameError === "InvalidTokenException")) {
         if (req.forceLogoutIfException !== false) {
-          await apiBaseService.logout();
+          // En caso de token inválido, limpiamos el estado de autenticación
+          // y NO redirigimos automáticamente. El layout mostrará login/registro.
+          try {
+            const { clearUser } = useAuthStore.getState();
+            clearUser();
+          } catch {}
         }
       }
 

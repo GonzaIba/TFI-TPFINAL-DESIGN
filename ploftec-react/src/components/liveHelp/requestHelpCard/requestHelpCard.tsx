@@ -118,7 +118,8 @@ export function RequestHelpCard({ item }: Props) {
 
             <ExpiryTimer
               expiresAt={expires}
-              size={28}  // podés subir a 26/28 si querés más presencia
+              startedAt={created}
+              size={34}
               onExpire={() => {
                 // opcional: invalidar query, marcar como expirada, etc.
                 // console.log('expired', item.titleHelp);

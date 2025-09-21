@@ -5,10 +5,14 @@ import styles from './expiryTimer.module.css';
 
 type Props = {
   expiresAt: string | number | Date;
-  size?: number;            // diámetro del reloj (px)
+  startedAt?: string | number | Date; // para saber el total y dibujar el progreso
+  size?: number;                      // diámetro del reloj (px)
   onExpire?: () => void;
   className?: string;
-  speedSecondsPerLap?: number; // velocidad del “orbital” (default 60s/vuelta)
+  warnAtHours?: number;   // umbral amarillo (default 16h)
+  dangerAtHours?: number; // umbral rojo (default 3h)
+  introFromHours?: number;   // de dónde arranca el barrido inicial (default 48h)
+  introDurationMs?: number;  // duración de esa animación (default 900ms)
 };
 
 function formatRemaining(ms: number): string {
@@ -21,10 +25,10 @@ function formatRemaining(ms: number): string {
   return `${s}s`;
 }
 
-function statusByMs(ms: number): 'ok' | 'warn' | 'danger' {
+function statusByMs(ms: number, warnAtH = 16, dangerAtH = 3): 'ok' | 'warn' | 'danger' {
   const h = ms / 3_600_000;
-  if (h < 3) return 'danger';
-  if (h < 16) return 'warn';
+  if (h < dangerAtH) return 'danger';
+  if (h < warnAtH) return 'warn';
   return 'ok';
 }
 
@@ -45,39 +49,87 @@ function computeNextDelay(msRemaining: number): number {
 
 export function ExpiryTimer({
   expiresAt,
-  size = 30,
+  startedAt,
+  size = 36,
   onExpire,
   className,
-  speedSecondsPerLap = 60,
+  warnAtHours = 16,
+  dangerAtHours = 3,
+  introFromHours = 48,
+  introDurationMs = 900,
 }: Props) {
   const target = useMemo(() => +new Date(expiresAt), [expiresAt]);
+  const start = useMemo(() => (startedAt ? +new Date(startedAt) : undefined), [startedAt]);
   const [now, setNow] = useState(() => Date.now());
-  const tRef = useRef<number | null>(null);
+  const tickRef = useRef<number | null>(null);
+  const introTimeoutRef = useRef<number | null>(null);
+  const introRaf1 = useRef<number | null>(null);
+  const introRaf2 = useRef<number | null>(null);
 
   const remaining = Math.max(0, target - now);
   const text = formatRemaining(remaining);
-  const status = statusByMs(remaining);
+  const status = statusByMs(remaining, warnAtHours, dangerAtHours);
+
+  // Estado visual: barrido inicial desde 48h (o lo que se configure) hacia el real
+  const [visualRemaining, setVisualRemaining] = useState<number>(() => introFromHours * 3_600_000);
+  const [intro, setIntro] = useState(true);
+
+  // Disparar el barrido al montar o cuando cambie el objetivo
+  useEffect(() => {
+    setIntro(true);
+    setVisualRemaining(introFromHours * 3_600_000);
+    // aseguramos un frame para que se pinte el estado inicial
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(() => {
+        setVisualRemaining(remaining);
+        // desactivar modo intro después de la duración configurada
+        const tid = window.setTimeout(() => setIntro(false), introDurationMs);
+        introTimeoutRef.current = tid;
+      });
+      introRaf2.current = raf2 as unknown as number;
+    });
+    introRaf1.current = raf1 as unknown as number;
+    return () => {
+      if (introTimeoutRef.current) window.clearTimeout(introTimeoutRef.current);
+      if (introRaf1.current) cancelAnimationFrame(introRaf1.current);
+      if (introRaf2.current) cancelAnimationFrame(introRaf2.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target]);
+
+  // Mantener el estado visual sincronizado con el real en cada tick
+  useEffect(() => {
+    if (!intro) setVisualRemaining(remaining);
+  }, [remaining, intro]);
+
+  // Progreso NORMALIZADO A 48H para cumplir con tu regla (48h -> círculo lleno)
+  const progress = Math.max(0, Math.min(1, visualRemaining / (48 * 3_600_000)));
 
   useEffect(() => {
-    return () => { if (tRef.current) window.clearTimeout(tRef.current); };
+    return () => {
+      if (tickRef.current) window.clearTimeout(tickRef.current);
+      if (introTimeoutRef.current) window.clearTimeout(introTimeoutRef.current);
+      if (introRaf1.current) cancelAnimationFrame(introRaf1.current);
+      if (introRaf2.current) cancelAnimationFrame(introRaf2.current);
+    };
   }, []);
 
   useEffect(() => {
     if (remaining <= 0) {
-      if (tRef.current) window.clearTimeout(tRef.current);
+      if (tickRef.current) window.clearTimeout(tickRef.current);
       onExpire?.();
       return;
     }
     const delay = computeNextDelay(remaining);
-    tRef.current = window.setTimeout(() => setNow(Date.now()), delay);
+    tickRef.current = window.setTimeout(() => setNow(Date.now()), delay);
   }, [remaining, onExpire]);
 
   const dim = size;
-  const ringThickness = Math.max(2, Math.floor(dim * 0.09));
-  const orbSize = Math.max(4, Math.floor(dim * 0.16)); // tamaño del punto orbital
-
-  // duración de la vuelta en CSS
-  const lapDuration = `${speedSecondsPerLap}s`;
+  const stroke = Math.max(3, Math.floor(dim * 0.12));
+  const r = 50 - stroke / 2; // viewBox 0 0 100 100
+  const circ = 2 * Math.PI * r;
+  // Aguja: 48h -> arriba; 24h -> abajo; 0h -> arriba
+  const handAngle = 360 * (1 - progress); // 0° arriba, 90° derecha, 180° abajo, 270° izquierda
 
   return (
     <div
@@ -88,30 +140,55 @@ export function ExpiryTimer({
       ].join(' ')}
       aria-live="polite"
       title={`Tiempo restante: ${text}`}
+      style={{ ['--trans' as any]: intro ? `${introDurationMs}ms` : undefined }}
     >
-      <div
-        className={styles.clock}
-        style={
-          {
-            width: dim,
-            height: dim,
-            '--thick': `${ringThickness}px`,
-            '--orb': `${orbSize}px`,
-            '--lap': lapDuration,
-          } as React.CSSProperties
-        }
-        aria-hidden
-      >
-        {/* anillo base */}
-        <div className={styles.ring} />
-        {/* halo sutil */}
-        <div className={styles.halo} />
-        {/* orbital: un contenedor que rota y un punto posicionado en el borde */}
-        <div className={styles.orbit}>
-          <div className={styles.dot} />
-        </div>
-        {/* punto central */}
-        <div className={styles.center} />
+      <div className={styles.clock} style={{ width: dim, height: dim }} aria-hidden>
+        <svg viewBox="0 0 100 100" width={dim} height={dim} className={styles.svg}>
+          {/* glow */}
+          <defs>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.8" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          {/* pista */}
+          <circle cx="50" cy="50" r={r} className={styles.track} strokeWidth={stroke} />
+          {/* ticks */}
+          {Array.from({ length: 12 }).map((_, i) => {
+            const a = (i / 12) * 360;
+            const len = i % 3 === 0 ? 8 : 5;
+            const start = 50 - r + 2;
+            const x1 = 50 + (r - start) * Math.cos((Math.PI / 180) * (a - 90));
+            const y1 = 50 + (r - start) * Math.sin((Math.PI / 180) * (a - 90));
+            const x2 = 50 + (r - start - len) * Math.cos((Math.PI / 180) * (a - 90));
+            const y2 = 50 + (r - start - len) * Math.sin((Math.PI / 180) * (a - 90));
+            return (
+              <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} className={styles.tick} />
+            );
+          })}
+          {/* progreso (12 en punto, sentido antihorario para que 24h pinte la izquierda) */}
+          <g style={{ transform: 'rotate(-90deg) scale(-1,1)', transformOrigin: '50px 50px' }}>
+            <circle
+              cx="50"
+              cy="50"
+              r={r}
+              className={styles.progress}
+              strokeWidth={stroke}
+              strokeDasharray={circ}
+              strokeDashoffset={circ * (1 - progress)}
+              filter="url(#glow)"
+            />
+          </g>
+          {/* manecilla */}
+          <g className={styles.hand} style={{ transform: `rotate(${handAngle}deg)` }}>
+            <line x1="50" y1={50 - r + 4} x2="50" y2="50" />
+            <circle cx="50" cy="50" r={Math.max(1.5, stroke * 0.25)} />
+            <circle cx="50" cy={50 - r + 4} r={Math.max(1.5, stroke * 0.25)} />
+          </g>
+        </svg>
       </div>
 
       <span className={styles.timeText}>{text}</span>
