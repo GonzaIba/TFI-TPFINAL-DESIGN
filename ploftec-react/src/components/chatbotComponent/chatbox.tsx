@@ -6,6 +6,8 @@ import { mcpChatService } from '@/lib/services/mcp/mcpChatService';
 import { RobotAnimated } from './robotIcon/robotIcon';
 import useAuthStore from "@/store/slices/authStore/authStore";
 import styles from './chatbot.module.css';
+import { Button, Input } from '@/components';
+import { Minus } from 'lucide-react';
 
 type ChatMessage = { from: 'user' | 'bot'; content: string };
 
@@ -18,6 +20,7 @@ export function Chatbot({ showRobot }: { showRobot: boolean }) {
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -45,10 +48,12 @@ export function Chatbot({ showRobot }: { showRobot: boolean }) {
     ]);
   };
 
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleSend();
-  };
+  useEffect(() => {
+    // Auto-scroll al final cuando llegan nuevos mensajes
+    if (bodyRef.current) {
+      bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
+    }
+  }, [messages, isThinking]);
 
   return (
     <div className={styles.chatbotContainer} ref={containerRef}>
@@ -70,8 +75,23 @@ export function Chatbot({ showRobot }: { showRobot: boolean }) {
             exit={{ opacity: 0, y: 100, scale: 0.3, rotate: 10 }}
             transition={{ type: 'spring', stiffness: 260, damping: 20 }}
           >
-            <div className={styles.chatHeader}>Asistente Virtual</div>
-            <div className={styles.chatBody}>
+            <div className={styles.chatHeader}>
+              Asistente Virtual
+              <div className={styles.minimizeBtn}>
+                <Button
+                  onClick={() => setOpen(false)}
+                  icon={<Minus size={16} />}
+                  transparent
+                  backgroundColor="#f0f0f0"
+                  width="28px"
+                  height="28px"
+                  borderRadius="6px"
+                  ariaLabel="Minimizar"
+                  title="Minimizar"
+                />
+              </div>
+            </div>
+            <div ref={bodyRef} className={styles.chatBody}>
               {messages.map((msg, i) => (
                 <div
                   key={i}
@@ -87,14 +107,26 @@ export function Chatbot({ showRobot }: { showRobot: boolean }) {
               )}
             </div>
             <div className={styles.chatInputArea}>
-              <input
-                type="text"
-                value={input}
-                onChange={e => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Escribe un mensaje..."
+              <div className={styles.inputWrapper}>
+                <Input
+                  value={input}
+                  onInput={(e) => setInput((e.target as HTMLInputElement).value)}
+                  submitFunction={handleSend}
+                  placeHolder="Escribe un mensaje..."
+                  useSearch={false}
+                  showIcon={false}
+                  useClear={true}
+                  widthContainer="100%"
+                  customStyle={{ height: '42px', fontSize: '14px', backgroundColor: '#333', color: '#fff' }}
+                />
+              </div>
+              <Button
+                onClick={handleSend}
+                text={isThinking ? 'Enviando...' : 'Enviar'}
+                disabled={isThinking || !input.trim()}
+                width="110px"
+                height="42px"
               />
-              <button onClick={handleSend}>Enviar</button>
             </div>
           </motion.div>
         )}

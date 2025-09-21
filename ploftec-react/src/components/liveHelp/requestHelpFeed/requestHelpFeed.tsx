@@ -11,6 +11,7 @@ type Props = {
   pageSize?: number;
   search?: string;
   refresh?: number;
+  enabled?: boolean;
   onCountChange?: (visible: number, hasMore: boolean) => void;
 };
 
@@ -21,7 +22,7 @@ const itemVariant = {
   exit:   { opacity: 0, y: 10, scale: 0.98 },
 };
 
-export function RequestHelpFeed({ pageSize = 9, search, refresh = 0, onCountChange }: Props) {
+export function RequestHelpFeed({ pageSize = 9, search, refresh = 0, enabled = true, onCountChange }: Props) {
   const {
     data: items = [],
     isLoading,
@@ -30,7 +31,7 @@ export function RequestHelpFeed({ pageSize = 9, search, refresh = 0, onCountChan
     hasNextPage,
     isError,
     error,
-  } = useRequestsHelpInfinite(pageSize, search, refresh);
+  } = useRequestsHelpInfinite(pageSize, search, refresh, enabled);
 
   // reporta conteo al padre (para "Total solicitudes")
   useEffect(() => {
@@ -49,7 +50,7 @@ export function RequestHelpFeed({ pageSize = 9, search, refresh = 0, onCountChan
     <section className={styles.feed}>
       <motion.div className={styles.grid} variants={container} initial="hidden" animate="show">
         {/* Skeletons */}
-        {isLoading &&
+        {(isLoading || !enabled) &&
           Array.from({ length: pageSize }).map((_, i) => (
             <div key={`sk-${i}`} className={styles.cardWrap}>
               <div className={styles.skeleton} />

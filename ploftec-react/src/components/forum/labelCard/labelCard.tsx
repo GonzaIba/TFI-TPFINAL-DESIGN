@@ -2,8 +2,8 @@
 
 import { LabelResponse } from '@/lib/types/forum';
 import styles from './labelCard.module.css';
-import { useLayoutEffect, useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useLayoutEffect, useState, useRef } from 'react';
+import { motion, AnimatePresence, useSpring, useMotionValue, useMotionTemplate } from 'framer-motion';
 
 interface Props {
   label: LabelResponse;
@@ -14,6 +14,7 @@ export function LabelCard({ label, onClick }: Props) {
   const [expanded, setExpanded] = useState(false);
   const [showMoreLink, setShowMoreLink] = useState(false);
   const descRef = useRef<HTMLParagraphElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   useLayoutEffect(() => {
     const el = descRef.current;
@@ -28,24 +29,56 @@ export function LabelCard({ label, onClick }: Props) {
     setExpanded(prev => !prev);
   };
 
+  // Subtle 3D tilt + cursor glow (perf-friendly)
+  const tiltX = useSpring(0, { stiffness: 260, damping: 20, mass: 0.6 });
+  const tiltY = useSpring(0, { stiffness: 260, damping: 20, mass: 0.6 });
+  const glowX = useMotionValue(0);
+  const glowY = useMotionValue(0);
+  const glow = useMotionTemplate`radial-gradient(600px 200px at ${glowX}px ${glowY}px, rgba(127,90,240,0.10), transparent 60%)`;
+  const bg = useMotionTemplate`${glow}`;
+
+  function onMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+    const el = cardRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const dx = x / rect.width - 0.5;
+    const dy = y / rect.height - 0.5;
+    tiltX.set(-(dy * 10));
+    tiltY.set(dx * 10);
+    glowX.set(x);
+    glowY.set(y);
+  }
+
+  function onMouseLeave() {
+    tiltX.set(0);
+    tiltY.set(0);
+  }
+
   return (
     <motion.div
       key={label.codeLabel + "card"}
       className={`${styles.card} ${expanded ? styles.expanded : ''}`}
+      ref={cardRef}
       onClick={onClick}
-      whileHover={{
-        boxShadow: '0 0 6px #bdaaff, 0 0 12px #bdaaff, 0 0 18px #bdaaff',
-        scale: 1.02,
-      }}
-      whileTap={{
-        scale: 0.97,
-        boxShadow: '0 0 4px #bdaaff, 0 0 8px #bdaaff',
-      }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
+      initial={{ opacity: 0, y: 8, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      whileHover={{ scale: 1.015 }}
+      whileTap={{ scale: 0.985 }}
+      transition={{ type: 'spring', stiffness: 220, damping: 20 }}
       style={{
-        willChange: 'transform, box-shadow',
-        transform: 'translateZ(0)'
+        willChange: 'transform, box-shadow, background',
+        transform: 'translateZ(0)',
+        rotateX: tiltX,
+        rotateY: tiltY,
+        transformPerspective: 900,
+        background: bg as any,
+        ['--px' as any]: glowX,
+        ['--py' as any]: glowY,
       }}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
     >
 
       <h2 className={styles.title}>{label.name}</h2>

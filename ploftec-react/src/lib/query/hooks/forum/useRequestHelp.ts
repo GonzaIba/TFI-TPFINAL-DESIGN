@@ -7,7 +7,12 @@ import type { CursorPage } from "@/lib/types/apiResponse";
 
 type PageParam = { after?: string; anchor: string; search?: string };
 
-export function useRequestsHelpInfinite(limit = 8, search?: string, refresh = 0) {
+export function useRequestsHelpInfinite(
+  limit = 8,
+  search?: string,
+  refresh = 0,
+  enabled = true,
+) {
   // normalizo búsqueda (evita refetch por espacios)
   const normSearch = search?.trim() || undefined;
 
@@ -29,6 +34,7 @@ export function useRequestsHelpInfinite(limit = 8, search?: string, refresh = 0)
       if (!res.data) throw new Error("No data returned from getRequestsHelp");
       return res.data;
     },
+    enabled,
     getNextPageParam: (lastPage, _pages, lastParam) =>
       lastPage?.hasNext && lastPage.nextCursor
         ? { after: lastPage.nextCursor, anchor: lastParam!.anchor, search: lastParam!.search }

@@ -1,10 +1,14 @@
 .card {
+  /* cursor position vars for glow */
+  --px: 50%;
+  --py: 0%;
+
   min-height: 220px;
   max-height: 220px;
   width: 100%;
   padding: 1rem;
   background-color: #1c1c1c;
-  border-radius: 8px;
+  border-radius: 12px;
   border: 1px solid #333;
   display: flex;
   flex-direction: column;
@@ -12,10 +16,49 @@
   cursor: pointer;
   overflow: hidden;
   position: relative;
+  transform-style: preserve-3d;
+  will-change: transform, box-shadow, border-color, background;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
 
-  pointer-events: auto; /* aseguro que cada card siga siendo interactiva */
-  z-index: 0; /* todas arrancan en fondo */
+  pointer-events: auto;
+  z-index: 0;
 }
+
+/* animated border glow */
+.card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  padding: 1.5px;
+  border-radius: 14px;
+  background:
+    radial-gradient(220px 120px at var(--px) var(--py), rgba(127,90,240,.30), transparent 60%),
+    conic-gradient(from var(--angle, 0deg), #7f5af0, #2cb67d, #7f5af0);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes spinAngle { to { --angle: 360deg; } }
+
+.card:hover::before {
+  opacity: .9;
+  animation: spinAngle 3s linear infinite;
+}
+
+/* sheen sweep */
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 35%, rgba(255,255,255,.08) 50%, transparent 65%);
+  transform: translateX(-120%);
+  transition: transform .6s ease;
+  pointer-events: none;
+}
+.card:hover::after { transform: translateX(120%); }
 
 /* Cuando se expande, permitile crecer */
 .expanded {
@@ -30,6 +73,8 @@
   font-weight: 600;
   color: #bdaaff;
   margin-bottom: 0.75rem;
+  transform: translateZ(12px);
+  will-change: transform;
 }
 
 .description {
@@ -39,6 +84,8 @@
   -webkit-box-orient: vertical;
   transition: max-height 0.3s ease;
   max-height: 10.5em; /* 5 líneas aprox. */
+  transform: translateZ(8px);
+  will-change: transform;
 }
 
 .expandedText {
@@ -92,6 +139,15 @@
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
+  transform: translateZ(6px);
+  will-change: transform;
+}
+
+/* hover lift */
+.card:hover {
+  box-shadow: 0 10px 24px rgba(0,0,0,.45), 0 0 24px rgba(127,90,240,.15);
+  border-color: #3a2f6b;
+  background: radial-gradient(1200px 400px at 50% 0%, rgba(127,90,240,.06), transparent 40%), #1c1c1c;
 }
 
 @keyframes pulseGlow {

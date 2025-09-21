@@ -2,7 +2,7 @@
   position: fixed;
   bottom: 20px;
   right: 20px;
-  z-index: 100;
+  z-index: 1000;
 }
 
 .robotButton {
@@ -20,8 +20,8 @@
 }
 
 .chatWindow {
-  width: 500px;
-  height: 500px;
+  width: 480px;
+  height: 520px;
   background-color: #1e1e1e;
   border-radius: 16px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
@@ -35,10 +35,18 @@
 }
 
 .chatHeader {
+  position: relative;
   font-weight: bold;
   font-size: 18px;
   color: #f0f0f0;
   margin-bottom: 8px;
+  padding-right: 32px; /* espacio para botón */
+}
+
+.minimizeBtn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
 }
 
 .chatBody {
@@ -95,27 +103,11 @@
 .chatInputArea {
   margin-top: 12px;
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 
-.chatInputArea input {
-  flex-grow: 1;
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: none;
-  background-color: #333;
-  color: white;
-  font-size: 14px;
-}
-
-.chatInputArea button {
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 12px;
-  cursor: pointer;
-}
+.inputWrapper { flex: 1; min-width: 0; }
 
 .robotFace {
   font-size: 24px;
@@ -130,4 +122,25 @@
   font-size: 16px;
   transform-origin: bottom center;
   pointer-events: none;
+}
+
+/* Responsive ajustes para pantallas pequeñas */
+@media (max-width: 550px) {
+  .chatbotContainer {
+    bottom: 16px;
+    right: 12px;
+  }
+
+  .chatWindow {
+    width: calc(100vw - 24px);
+    height: min(70vh, 460px);
+    bottom: 76px;
+    right: 0;
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  .chatHeader { font-size: 16px; }
+  .message { max-width: 85%; font-size: 13px; }
+  .chatInputArea { gap: 6px; }
 }

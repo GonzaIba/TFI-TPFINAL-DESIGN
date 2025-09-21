@@ -39,6 +39,7 @@ export default function LiveHelpPage() {
   const [visibleCount, setVisibleCount] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [refreshCounter, setRefreshCounter] = useState(0);
+  const [feedEnabled, setFeedEnabled] = useState(false);
 
   const handleManageFilters = async () => setShowHelpFilters(p => !p);
 
@@ -100,12 +101,14 @@ export default function LiveHelpPage() {
   }
 
   useEffect(() => {
-    const loadFilters = async () => {
-      const filtros = (await filtrosService.getFilterUser(GroupEnum.ForumRequestHelp)).data
-      setUserFilters(filtros ?? [])
+    if(feedEnabled){
+      const loadFilters = async () => {
+        const filtros = (await filtrosService.getFilterUser(GroupEnum.ForumRequestHelp)).data
+        setUserFilters(filtros ?? [])
+      }
+      loadFilters()
     }
-    loadFilters()
-  }, [])
+  }, [feedEnabled])
 
   return (
     <div className={styles.liveHelpContainer}>
@@ -142,6 +145,7 @@ export default function LiveHelpPage() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 + i * 0.2, duration: 0.6, ease: 'easeOut', }}
+                onAnimationComplete={() => { if (i === steps.length - 1) setFeedEnabled(true) }}
               >
                 <motion.div 
                   className={styles.stepCard} 
@@ -249,6 +253,7 @@ export default function LiveHelpPage() {
             pageSize={9}
             search={appliedSearch}
             refresh={refreshCounter}
+            enabled={feedEnabled}
             onCountChange={(visible, more) => { setVisibleCount(visible); setHasMore(more); }}
           />
         </div>

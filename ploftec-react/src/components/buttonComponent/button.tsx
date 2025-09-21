@@ -28,6 +28,10 @@ interface ButtonPloftecProps {
   tooltipOptions?: TooltipOptions;
   /** Nuevo: contenido custom. Si se provee, ignora icon/text. */
   children?: React.ReactNode;
+  /** Accesibilidad: etiqueta aria-label para el botón */
+  ariaLabel?: string;
+  /** Título nativo (title attribute) para tooltip simple */
+  title?: string;
 }
 
 interface TooltipOptions {
@@ -53,9 +57,11 @@ export default function ButtonPloftec({
   backgroundColor = Colors.primary,
   tooltipOptions,
   children,
+  ariaLabel,
+  title,
 }: ButtonPloftecProps) {
   const {
-    title,
+    title: tooltipTitle,
     placement = 'bottom',
     width: tooltipWidth = 500,
     transition = 'none',
@@ -70,6 +76,8 @@ export default function ButtonPloftec({
     <ButtonMui
       onClick={onClick}
       disabled={disabled || loading}
+      aria-label={ariaLabel}
+      title={title}
       sx={{
         width: circular ? '45px' : width,
         height: height,
@@ -127,7 +135,7 @@ export default function ButtonPloftec({
 
   return tooltipOptions && !loading ? (
     <Tooltip
-      title={<div style={{ maxWidth: tooltipWidth }}>{title}</div>}
+      title={<div style={{ maxWidth: tooltipWidth }}>{tooltipTitle}</div>}
       placement={placement}
       followCursor={followCursor}
       arrow={arrow}

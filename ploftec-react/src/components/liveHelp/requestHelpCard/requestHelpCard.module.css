@@ -28,12 +28,12 @@
   inset: -1px;
   padding: 1.5px;
   border-radius: 16px;
-  background:
+  /* background:
     radial-gradient(220px 120px at var(--px) var(--py), rgba(127,90,240,.35), transparent 60%),
-    conic-gradient(from var(--angle, 0deg), #7f5af0, #2cb67d, #7f5af0);
+    conic-gradient(from var(--angle, 0deg), #7f5af0, #2cb67d, #7f5af0); */
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
-          mask-composite: exclude;
+  mask-composite: exclude;
   opacity: 0;
   pointer-events: none;
 }

@@ -7,8 +7,12 @@
 }
 
 .label-card-skeleton {
-    border: 1px solid #ffffff22;
-    border-radius: 8px;
+    /* cursor position vars for glow */
+    --px: 50%;
+    --py: 0%;
+
+    border: 1px solid #2e2e2e;
+    border-radius: 12px;
     padding: 1rem;
     background-color: #1a1a1a;
     display: flex;
@@ -16,7 +20,54 @@
     justify-content: space-between;
     height: 100%;
     width: 100%;
+    position: relative;
+    overflow: hidden;
+    transform-style: preserve-3d;
+    will-change: transform, box-shadow, border-color, background;
+    transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
     animation: fadein 0.3s ease-in;
+}
+
+/* animated border glow, CSS-only variant */
+.label-card-skeleton::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    padding: 1.5px;
+    border-radius: 14px;
+    background:
+      radial-gradient(220px 120px at var(--px) var(--py), rgba(127,90,240,.30), transparent 60%),
+      conic-gradient(from var(--angle, 0deg), #7f5af0, #2cb67d, #7f5af0);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    opacity: 0;
+    pointer-events: none;
+}
+
+@keyframes spinAngleSkeleton { to { --angle: 360deg; } }
+
+.label-card-skeleton:hover::before {
+    opacity: .9;
+    animation: spinAngleSkeleton 3s linear infinite;
+}
+
+/* sheen sweep */
+.label-card-skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(120deg, transparent 35%, rgba(255,255,255,.06) 50%, transparent 65%);
+    transform: translateX(-120%);
+    transition: transform .6s ease;
+    pointer-events: none;
+}
+.label-card-skeleton:hover::after { transform: translateX(120%); }
+
+.label-card-skeleton:hover {
+    box-shadow: 0 10px 24px rgba(0,0,0,.45), 0 0 24px rgba(127,90,240,.15);
+    border-color: #3a2f6b;
+    background: radial-gradient(1200px 400px at 50% 0%, rgba(127,90,240,.05), transparent 40%), #1a1a1a;
 }
 
 .card-skeleton .header-skeleton {
