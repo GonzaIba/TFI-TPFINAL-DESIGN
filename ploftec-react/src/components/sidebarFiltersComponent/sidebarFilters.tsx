@@ -105,6 +105,7 @@ export function SideBarFilters({
               width="100%"
               align="left"
               springy
+              className={styles.selectWrapper}
             />
             {/* <select
               className={styles.select}

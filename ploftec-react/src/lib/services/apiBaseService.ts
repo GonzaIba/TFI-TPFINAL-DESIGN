@@ -80,13 +80,15 @@ export const apiBaseService = {
     } catch (error: any) {
 
       if (error.response?.data?.errors?.errorsList?.some((e: ExceptionBase) => e.nameError === "InvalidTokenException")) {
+        // En caso de token inválido, limpiamos el estado de autenticación
+        // y NO redirigimos automáticamente. El layout mostrará login/registro.
+        try {
+          const { clearUser } = useAuthStore.getState();
+          clearUser();
+        } catch {}
+        
         if (req.forceLogoutIfException !== false) {
-          // En caso de token inválido, limpiamos el estado de autenticación
-          // y NO redirigimos automáticamente. El layout mostrará login/registro.
-          try {
-            const { clearUser } = useAuthStore.getState();
-            clearUser();
-          } catch {}
+          await apiBaseService.logout();
         }
       }
 

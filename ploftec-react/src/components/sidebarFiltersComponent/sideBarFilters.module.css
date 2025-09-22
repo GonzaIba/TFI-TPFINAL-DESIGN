@@ -64,14 +64,20 @@
   font-size: 1.2rem;
 }
 
-.input,
-.select {
+.input {
   width: 100%;
   background: #151515;
   border: 1px solid #222;
   border-radius: 10px;
   padding: 10px 12px;
   outline: none;
+}
+
+/* Contenedor para AnimatedSelect dentro del sidebar: borde con color primario */
+.selectWrapper {
+  width: 100%;
+  border: 1px solid #644BFF;
+  border-radius: 10px;
 }
 
 .switchRow {

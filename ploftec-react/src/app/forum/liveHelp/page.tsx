@@ -3,7 +3,7 @@
 
 import styles from './page.module.css';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Button, Grid, GridItem, Input, SideBarFilters, RequestHelpFeed } from '@/components';
 import { UserFilterForumResponse } from '@/lib/types/forum';
@@ -109,6 +109,11 @@ export default function LiveHelpPage() {
       loadFilters()
     }
   }, [feedEnabled])
+
+  const handleCountChange = useCallback((visible: number, more: boolean) => {
+    setVisibleCount(visible);
+    setHasMore(more);
+  }, []);
 
   return (
     <div className={styles.liveHelpContainer}>
@@ -229,8 +234,21 @@ export default function LiveHelpPage() {
         />
 
         {/* Chips de filtros aplicados */}
-        {userFilters.length > 0 && (
+        {(userFilters.length > 0 || appliedSearch) && (
           <div className={styles.appliedRow}>
+            {appliedSearch && (
+              <span className={`${styles.chip} ${styles.chipApplied}`}>
+                {`Buscar: ${appliedSearch.length > 80 ? appliedSearch.slice(0,80) + '…' : appliedSearch}`}
+                <Button
+                  onClick={clearSearch}
+                  width="18px"
+                  height="18px"
+                  borderRadius="50%"
+                  backgroundColor="#1a1a1a"
+                  icon={<X size={12} color="#cfcfcf" />}
+                />
+              </span>
+            )}
             {userFilters.map((f) => (
               <span key={f.codeFilter} className={`${styles.chip} ${styles.chipApplied}`}>
                 {f.description}: {f.value}
@@ -254,7 +272,7 @@ export default function LiveHelpPage() {
             search={appliedSearch}
             refresh={refreshCounter}
             enabled={feedEnabled}
-            onCountChange={(visible, more) => { setVisibleCount(visible); setHasMore(more); }}
+            onCountChange={handleCountChange}
           />
         </div>
       </motion.section>

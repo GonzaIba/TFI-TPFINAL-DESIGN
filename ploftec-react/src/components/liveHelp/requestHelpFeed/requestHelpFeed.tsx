@@ -1,7 +1,7 @@
 // src/components/liveHelp/RequestHelpFeed.tsx
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, memo } from "react";
 import { motion, AnimatePresence, useSpring, useMotionValue, useMotionTemplate } from "framer-motion";
 import { RequestHelpCard } from "@/components/liveHelp/requestHelpCard/requestHelpCard";
 import { useRequestsHelpInfinite } from "@/lib/query/hooks/forum/useRequestHelp";
@@ -23,7 +23,7 @@ const itemVariant = {
   exit:   { opacity: 0, y: 10, scale: 0.98 },
 };
 
-export function RequestHelpFeed({ pageSize = 9, search, refresh = 0, enabled = true, onCountChange }: Props) {
+function RequestHelpFeedInner({ pageSize = 9, search, refresh = 0, enabled = true, onCountChange }: Props) {
   const {
     data: items = [],
     isLoading,
@@ -92,6 +92,8 @@ export function RequestHelpFeed({ pageSize = 9, search, refresh = 0, enabled = t
     </section>
   );
 }
+
+export const RequestHelpFeed = memo(RequestHelpFeedInner);
 
 function CreateHelpCard() {
   // 3D tilt + glow like RequestHelpCard

@@ -152,7 +152,7 @@
 
   export interface NotificationsResponse {
     codeNotification: number;
-    codeUser: string;
+    //codeUser: string;
     //title: string; Revisar
     message: string;
     date: Date;
