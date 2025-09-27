@@ -23,7 +23,7 @@ import { publicationsService } from '@/lib/services/forum/publicationsService'
 import { PublicationResponse, PublicationDetailResponse, CreatePublicationRequest, SuccessfulResponse } from '@/lib/types/forum'
 import { PaginatedList, GenericApiResponse } from '@/lib/types/apiResponse'
 import { AvatarCrownEnum } from '@/lib/types/enum'
-import { Add, Bookmark, BookmarkBorder, BorderColor, BorderColorOutlined } from '@mui/icons-material';
+import { Add, Bookmark, BookmarkBorder, BorderColor, BorderColorOutlined, Close } from '@mui/icons-material';
 import { Colors } from '@/theme/colors'
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -66,6 +66,20 @@ export default function PublicationsPage() {
   useEffect(() => {
     setIsMobile(width < 768)
   }, [width])
+
+  // Extract label filter from `search` if it comes as [label]
+  const [labelFilter, setLabelFilter] = useState<string | null>(null)
+  useEffect(() => {
+    const decodeSafely = (val: string) => {
+      try { return decodeURIComponent(val) } catch { return val }
+    }
+    // handle potential double-encoding from source navigation
+    let decoded = decodeSafely(search)
+    const maybeStillEncoded = /%[0-9A-Fa-f]{2}/.test(decoded)
+    if (maybeStillEncoded) decoded = decodeSafely(decoded)
+    const match = decoded.match(/^\[(.+)\]$/)
+    setLabelFilter(match ? match[1] : null)
+  }, [search])
 
   /* ---------- Queries ---------- */
   const {
@@ -250,6 +264,10 @@ export default function PublicationsPage() {
     setRelatedPublications(undefined)
     await fetchPublicationDetail(codigo)
   }
+
+  const clearLabelFilter = () => {
+    router.push('/forum/publications')
+  }
   
   // console.log('Page publications Main:')
   
@@ -328,6 +346,15 @@ export default function PublicationsPage() {
                     transparent
                     width="40px"
                   />
+
+                  {labelFilter && (
+                    <div className="active-filter-chip" title="Filtrando por etiqueta">
+                      <span className="chip-label">Etiqueta: {labelFilter}</span>
+                      <button className="chip-close" onClick={clearLabelFilter} aria-label="Quitar filtro de etiqueta">
+                        <Close fontSize="small" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* ––– LISTA PUBLICACIONES ––– */}

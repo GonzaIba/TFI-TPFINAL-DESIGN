@@ -32,6 +32,7 @@ export function RequestHelpCard({ item }: Props) {
   const expires = useMemo(() => new Date(item.expiresAt), [item.expiresAt]);
 
   const [now, setNow] = useState(() => Date.now());
+  const [flipped, setFlipped] = useState(false);
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 30_000);
     return () => clearInterval(id);
@@ -66,6 +67,19 @@ export function RequestHelpCard({ item }: Props) {
     tiltY.set(0);
   }
 
+  function onCardClick() {
+    setFlipped((f) => !f);
+  }
+
+  function formatSlot(startIso: string, endIso: string) {
+    const start = new Date(startIso);
+    const end = new Date(endIso);
+    const d = start.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' });
+    const sh = start.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
+    const eh = end.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
+    return `${d} ${sh}–${eh}`;
+  }
+
   function onHelp() {
     // TODO: aquí podés abrir modal/detalle o navegar a la solicitud
     console.log("Ayudar clicked", item.titleHelp);
@@ -88,9 +102,12 @@ export function RequestHelpCard({ item }: Props) {
       }}
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
+      onClick={onCardClick}
     >
-      {/* Top row: avatar + right panel (timer, reward, button) */}
-      <div className={styles.topRow}>
+      <div className={`${styles.flipContainer} ${flipped ? styles.flipped : ''}`}>
+        <div className={styles.front}>
+          {/* Top row: avatar + right panel (timer, reward, button) */}
+          <div className={styles.topRow}>
 
         <AvatarUser 
           tagUser={item.userCreator?.initials ?? "AU"} 
@@ -130,11 +147,16 @@ export function RequestHelpCard({ item }: Props) {
               <span className={styles.regard}>{item.regard.toFixed(2)}</span>
             </div>
           </div>
-          <Button 
-            onClick={onHelp}
-            icon={<HandshakeIcon />}
-            circular
-          />
+          {/* Evitar flip al clickear el botn */}
+          <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+            <Button 
+              onClick={onHelp}
+              icon={<HandshakeIcon />}
+              circular
+              ariaLabel="Ofrecer ayuda"
+              title="Ofrecer ayuda"
+            />
+          </div>
         </div>
       </div>
 
@@ -162,6 +184,27 @@ export function RequestHelpCard({ item }: Props) {
               {l}
             </span>
           ))}
+        </div>
+      </div>
+        </div>
+
+        {/* BACK: time slots */}
+        <div className={styles.back}>
+          <div className={styles.backHeader}>
+            <span className={styles.backTitle}>Franjas horarias</span>
+            <span className={styles.backHint}>Click para volver</span>
+          </div>
+          <div className={styles.slots}>
+            {item.timeSlot?.slots?.length ? (
+              item.timeSlot.slots.map((s, idx) => (
+                <div key={`${s.start}-${s.end}-${idx}`} className={styles.slotItem}>
+                  {formatSlot(s.start, s.end)}
+                </div>
+              ))
+            ) : (
+              <div className={styles.noSlots}>Sin franjas horarias definidas</div>
+            )}
+          </div>
         </div>
       </div>
      

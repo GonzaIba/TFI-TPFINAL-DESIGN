@@ -204,4 +204,7 @@
     createdAt: Date;
     regard: number;
     expiresAt: Date;
+    timeSlot?: {
+      slots: { start: string; end: string }[];
+    };
   };
