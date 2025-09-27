@@ -2,12 +2,14 @@
 "use client";
 
 import { motion, useMotionValue, useSpring, useMotionTemplate } from "framer-motion";
+import { useRouter, useSearchParams } from 'next/navigation';
 import styles from "./requestHelpCard.module.css";
 import { Button, ExpiryTimer, AvatarUser } from "@/components";
 import type { RequestHelpResponse } from "@/lib/types/forum";
 import { useEffect, useMemo, useState } from "react";
 import { Trophy } from "lucide-react";
 import HandshakeIcon from '@mui/icons-material/Handshake';
+import { parseApiUtc, formatLocalSlot } from '@/lib/utils/datetime';
 
 function formatRemaining(ms: number) {
   if (ms <= 0) return "0s";
@@ -28,8 +30,12 @@ function variantByMs(ms: number) {
 type Props = { item: RequestHelpResponse };
 
 export function RequestHelpCard({ item }: Props) {
-  const created = useMemo(() => new Date(item.createdAt), [item.createdAt]);
-  const expires = useMemo(() => new Date(item.expiresAt), [item.expiresAt]);
+  const router = useRouter();
+  const sp = useSearchParams();
+  const qs = sp.toString();
+  // API envía UTC sin zona (ej: 2025-09-27T23:30:47.957) → parseamos como UTC
+  const created = useMemo(() => parseApiUtc(item.createdAt as any), [item.createdAt]);
+  const expires = useMemo(() => parseApiUtc(item.expiresAt as any), [item.expiresAt]);
 
   const [now, setNow] = useState(() => Date.now());
   const [flipped, setFlipped] = useState(false);
@@ -72,12 +78,14 @@ export function RequestHelpCard({ item }: Props) {
   }
 
   function formatSlot(startIso: string, endIso: string) {
-    const start = new Date(startIso);
-    const end = new Date(endIso);
-    const d = start.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' });
-    const sh = start.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
-    const eh = end.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
-    return `${d} ${sh}–${eh}`;
+    return formatLocalSlot(startIso, endIso);
+  }
+
+  function openDetail() {
+    const createdTs = +parseApiUtc(item.createdAt as any);
+    const slug = encodeURIComponent(`${item.titleHelp}-${createdTs}`);
+    const keepQS = qs ? `?${qs}` : '';
+    router.push(`/forum/liveHelp/detail/${slug}${keepQS}`);
   }
 
   function onHelp() {
@@ -150,7 +158,7 @@ export function RequestHelpCard({ item }: Props) {
           {/* Evitar flip al clickear el botn */}
           <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
             <Button 
-              onClick={onHelp}
+              onClick={openDetail}
               icon={<HandshakeIcon />}
               circular
               ariaLabel="Ofrecer ayuda"

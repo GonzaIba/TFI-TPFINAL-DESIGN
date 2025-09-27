@@ -1,5 +1,5 @@
 // src/lib/services/publicacionesService.ts
-import { CursorPage, GenericApiResponse, PaginatedList } from "@/lib/types/apiResponse";
+import { CursorPage, GenericApiResponse } from "@/lib/types/apiResponse";
 import { apiBaseService } from "../apiBaseService";
 import {
   CreatePublicationRequest,
@@ -13,7 +13,8 @@ import {
   SuccessfulResponse,
   AnswerPublicationVoteResponse,
   AnswerResponse,
-  RequestHelpResponse
+  RequestHelpResponse,
+  CreateHelpRequest
 } from "@/lib/types/forum";
 
 export const requestHelpService = {
@@ -26,6 +27,16 @@ export const requestHelpService = {
       method: "GET",
       url: `ApiForum/ObtenerSolicitudesDeAyuda?${p}`,
       requireCredentials: true,
+    });
+    return response;
+  },
+  
+  async createHelpRequest(request: CreateHelpRequest): Promise<GenericApiResponse<SuccessfulResponse>> {
+    const response = await apiBaseService.execute<SuccessfulResponse, CreateHelpRequest>({
+      method: "POST",
+      url: `ApiForum/CrearSolicitudAyuda`,
+      requireCredentials: true,
+      body: request,
     });
     return response;
   },

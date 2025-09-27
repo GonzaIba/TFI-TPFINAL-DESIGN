@@ -208,3 +208,14 @@
       slots: { start: string; end: string }[];
     };
   };
+
+  // Live Help - Create request
+  export type HelpTimeSlot = { start: string; end: string };
+
+  export interface CreateHelpRequest {
+    titleHelp: string;
+    message: string; // HTML o texto enriquecido
+    labels: string[];
+    languages: string[]; // ej: ['es-AR','en-US']
+    timeSlot: { slots: HelpTimeSlot[] };
+  }

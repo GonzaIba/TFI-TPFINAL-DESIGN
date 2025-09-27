@@ -1,10 +1,12 @@
 // src/components/liveHelp/RequestHelpFeed.tsx
 "use client";
 
-import { useEffect, memo } from "react";
+import { useEffect, memo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, useSpring, useMotionValue, useMotionTemplate } from "framer-motion";
 import { RequestHelpCard } from "@/components/liveHelp/requestHelpCard/requestHelpCard";
 import { useRequestsHelpInfinite } from "@/lib/query/hooks/forum/useRequestHelp";
+import { Loading } from '@/components';
 import styles from "./requestHelpFeed.module.css";
 import { Plus } from "lucide-react";
 
@@ -96,6 +98,11 @@ function RequestHelpFeedInner({ pageSize = 9, search, refresh = 0, enabled = tru
 export const RequestHelpFeed = memo(RequestHelpFeedInner);
 
 function CreateHelpCard() {
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const sp = useSearchParams();
+  const qs = sp.toString();
+  const target = `/forum/liveHelp/new${qs ? `?${qs}` : ''}`;
   // 3D tilt + glow like RequestHelpCard
   const tiltX = useSpring(0, { stiffness: 260, damping: 20, mass: 0.6 });
   const tiltY = useSpring(0, { stiffness: 260, damping: 20, mass: 0.6 });
@@ -115,35 +122,44 @@ function CreateHelpCard() {
     glowX.set(x);
     glowY.set(y);
   }
+
   function onMouseLeave() {
     tiltX.set(0);
     tiltY.set(0);
   }
 
+  function redirectCreate() {
+    setLoading(true);
+    setTimeout(() => router.push(target), 700);
+  }
+
   return (
-    <motion.div className={styles.cardWrap} variants={itemVariant} layout>
-      <motion.article
-        className={styles.createCard}
-        onClick={() => { /* placeholder for create action */ }}
-        initial={{ opacity: 0, y: 8, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        whileHover={{ scale: 1.02 }}
-        transition={{ type: "spring", stiffness: 220, damping: 20 }}
-        style={{
-          rotateX: tiltX,
-          rotateY: tiltY,
-          transformPerspective: 900,
-          background: bg as any,
-        }}
-        onMouseMove={onMouseMove}
-        onMouseLeave={onMouseLeave}
-        aria-label="Crear solicitud de ayuda"
-      >
-        <div className={styles.plusButton} aria-hidden>
-          <Plus size={28} color="#eaeaea" />
-        </div>
-        <div className={styles.createText}>Crear solicitud de ayuda</div>
-      </motion.article>
-    </motion.div>
+    <>
+      <Loading show={loading} />
+      <motion.div className={styles.cardWrap} variants={itemVariant} layout>
+        <motion.article
+          className={styles.createCard}
+          onClick={() => redirectCreate()}
+          initial={{ opacity: 0, y: 8, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          whileHover={{ scale: 1.02 }}
+          transition={{ type: "spring", stiffness: 220, damping: 20 }}
+          style={{
+            rotateX: tiltX,
+            rotateY: tiltY,
+            transformPerspective: 900,
+            background: bg as any,
+          }}
+          onMouseMove={onMouseMove}
+          onMouseLeave={onMouseLeave}
+          aria-label="Crear solicitud de ayuda"
+        >
+          <div className={styles.plusButton} aria-hidden>
+            <Plus size={28} color="#eaeaea" />
+          </div>
+          <div className={styles.createText}>Crear solicitud de ayuda</div>
+        </motion.article>
+      </motion.div>
+    </>
   );
 }

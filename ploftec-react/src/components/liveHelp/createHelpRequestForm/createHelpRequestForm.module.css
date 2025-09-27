@@ -1,0 +1,110 @@
+/* createHelpRequestForm.module.css */
+
+.wrap {
+  display: grid;
+  /* Hacemos la derecha más ancha (≈40% más) */
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  gap: 20px;
+  min-height: 60vh;
+}
+
+.section {
+  background: #111214;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.titleRow h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.inputRow { margin-bottom: 12px; }
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Igual que en crear publicación */
+.chipList{
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chipContainer {
+  margin-right: 0;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: #1a1a1a;
+  color: #e5e5e5;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.chip.active {
+  background: #222244;
+  border-color: rgba(127,90,240,0.45);
+  box-shadow: 0 0 0 1px rgba(127,90,240,0.4) inset;
+}
+
+.error {
+  color: #ff6b6b;
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.sidebarGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.slots {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.slotItem {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 10px;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+@media (max-width: 980px) {
+  .wrap { grid-template-columns: 1fr; }
+}
