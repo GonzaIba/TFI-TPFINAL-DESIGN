@@ -196,6 +196,7 @@
 
   export type RequestHelpResponse = {
     userCreator: UsersForumPreviewResponse;
+    CodeRequestHelp: number;
     titleHelp: string;
     message: string;
     status: string;

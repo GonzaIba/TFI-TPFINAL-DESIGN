@@ -24,6 +24,7 @@ import {
   DeleteAnswerRequest,
   PublicationResponse
 } from '@/lib/types/forum'
+import { EditAnswerEvent } from '@/lib/types/events'
 import { isWithinLastHour } from '@/lib/helpers/timeHelper';
 import useSnackBarStore from '@/store/slices/snackBarStore/snackbarStore';
 import { AddAnswerEvent } from '@/lib/types/events'
@@ -58,6 +59,7 @@ function PublicationDetail({
   const [showNewAnswerAlert, setShowNewAnswerAlert] = useState(false);
   const [newAnswerId, setNewAnswerId] = useState<number | null>(null);
   const [editorKey, setEditorKey] = useState<number>(0);
+  const [editedAnswerId, setEditedAnswerId] = useState<number | null>(null);
   const newAnswerElRef = useRef<HTMLDivElement | null>(null);
   const isVoting = loadingUpVote || loadingDownVote;
   const isPositiveVoted = publication?.votedPositive;
@@ -123,6 +125,23 @@ function PublicationDetail({
     );
   }, []);
 
+  const handleCommentEdited = useCallback((editEvent: EditAnswerEvent) => {
+    const codeAnswer = (editEvent as any)?.answerCode ?? (editEvent as any)?.codeAnswer;
+    const newText = (editEvent as any)?.content ?? (editEvent as any)?.textResponse ?? (editEvent as any)?.contenido ?? (editEvent as any)?.newText;
+    if (codeAnswer == null || typeof newText !== 'string') return;
+    setPublication(p =>
+      p
+        ? {
+            ...p,
+            answers: p.answers.map(a =>
+              a.codeAnswer === codeAnswer ? { ...a, textResponse: newText } : a,
+            ),
+          }
+        : p,
+    );
+    setEditedAnswerId(codeAnswer);
+  }, []);
+
   const connectionId = usePublicationSignalR(
     publication
       ? {
@@ -130,10 +149,17 @@ function PublicationDetail({
           onVotePublicationChanged: handleVotePublicationChanged,
           onVoteAnswerChanged: handleVoteAnswerChanged,
           onCommentAdded: handleCommentAdded,
-          onCommentDeleted: handleCommentDeleted
+          onCommentDeleted: handleCommentDeleted,
+          onCommentEdited: handleCommentEdited
         }
       : null
   );
+
+  useEffect(() => {
+    if (!editedAnswerId) return;
+    const t = setTimeout(() => setEditedAnswerId(null), 1800);
+    return () => clearTimeout(t);
+  }, [editedAnswerId]);
 
   const handleOnAddAnswer = async (text: string) => {
     try {
@@ -543,11 +569,13 @@ function PublicationDetail({
             <div className={styles.commentsWrp}>
               {!publication ? (
                 <SkeletonAnswerCard />
-              ) : publication?.answers?.length === 0 ? (
-                <h3>¡Sé el primero en responder!</h3>
               ) : (
                 <>
-                  <h3 className={styles.answersTitle}>{publication?.answers?.length} Respuesta{publication?.answers?.length > 1 ? 's' : ''}</h3>
+                  {publication?.answers?.length > 0 ? (
+                    <h3 className={styles.answersTitle}>{publication?.answers?.length} Respuesta{publication?.answers?.length > 1 ? 's' : ''}</h3>
+                  ) : (
+                    <h3>¡Sé el primero en responder!</h3>
+                  )}
                   <AnimatePresence initial={false}>
                     {(publication?.answers ?? []).map(answer => (
                       <motion.div
@@ -570,6 +598,7 @@ function PublicationDetail({
                           canDelete={isWithinLastHour(answer.createdDate) && answer.isAuthor}
                           canEdit={isWithinLastHour(answer.createdDate) && answer.isAuthor}
                           isNew={answer.codeAnswer === newAnswerId}
+                          isEdited={answer.codeAnswer === editedAnswerId}
                           onUpvote={async () => await handleOnClicUpVoteAnswer(answer.codeAnswer)}
                           onDownvote={async () => await handleOnClicDownVoteAnswer(answer.codeAnswer)}
                           onDelete={async () => {
@@ -600,7 +629,11 @@ function PublicationDetail({
             </>
           )}
           renderItem={(pub, i) => (
-            <div className={styles.relatedPub} onClick={async()=> {onClicRelatedPub(pub.codePublication)}}>
+            <div
+              className={styles.relatedPub}
+              title={pub.title}
+              onClick={async()=> {onClicRelatedPub(pub.codePublication)}}
+            >
               {pub.title}
             </div>
           )}

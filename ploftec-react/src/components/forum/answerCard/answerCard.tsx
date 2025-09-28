@@ -21,11 +21,25 @@ import 'prism-code-editor-lightweight/themes/github-dark.css';
 import dynamic from 'next/dynamic'
 import { Suspense } from 'react'
 
+// Hoist dynamic import to module scope to avoid remounts on each keystroke
+const EditorInput = dynamic(
+  () => import('@/components/editorComponent/editor'),
+  {
+    ssr: false,
+    loading: () => (
+      <div style={{ padding: 16 }}>
+        <SkeletonEditorComment isInEditorComponent />
+      </div>
+    )
+  }
+)
+
 interface Props {
   answer: AnswerResponse;
   canDelete: boolean;
   canEdit: boolean;
   isNew?: boolean;
+  isEdited?: boolean;
   onUpvote: () => Promise<void>;
   onDownvote: () => Promise<void>;
   onDelete: () => Promise<void>;
@@ -36,7 +50,8 @@ export default function AnswerCard({
   answer,
   canDelete,
   canEdit,
-  isNew = false, 
+  isNew = false,
+  isEdited = false,
   onUpvote, 
   onDownvote, 
   onDelete,
@@ -46,9 +61,11 @@ export default function AnswerCard({
   const [loadingUpVote, setLoadingUpVote] = useState(false);
   const [loadingDownVote, setLoadingDownVote] = useState(false);
   const [animateNew, setAnimateNew] = useState(false);
+  const [flashEdited, setFlashEdited] = useState(false);
   /** Nuevos estados para inline edit */
   const [isEditing, setIsEditing] = useState(false);
-  const [draft, setDraft] = useState(answer.textResponse);
+  // contenido actual mientras se edita (no se reinyecta al editor para evitar resets)
+  const [editedContent, setEditedContent] = useState<string | null>(null);
   const isVoting = loadingUpVote || loadingDownVote;
   const isPositiveVoted = answer.votedPositive;
 
@@ -65,29 +82,26 @@ export default function AnswerCard({
   }
 
   const startEdit = () => {
-    setDraft(answer.textResponse);
+    setEditedContent(answer.textResponse);
     setIsEditing(true);
   };
   const cancelEdit = () => setIsEditing(false);
   const saveEdit = async () => {
     if (onSaveEdit) {
-      await onSaveEdit(draft, answer.codeAnswer);
+      await onSaveEdit(editedContent ?? answer.textResponse, answer.codeAnswer);
       setIsEditing(false);
     }
   };
 
   // cargamos el editor **solo** cuando isEditing===true
-  const EditorInput = dynamic(
-    () => import('@/components/editorComponent/editor'),
-    {
-      ssr: false,
-      loading: () => (
-        <div style={{ padding: 16 }}>
-          <SkeletonEditorComment isInEditorComponent />
-        </div>
-      )
-    }
-  )
+  // Pre-carga opcional del editor para evitar trabas al abrir
+  useEffect(() => {
+    if (!canEdit) return;
+    const id = setTimeout(() => {
+      import('@/components/editorComponent/editor').catch(() => {});
+    }, 0);
+    return () => clearTimeout(id);
+  }, [canEdit]);
 
   useEffect(() => {
     if (isNew) {
@@ -97,6 +111,14 @@ export default function AnswerCard({
       });
     }
   }, [isNew]);
+
+  // Pequeño destello cuando llega un edit por SignalR (para otros usuarios)
+  useEffect(() => {
+    if (!isEdited) return;
+    setFlashEdited(true);
+    const t = setTimeout(() => setFlashEdited(false), 1600);
+    return () => clearTimeout(t);
+  }, [isEdited]);
   
   return (
     <motion.div
@@ -114,7 +136,15 @@ export default function AnswerCard({
                 '0 0 0px rgba(0, 195, 255, 0)',
               ],
             }
-          : undefined
+          : flashEdited
+            ? {
+                boxShadow: [
+                  '0 0 0px rgba(255, 200, 0, 0)',
+                  '0 0 14px rgba(255, 200, 0, 0.6)',
+                  '0 0 0px rgba(255, 200, 0, 0)',
+                ],
+              }
+            : undefined
       }
       transition={
         animateNew
@@ -126,10 +156,25 @@ export default function AnswerCard({
                 ease: 'easeInOut',
               },
             }
-          : undefined
+          : flashEdited
+            ? {
+                boxShadow: { duration: 1.2, ease: 'easeInOut' },
+              }
+            : undefined
       }
       className={styles.answerCardAnimated}
     >
+      {flashEdited && (
+        <motion.div
+          className={styles.editedBadge}
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2 }}
+        >
+          Editado
+        </motion.div>
+      )}
       <div className={styles.commentWrp}>
         <div className={`${styles.comment} ${styles.pubContainer}`}>
           <div className={styles.cScore}>
@@ -205,34 +250,22 @@ export default function AnswerCard({
             <p className={styles.cmntAt}>{answer.createdDate.toString()}</p>
           </div>
 
-          <AnimatePresence initial={false}>
+          <div className={styles.editSwap}>
+          <AnimatePresence initial={false} mode="wait">
             {isEditing ? (
               <motion.div
                 key="editor"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{
-                  opacity: 0,
-                  height: 0,
-                }}
-                transition={{
-                  // primero se desvanece rápido...
-                  opacity: { duration: 0.15, ease: 'easeInOut' },
-                  // luego, con un spring más “suave”, colapsa la altura
-                  height: {
-                    type: 'spring',
-                    stiffness: 200,
-                    damping: 25,
-                    mass: 0.5,
-                    delay: 0.1
-                  }
-                }}
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -12 }}
+                transition={{ duration: 0.22, ease: 'easeOut' }}
                 className={styles.inlineEditor}
               >
                 <Suspense fallback={<SkeletonEditorComment isInEditorComponent />}>
                   <EditorInput
                     isInternal
-                    initialContent={draft}
+                    initialContent={answer.textResponse}
+                    onChangeContent={setEditedContent}
                   />
                 </Suspense>
                 <div className={`buttonList ${styles.editActions}`}>
@@ -246,9 +279,10 @@ export default function AnswerCard({
             ) : (
               <motion.div
                 key="view"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
+                initial={{ opacity: 0, x: 12 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -12 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
               >
                 <div
                   className={styles.cText}
@@ -257,6 +291,7 @@ export default function AnswerCard({
               </motion.div>
             )}
           </AnimatePresence>
+          </div>
 
         </div>
       </div>

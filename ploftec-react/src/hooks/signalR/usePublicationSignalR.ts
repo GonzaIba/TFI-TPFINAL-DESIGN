@@ -8,6 +8,7 @@ interface PublicationSignalRProps {
   onVoteAnswerChanged: (answerId: number, newVotes: number) => void;
   onCommentAdded: (newComment: any) => void;
   onCommentDeleted: (commentDeleted: any) => void;
+  onCommentEdited: (payload: any) => void;
 }
 
 export function usePublicationSignalR(
@@ -64,6 +65,10 @@ export function usePublicationSignalR(
       conn.on('AnswerDeleted', d => {
         if (d.connectionId === conn.connectionId) return;  // ya la actualicé localmente
         if (d.codePublication === pubId) props.onCommentDeleted(d.codeAnswer)
+      });
+      conn.on('AnswerEdited', d => {
+        if (d.connectionId === conn.connectionId) return;  // ya la actualicé localmente
+        if (d.codePublication === pubId) props.onCommentEdited(d)
       });
 
       conn.start()

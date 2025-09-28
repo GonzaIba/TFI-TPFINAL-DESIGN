@@ -185,7 +185,7 @@ export default function CreateHelpRequestForm({ onCreated, onCancel }: Props) {
             <div className={styles.error}>{errorContentText}</div>
           )}
 
-          <div className={styles.actions}>
+          <div className={styles.actionsDesktop}>
             <Button transparent text="Cancelar" onClick={() => onCancel ? onCancel() : router.push(base)} />
             <Button text="Publicar solicitud" onClick={handleSubmit} loading={submitting} />
           </div>
@@ -373,13 +373,18 @@ export default function CreateHelpRequestForm({ onCreated, onCancel }: Props) {
                   );
                 })}
               </div>
-              {errorLanguages && languages.length === 0 && (
-                <div className={styles.error} style={{ marginTop: 6 }}>{errorLanguagesText}</div>
-              )}
-            </div>
+            {errorLanguages && languages.length === 0 && (
+              <div className={styles.error} style={{ marginTop: 6 }}>{errorLanguagesText}</div>
+            )}
+          </div>
         </aside>
+
+        {/* Mobile-only actions at the very bottom */}
+        <div className={styles.actionsMobile}>
+          <Button transparent text="Cancelar" onClick={() => onCancel ? onCancel() : router.push(base)} />
+          <Button text="Publicar solicitud" onClick={handleSubmit} loading={submitting} />
+        </div>
       </div>
     </ThemeProvider>
   );
 }
-
