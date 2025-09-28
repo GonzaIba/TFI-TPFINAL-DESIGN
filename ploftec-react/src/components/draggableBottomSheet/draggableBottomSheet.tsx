@@ -13,11 +13,15 @@ import styles from './draggableBottomSheet.module.css'
 export default function DraggableBottomSheet({
   children,
   isOpen,
-  onClose
+  onClose,
+  openRatio = 0.75, // porcentaje de alto visible al abrir (0..1)
+  midRatio = 0.6,   // porcentaje al que "snappea" si no cierra
 }: {
   children: React.ReactNode
   isOpen: boolean
   onClose: () => void
+  openRatio?: number
+  midRatio?: number
 }) {
   const [viewportHeight, setViewportHeight] = useState(0)
   const sheetRef = useRef<HTMLDivElement>(null)
@@ -26,8 +30,8 @@ export default function DraggableBottomSheet({
   const controls = useAnimation()
   const dragControls = useDragControls()
   const backdropControls = useAnimation()
-  const START_HEIGHT = viewportHeight * 0.75
-  const MID_HEIGHT = viewportHeight * 0.6
+  const START_HEIGHT = viewportHeight * Math.max(0.1, Math.min(openRatio, 0.98))
+  const MID_HEIGHT = viewportHeight * Math.max(0.1, Math.min(midRatio, 0.95))
   const MIN_DRAG_CLOSE = 120
 
   useEffect(() => {
@@ -91,7 +95,9 @@ export default function DraggableBottomSheet({
   useEffect(() => {
     if (isOpen && viewportHeight) {
       controls.set({ y: viewportHeight })
-      controls.start({ y: viewportHeight - START_HEIGHT })
+      // abrir lo más arriba posible según ratio
+      const yOpen = Math.max(0, viewportHeight - START_HEIGHT)
+      controls.start({ y: yOpen })
 
       backdropControls.start({
         opacity: 1,

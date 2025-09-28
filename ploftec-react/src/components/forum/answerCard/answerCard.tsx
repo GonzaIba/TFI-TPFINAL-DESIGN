@@ -53,7 +53,7 @@ export default function AnswerCard({
   isNew = false,
   isEdited = false,
   onUpvote, 
-  onDownvote, 
+  onDownvote, /*  */
   onDelete,
   onSaveEdit
 }: Props) {

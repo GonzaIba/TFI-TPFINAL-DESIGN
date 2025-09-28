@@ -4,12 +4,13 @@
 import { motion, useMotionValue, useSpring, useMotionTemplate } from "framer-motion";
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from "./requestHelpCard.module.css";
-import { Button, ExpiryTimer, AvatarUser } from "@/components";
+import { Button, ExpiryTimer, AvatarUser, Loading } from "@/components";
 import type { RequestHelpResponse } from "@/lib/types/forum";
 import { useEffect, useMemo, useState } from "react";
 import { Trophy } from "lucide-react";
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import { parseApiUtc, formatLocalSlot } from '@/lib/utils/datetime';
+import useLiveHelpStore from '@/store/slices/liveHelpStore/liveHelpStore';
 
 function formatRemaining(ms: number) {
   if (ms <= 0) return "0s";
@@ -38,6 +39,7 @@ export function RequestHelpCard({ item }: Props) {
   const expires = useMemo(() => parseApiUtc(item.expiresAt as any), [item.expiresAt]);
 
   const [now, setNow] = useState(() => Date.now());
+  const [navLoading, setNavLoading] = useState(false);
   const [flipped, setFlipped] = useState(false);
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 30_000);
@@ -82,10 +84,19 @@ export function RequestHelpCard({ item }: Props) {
   }
 
   function openDetail() {
-    const createdTs = +parseApiUtc(item.createdAt as any);
-    const slug = encodeURIComponent(`${item.titleHelp}-${createdTs}`);
-    const keepQS = qs ? `?${qs}` : '';
-    router.push(`/forum/liveHelp/detail/${slug}${keepQS}`);
+    const id = (item as any).CodeRequestHelp ?? (item as any).codeRequestHelp;
+    // Persist selection for the detail page
+    try { 
+      useLiveHelpStore.getState().setSelected(item); 
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('livehelp:selected', JSON.stringify(item));
+      }
+    } catch {}
+    // Guardar el item en un store para usar data real en el detalle
+    setNavLoading(true);
+    setTimeout(() => {
+      router.push(`/forum/liveHelp/detail/${encodeURIComponent(String(id))}`);
+    }, 550);
   }
 
   function onHelp() {
@@ -94,6 +105,8 @@ export function RequestHelpCard({ item }: Props) {
   }
 
   return (
+    <>
+    <Loading show={navLoading} />
     <motion.article
       className={styles.card}
       initial={{ opacity: 0, y: 8, scale: 0.98 }}
@@ -217,5 +230,6 @@ export function RequestHelpCard({ item }: Props) {
       </div>
      
     </motion.article>
+    </>
   );
 }

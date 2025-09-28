@@ -1,0 +1,111 @@
+/* Container */
+.container {
+  min-height: 100dvh;
+  padding: 24px 16px 72px;
+}
+
+.headerBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+/* Columns */
+.columns {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.leftCol {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 60vh;
+}
+
+.rightCol {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .columns { grid-template-columns: 2fr 1fr; gap: 24px; }
+  .rightCol { display: block; }
+}
+
+/* Header */
+.headerCard { background: #151515; border: 1px solid #2a2a2a; border-radius: 12px; padding: 8px 12px 12px; display: flex; flex-direction: column; gap: 10px; }
+.headerRow { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 16px; }
+.headerMain { min-width: 0; }
+.title { font-size: 20px; line-height: 1.3; margin: 0 0 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.metaRow { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.status { padding: 4px 10px; border-radius: 999px; background: #1a2d1a; color: #7bd97b; font-size: 12px; }
+.reward { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: #2a2233; color: #e1ccff; font-size: 12px; }
+.trophy { color: #caa7ff; }
+.timerWrap { display: inline-flex; align-items: center; gap: 10px; }
+.timerText { color: #cfcfcf; font-size: 12px; }
+
+/* Show button only on mobile (<768px) */
+.headerRight { display: block; }
+@media (min-width: 768px) { .headerRight { display: none; } }
+
+.descBlock { border-top: 1px solid #262626; padding-top: 14px; margin-top: 8px; }
+
+/* Description */
+.descText { color: #e7e7e7; font-size: 14px; }
+.chipsRow { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.chipsGroup { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { background: #1a1a1a; border: 1px solid #333; color: #cfcfcf; padding: 4px 10px; border-radius: 999px; font-size: 12px; }
+.chipAlt { background: #222; border: 1px solid #3a3a3a; color: #e0e0e0; padding: 4px 10px; border-radius: 999px; font-size: 12px; }
+
+/* Chat */
+.chatPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 12px;
+  min-height: 380px;
+  flex: 1;
+}
+.sectionTitle { font-size: 14px; color: #bdbdbd; margin: 0; }
+.chatHistory { flex: 1; overflow: auto; padding: 6px; display: flex; flex-direction: column; gap: 8px; }
+.chatEmpty { color: #9e9e9e; font-size: 13px; text-align: center; padding: 24px 0; }
+.chatMsg { display: flex; }
+.chatMsg.me { justify-content: flex-end; }
+.chatMsg.other { justify-content: flex-start; }
+.msgBubble { max-width: 72%; padding: 8px 12px; border-radius: 12px; font-size: 14px; line-height: 1.3; background: #2b2b2b; color: #eaeaea; }
+.chatMsg.me .msgBubble { background: #4a3f6b; }
+
+.chatComposer { display: flex; align-items: center; gap: 10px; border-top: 1px solid #242424; padding-top: 8px; position: sticky; bottom: 0; background: #111; }
+.composerInput { flex: 1; height: 42px; background: #222; border: 1px solid #3a3a3a; border-radius: 8px; color: #fff; padding: 0 12px; font-size: 14px; }
+
+/* Sidebar */
+.sidebarSticky { position: sticky; top: 12px; display: flex; flex-direction: column; gap: 12px; max-height: calc(100dvh - 24px); }
+.availabilityCard { background: #0c0c0c; border: 1px solid #2a2a2a; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+.avTitle { text-align: center; margin: 0; font-size: 16px; color: #eaeaea; }
+
+.slotsList { overflow: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px; border: 1px solid #242424; border-radius: 10px; padding: 10px; background: #141414; }
+.slotItem { width: 100%; text-align: left; padding: 10px 12px; background: #1a1a1a; color: #e7e7e7; border: 1px solid #2e2e2e; border-radius: 10px; cursor: pointer; }
+.slotItem:hover { border-color: #6f56d9; }
+.slotSelected { border-color: #7f5af0; background: #221b30; }
+.noSlots { text-align: center; color: #bdbdbd; display: grid; gap: 12px; padding: 18px; }
+.confirmWrap { margin-top: 8px; }
+.confirmText { font-weight: 600; }
+
+/* Bottom bar (mobile) */
+.bottomBar { position: fixed; left: 16px; right: 16px; bottom: 16px; background: rgba(16,16,16,0.9); padding: 10px; border: 1px solid #2a2a2a; border-radius: 12px; display: flex; gap: 10px; z-index: 40; }
+@media (min-width: 1024px) { .bottomBar { display: none; } }
+
+/* Bottom sheet content */
+.sheetContent { display: flex; flex-direction: column; gap: 12px; padding-bottom: 8px; }
+.slotsListSheet { max-height: 52vh; overflow: auto; display: flex; flex-direction: column; gap: 8px; }
+.sheetConfirm { margin-top: 6px; }
+
+/* Modal */
+.modalWrap { padding: 14px; }
+.modalActions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+.policy { color: #9f9f9f; font-size: 12px; margin-top: 6px; }
