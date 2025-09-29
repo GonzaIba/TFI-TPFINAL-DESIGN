@@ -220,3 +220,26 @@
     languages: string[]; // ej: ['es-AR','en-US']
     timeSlot: { slots: HelpTimeSlot[] };
   }
+
+  // Live Help - Chat (GET messages)
+  export interface ChatMessageResponse {
+    codeMessage: number;
+    codeChat: number;
+    message: string;
+    createdAt: string | Date; // API devuelve string (ISO sin Z) o Date
+    readed: boolean;
+    sentByMe: boolean;
+  }
+
+  export interface SendChatMessageRequest {
+    message: string;
+    connectionId?: string | null;
+  }
+
+  export interface MarkChatReadRequest {
+    lastMessageUtc?: string;
+  }
+
+  export interface ChatUnreadCountResponse {
+    unreadCount: number;
+  }

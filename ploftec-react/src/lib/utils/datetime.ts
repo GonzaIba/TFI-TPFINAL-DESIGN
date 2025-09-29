@@ -1,12 +1,14 @@
 export function parseApiUtc(input: string | Date | number | null | undefined): Date {
   if (input instanceof Date) return input;
   if (typeof input === 'number') return new Date(input);
-  const s = (input ?? '').toString().trim();
+  let s = (input ?? '').toString().trim();
   if (!s) return new Date(NaN);
-  // If the API omits timezone (e.g. 2025-09-27T23:30:47.957), treat it as UTC.
-  // If it already has 'Z' or an offset, respect it.
+  // Normaliza fracciones: 2025-09-28T01:41:00.4966667 -> 2025-09-28T01:41:00.496
+  s = s.replace(/(\.\d{3})\d+/, '$1');
+  // Si no trae zona horaria, interpretamos como UTC (append Z)
   const hasTz = /[zZ]$|[+-]\d{2}:?\d{2}$/.test(s);
-  return new Date(hasTz ? s : `${s}Z`);
+  const norm = hasTz ? s : `${s}Z`;
+  return new Date(norm);
 }
 
 export function formatLocalSlot(startIso: string, endIso: string, withTz = false): string {
@@ -19,4 +21,3 @@ export function formatLocalSlot(startIso: string, endIso: string, withTz = false
   const eh = end.toLocaleTimeString(undefined, opts);
   return `${d} ${sh}–${eh}`;
 }
-
