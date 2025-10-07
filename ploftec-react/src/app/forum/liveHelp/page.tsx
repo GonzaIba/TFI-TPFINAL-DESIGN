@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Button, Grid, GridItem, Input, SideBarFilters, RequestHelpFeed } from '@/components';
+import { MyRequestHelpFeed } from '@/components/liveHelp/myRequestHelpFeed/myRequestHelpFeed';
 import { UserFilterForumResponse } from '@/lib/types/forum';
 import { filtrosService } from "@/lib/services/forum/filtrosService";
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
@@ -167,6 +168,12 @@ export default function LiveHelpPage() {
             </GridItem>
           ))}
         </Grid>
+
+        {/* Mis solicitudes de ayuda */}
+        <h2 className={styles.sectionTitle}>Mis solicitudes de ayuda</h2>
+        <div className={styles.mySectionContainer}>
+          <MyRequestHelpFeed enabled={feedEnabled} />
+        </div>
 
         <div className={styles.filterContainer} style={{ paddingBottom: userFilters.length > 0 ? 0 : 24 }}>
           <div className={styles.totalBox}>

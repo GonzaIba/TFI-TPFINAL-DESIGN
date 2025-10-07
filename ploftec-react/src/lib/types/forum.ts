@@ -221,7 +221,7 @@
     timeSlot: { slots: HelpTimeSlot[] };
   }
 
-  // Live Help - Chat (GET messages)
+  // Live Help - Chat (message DTO)
   export interface ChatMessageResponse {
     codeMessage: number;
     codeChat: number;
@@ -231,15 +231,54 @@
     sentByMe: boolean;
   }
 
+  // Enviar mensaje (gateway: SolicitudAyuda/{id}/Chat/EnviarMensaje)
   export interface SendChatMessageRequest {
+    codeChat: number;
     message: string;
     connectionId?: string | null;
   }
 
+  // Marcar como leído (gateway: SolicitudAyuda/{id}/Chat/Leido)
   export interface MarkChatReadRequest {
-    lastMessageUtc?: string;
+    codeChat: number;
+    upToUtc?: string; // ISO string
+    messageIds?: number[];
   }
 
   export interface ChatUnreadCountResponse {
+    count: number;
+  }
+
+  // Detalle de solicitud (gateway: SolicitudAyuda/{id}/ObtenerDetalleSolicitudAyuda)
+  export interface RequestHelpDetailResponse {
+    requestHelp: RequestHelpResponse;
+    codeChat?: number | null;
+    isOwner: boolean;
+  }
+
+  // Detalle de chat (gateway: SolicitudAyuda/{id}/Chat/Mensajes)
+  export interface HelpRequestChatDetailResponse {
+    chatCode: number;
+    requestCode: number;
+    state: string; // "Abierto" etc.
+    createdAt: string; // ISO
+    active: boolean;
+    other: UsersForumPreviewResponse;
+    unreadCount: number;
+    messages: Array<{
+      codeMessage: number;
+      text: string;
+      at: string; // ISO
+      fromMe: boolean;
+      readByOther: boolean;
+    }>;
+  }
+
+  // Listado de chats de mi solicitud (ayudado)
+  export interface HelpRequestChatsResponse {
+    chatCode: number;
+    other: UsersForumPreviewResponse;
+    lastText?: string;
+    lastAt?: string; // ISO
     unreadCount: number;
   }

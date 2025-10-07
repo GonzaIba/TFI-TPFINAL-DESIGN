@@ -28,9 +28,9 @@ function variantByMs(ms: number) {
   return "ok";
 }
 
-type Props = { item: RequestHelpResponse };
+type Props = { item: RequestHelpResponse; hideOwnerAvatar?: boolean };
 
-export function RequestHelpCard({ item }: Props) {
+export function RequestHelpCard({ item, hideOwnerAvatar = false }: Props) {
   const router = useRouter();
   const sp = useSearchParams();
   const qs = sp.toString();
@@ -127,17 +127,19 @@ export function RequestHelpCard({ item }: Props) {
     >
       <div className={`${styles.flipContainer} ${flipped ? styles.flipped : ''}`}>
         <div className={styles.front}>
-          {/* Top row: avatar + right panel (timer, reward, button) */}
-          <div className={styles.topRow}>
+          {/* Top row: avatar (optional) + right panel (timer, reward, button) */}
+          <div className={`${styles.topRow} ${hideOwnerAvatar ? styles.noAvatar : ''}`}>
 
-        <AvatarUser 
-          tagUser={item.userCreator?.initials ?? "AU"} 
-          imageUser={item.userCreator?.image}
-          descripcionCorta={item.userCreator?.shortDescription ?? ''}
-          descripcionLarga={item.userCreator?.longDescription ?? ''}
-          nombreCompleto={item.userCreator?.completeName ?? ''}
-          direction='right'
-        /> {/*Anonimous User*/}
+        {!hideOwnerAvatar && (
+          <AvatarUser 
+            tagUser={item.userCreator?.initials ?? "AU"} 
+            imageUser={item.userCreator?.image}
+            descripcionCorta={item.userCreator?.shortDescription ?? ''}
+            descripcionLarga={item.userCreator?.longDescription ?? ''}
+            nombreCompleto={item.userCreator?.completeName ?? ''}
+            direction='right'
+          />
+        )}
 
         {/* <div className={styles.avatar}>
           {item.userCreator.image ? (

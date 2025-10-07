@@ -22,7 +22,10 @@ export function useLiveHelpChatSignalR(props: LiveHelpChatSignalRProps | null): 
       if (connectionRef.current) {
         try {
           if (connectionRef.current.state === signalR.HubConnectionState.Connected) {
+            // Intenta múltiples variantes de método de salida por compatibilidad
             try { await connectionRef.current.invoke('LeaveHelpRequestRoom', roomIdRef.current); } catch {}
+            try { await connectionRef.current.invoke('LeaveRoom', roomIdRef.current); } catch {}
+            try { await connectionRef.current.invoke('LeaveChatRoom', roomIdRef.current); } catch {}
           }
         } finally {
           await connectionRef.current.stop();
@@ -43,14 +46,35 @@ export function useLiveHelpChatSignalR(props: LiveHelpChatSignalRProps | null): 
       connectionRef.current = conn;
       roomIdRef.current = reqId;
 
-      // Eventos estimados: ajustar a los nombres reales del Hub
-      conn.on('ChatMessageAdded', (d) => { props?.onMessageAdded?.(d); });
-      conn.on('ChatRead', (d) => { props?.onChatRead?.(d); });
+      // Eventos: soporta varios nombres posibles para compatibilidad
+      const messageEvents = ['ChatMessageAdded', 'MessageAdded', 'MessageCreated', 'ReceiveMessage'];
+      const readEvents = ['ChatRead', 'MessagesRead', 'ChatMarkedAsRead', 'Read'];
 
-      conn.start()
-        .then(() => conn.invoke('JoinHelpRequestRoom', reqId))
-        .then(() => setConnId(conn.connectionId))
-        .catch(err => console.error('SignalR livehelp negotiation error', err));
+      messageEvents.forEach((evt) => conn.on(evt, (d) => { props?.onMessageAdded?.(d); }));
+      readEvents.forEach((evt) => conn.on(evt, (d) => { props?.onChatRead?.(d); }));
+
+      const tryJoin = async () => {
+        try {
+          await conn.start();
+        } catch (err) {
+          console.error('SignalR livehelp start error', err);
+          // si no arranca, no seguimos
+          return;
+        }
+        // Probar múltiples nombres de método para unirse a la sala
+        const joinMethods = ['JoinHelpRequestRoom', 'JoinHelpRequest', 'JoinRoom', 'JoinChatRoom'];
+        for (const m of joinMethods) {
+          try {
+            await conn.invoke(m, reqId);
+            setConnId(conn.connectionId);
+            return; // ok, unido
+          } catch {}
+        }
+        console.warn('No se pudo invocar método de join en el hub (intentadas variantes).');
+        setConnId(conn.connectionId ?? null);
+      };
+
+      tryJoin();
     });
 
     return () => { cleanupPrev(); };
@@ -58,4 +82,3 @@ export function useLiveHelpChatSignalR(props: LiveHelpChatSignalRProps | null): 
 
   return connId;
 }
-

@@ -1,5 +1,5 @@
 // src/lib/query/hooks/useRequestsHelpInfinite.ts
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { requestHelpService } from "@/lib/services/forum/requestHelpService";
 import type { RequestHelpResponse } from "@/lib/types/forum";
@@ -41,6 +41,19 @@ export function useRequestsHelpInfinite(
         : undefined,
     // aplanamos para que el componente consuma una lista directa
     select: (data) => data.pages.flatMap((p) => p.items ?? []),
+    staleTime: 30_000,
+  });
+}
+
+export function useMyRequestsHelp(enabled = true, refresh = 0) {
+  return useQuery<RequestHelpResponse[], Error>({
+    queryKey: ["livehelp", "my-requests", { refresh }],
+    queryFn: async () => {
+      const res = await requestHelpService.getMyHelpRequests();
+      if (!res.data) throw new Error("No data returned from getMyHelpRequests");
+      return res.data;
+    },
+    enabled,
     staleTime: 30_000,
   });
 }

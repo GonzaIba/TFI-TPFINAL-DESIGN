@@ -14,7 +14,8 @@ import {
   AnswerPublicationVoteResponse,
   AnswerResponse,
   RequestHelpResponse,
-  CreateHelpRequest
+  CreateHelpRequest,
+  RequestHelpDetailResponse,
 } from "@/lib/types/forum";
 
 export const requestHelpService = {
@@ -39,5 +40,40 @@ export const requestHelpService = {
       body: request,
     });
     return response;
+  },
+
+  async getMyHelpRequests(): Promise<GenericApiResponse<RequestHelpResponse[]>> {
+    const response = await apiBaseService.execute<RequestHelpResponse[], undefined>({
+      method: "GET",
+      url: `ApiForum/ObtenerMisSolicitudesDeAyuda`,
+      requireCredentials: true,
+    });
+    return response;
+  },
+
+  async getRequestHelpDetail(id: number): Promise<GenericApiResponse<RequestHelpDetailResponse>> {
+    return await apiBaseService.execute<RequestHelpDetailResponse, undefined>({
+      method: "GET",
+      url: `ApiForum/SolicitudAyuda/${id}/ObtenerDetalleSolicitudAyuda`,
+      requireCredentials: true,
+    });
+  },
+
+  async cancelHelpRequest(id: number, reason?: string): Promise<GenericApiResponse<SuccessfulResponse>> {
+    return await apiBaseService.execute<SuccessfulResponse, { codeRequestHelp: number; reason?: string } | undefined>({
+      method: "POST",
+      url: `ApiForum/SolicitudAyuda/${id}/CancelarSolicitudAyuda`,
+      body: { codeRequestHelp: id, reason },
+      requireCredentials: true,
+    });
+  },
+
+  async closeHelpRequest(id: number): Promise<GenericApiResponse<SuccessfulResponse>> {
+    return await apiBaseService.execute<SuccessfulResponse, { codeRequestHelp: number }>({
+      method: "POST",
+      url: `ApiForum/SolicitudAyuda/${id}/CerrarSolicitudAyuda`,
+      body: { codeRequestHelp: id },
+      requireCredentials: true,
+    });
   },
 };
