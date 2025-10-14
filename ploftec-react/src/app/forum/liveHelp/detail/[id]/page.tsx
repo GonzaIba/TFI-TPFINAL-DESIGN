@@ -3,8 +3,8 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import styles from "./page.module.css";
-import { AvatarUser, Button, ExpiryTimer, Loading } from "@/components";
-import { Trophy, AlertCircle } from "lucide-react";
+import { AvatarUser, Button, ExpiryTimer, Loading, DateTime } from "@/components";
+import { Trophy, AlertCircle, CheckCheck, Clock, XCircle } from "lucide-react";
 import ArrowBack from "@mui/icons-material/ArrowBack";
 import { parseApiUtc, formatLocalSlot } from "@/lib/utils/datetime";
 import type {
@@ -22,6 +22,28 @@ import { requestHelpService } from "@/lib/services/forum/requestHelpService";
 import { useLiveHelpChatSignalR } from "@/hooks";
 
 type Slot = { start: string; end: string };
+
+type EditableSlot = { start: Date | null; end: Date | null };
+
+const SLOT_MINUTES = [15, 30];
+
+const isDurationValid = (start: Date, end: Date) => {
+  const diff = Math.round((end.getTime() - start.getTime()) / 60000);
+  return SLOT_MINUTES.includes(diff);
+};
+
+const isEditableSlotValid = (slot: EditableSlot) =>
+  !!(slot.start && slot.end && isDurationValid(slot.start, slot.end));
+
+const toDateOrNull = (value: any): Date | null => {
+  if (!value) return null;
+  try {
+    const parsed = parseApiUtc(value as any);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  } catch {
+    return null;
+  }
+};
 
 type ChatMsg = {
   id: string | number;
@@ -125,7 +147,16 @@ const mapChatMessage = (raw: ChatMessageResponse | any, userEmail: string | null
       : "";
 
   const { at, utc } = resolveCreatedAt(raw);
-  const readValue = normalizeBoolean(raw?.readed ?? raw?.Readed ?? raw?.read ?? raw?.Read ?? raw?.readByOther ?? raw?.ReadByOther);
+  const readValue = normalizeBoolean(
+    raw?.isRead ??
+    raw?.IsRead ??
+    raw?.read ??
+    raw?.Read ??
+    raw?.readed ??
+    raw?.Readed ??
+    raw?.readByOther ??
+    raw?.ReadByOther
+  );
 
   return {
     id,
@@ -135,7 +166,7 @@ const mapChatMessage = (raw: ChatMessageResponse | any, userEmail: string | null
     utc,
     pending: false,
     delivered: true,
-    read: fromMe ? !!readValue : undefined,
+    read: readValue === true,
   };
 };
 
@@ -160,6 +191,10 @@ export default function LiveHelpDetailByIdPage() {
   const userEmail = useMemo(() => auth?.email?.toLowerCase() ?? null, [auth?.email]);
 
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
+  const [editableSlots, setEditableSlots] = useState<EditableSlot[]>([{ start: null, end: null }]);
+  const [slotsSaving, setSlotsSaving] = useState(false);
+  const [slotsError, setSlotsError] = useState<string | null>(null);
+  const ownerHasValidSlot = useMemo(() => editableSlots.some(isEditableSlotValid), [editableSlots]);
 
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
 
@@ -168,7 +203,6 @@ export default function LiveHelpDetailByIdPage() {
   const chatBodyRef = useRef<HTMLDivElement | null>(null);
   const [chatLoading, setChatLoading] = useState(false);
   const [chatError, setChatError] = useState(false);
-  const lastMarkedOtherRef = useRef<string | number | null>(null);
   const [codeChat, setCodeChat] = useState<number | null>(null);
   const [inbox, setInbox] = useState<any[]>([]);
   const [inboxLoading, setInboxLoading] = useState(false);
@@ -203,16 +237,21 @@ export default function LiveHelpDetailByIdPage() {
               ? raw.preview ?? raw.Preview
               : mapped.text;
           const isFromMe = mapped.from === "me";
-          const updated = prev.map((it) =>
-            it.chatCode === msgChatCode
-              ? {
-                  ...it,
-                  lastText: text,
-                  lastAt: nowIso,
-                  unread: isFromMe || msgChatCode === codeChat ? 0 : (it.unread ?? 0) + 1,
-                }
-              : it
-          );
+          const updated = prev.map((it) => {
+            if (it.chatCode !== msgChatCode) return it;
+            const isUnreadMessage = !isFromMe && !mapped.read;
+            const nextUnread = (() => {
+              if (msgChatCode === codeChat) return 0;
+              if (isFromMe) return it.unread ?? 0;
+              return (it.unread ?? 0) + (isUnreadMessage ? 1 : 0);
+            })();
+            return {
+              ...it,
+              lastText: text,
+              lastAt: nowIso,
+              unread: nextUnread,
+            };
+          });
           const idx = updated.findIndex((x: any) => x.chatCode === msgChatCode);
           if (idx > 0) {
             const item = updated[idx];
@@ -244,6 +283,108 @@ export default function LiveHelpDetailByIdPage() {
         }
       : null
   );
+
+  const handleOwnerSlotStartChange = (index: number, value: Date | null) => {
+    setEditableSlots((prev) => {
+      const safeStart = value ? new Date(Math.max(value.getTime(), Date.now())) : null;
+      const next = prev.map((slot, idx) => (idx === index ? { ...slot, start: safeStart } : slot));
+      if (safeStart && next[index].end) {
+        const end = next[index].end as Date;
+        if (!isDurationValid(safeStart, end)) {
+          next[index] = { ...next[index], end: null };
+        }
+      }
+      if (slotsError) {
+        const valid = next.some(isEditableSlotValid);
+        if (valid) setSlotsError(null);
+      }
+      return next;
+    });
+  };
+
+  const handleOwnerSlotEndChange = (index: number, value: Date | null) => {
+    setEditableSlots((prev) => {
+      const start = prev[index].start;
+      let end = value;
+      if (end && start) {
+        const startTime = start.getTime();
+        const fifteen = new Date(startTime + 15 * 60000);
+        const thirty = new Date(startTime + 30 * 60000);
+        const diff15 = Math.abs(end.getTime() - fifteen.getTime());
+        const diff30 = Math.abs(end.getTime() - thirty.getTime());
+        end = diff15 <= diff30 ? fifteen : thirty;
+      } else if (!start) {
+        end = null;
+      }
+      const next = prev.map((slot, idx) => (idx === index ? { ...slot, end } : slot));
+      if (slotsError) {
+        const valid = next.some(isEditableSlotValid);
+        if (valid) setSlotsError(null);
+      }
+      return next;
+    });
+  };
+
+  const handleOwnerAddSlot = () => {
+    setEditableSlots((prev) => [...prev, { start: null, end: null }]);
+  };
+
+  const handleOwnerRemoveSlot = (index: number) => {
+    setEditableSlots((prev) => {
+      const next = prev.filter((_, idx) => idx !== index);
+      const normalized = next.length > 0 ? next : [{ start: null, end: null }];
+      if (slotsError) {
+        const valid = normalized.some(isEditableSlotValid);
+        if (valid) setSlotsError(null);
+      }
+      return normalized;
+    });
+  };
+
+  const handleOwnerSaveSlots = async () => {
+    if (!idParam) return;
+    setSlotsError(null);
+    const validSlots = editableSlots.filter(isEditableSlotValid);
+    if (validSlots.length === 0) {
+      setSlotsError("Agrega al menos una franja válida (15 o 30 minutos).");
+      return;
+    }
+
+    setSlotsSaving(true);
+    try {
+      const payloadSlots = validSlots.map((slot) => ({
+        start: slot.start!.toISOString(),
+        end: slot.end!.toISOString(),
+      }));
+
+      await requestHelpService.updateHelpRequestAvailability(idParam, {
+        timeSlot: { slots: payloadSlots },
+      });
+
+      setRequest((prev) =>
+        prev
+          ? {
+              ...prev,
+              timeSlot: { slots: payloadSlots },
+            }
+          : prev
+      );
+
+      setEditableSlots(
+        payloadSlots.map((slot) => ({
+          start: new Date(slot.start),
+          end: new Date(slot.end),
+        }))
+      );
+      setSlotsError(null);
+      showToast({ message: "Disponibilidad actualizada", variant: "success" });
+    } catch (error) {
+      console.error("update availability failed", error);
+      showToast({ message: "No pude actualizar los horarios", variant: "error" });
+    } finally {
+      setSlotsSaving(false);
+    }
+  };
 
   useEffect(() => {
     if (!enterLoading && isOwner === null) {
@@ -310,6 +451,20 @@ export default function LiveHelpDetailByIdPage() {
   }, [idParam, queryClient, request, selectedFromStore]);
 
   useEffect(() => {
+    if (isOwner !== true) return;
+    const rawSlots = request?.timeSlot?.slots ?? [];
+    if (!rawSlots.length) {
+      setEditableSlots([{ start: null, end: null }]);
+      return;
+    }
+    const mapped = rawSlots.map((slot) => ({
+      start: toDateOrNull(slot.start),
+      end: toDateOrNull(slot.end),
+    }));
+    setEditableSlots(mapped.length ? mapped : [{ start: null, end: null }]);
+  }, [isOwner, request?.timeSlot]);
+
+  useEffect(() => {
     if (!idParam) return;
     if (isOwner !== true) {
       if (isOwner === false) {
@@ -367,19 +522,24 @@ export default function LiveHelpDetailByIdPage() {
     try {
       const res = await liveHelpChatService.getChatDetail(idParam, codeChat);
       const detail: HelpRequestChatDetailResponse | undefined = res?.data as any;
+      let chatCodeValue = codeChat;
       if (detail?.chatCode && typeof detail.chatCode === "number") {
+        chatCodeValue = detail.chatCode;
         setCodeChat(detail.chatCode);
       }
       const list = detail?.messages ?? [];
       const mapped = list.map((m: any) => toChatMessage(m));
       setChat(mapped);
-      const lastOther = [...mapped].reverse().find((m) => m.from === "other");
-      if (lastOther && codeChat) {
-        lastMarkedOtherRef.current = lastOther.id ?? null;
-        const payload = lastOther.utc ? { codeChat, upToUtc: lastOther.utc } : { codeChat };
-        try {
-          await liveHelpChatService.markChatAsRead(idParam, payload);
-        } catch {}
+      const unreadFromDetail =
+        typeof detail?.unreadCount === "number"
+          ? detail.unreadCount ?? 0
+          : mapped.filter((m) => m.from === "other" && !m.read).length;
+      if (chatCodeValue && isOwner === true) {
+        setInbox((prev) =>
+          prev.map((it) =>
+            it.chatCode === chatCodeValue ? { ...it, unread: unreadFromDetail } : it
+          )
+        );
       }
     } catch {
       setChatError(true);
@@ -387,7 +547,7 @@ export default function LiveHelpDetailByIdPage() {
     } finally {
       setChatLoading(false);
     }
-  }, [idParam, codeChat, toChatMessage]);
+  }, [idParam, codeChat, toChatMessage, isOwner]);
 
   useEffect(() => {
     fetchInitialChat();
@@ -400,21 +560,39 @@ export default function LiveHelpDetailByIdPage() {
 
   useEffect(() => {
     if (!idParam || !codeChat || chat.length === 0) return;
-    const lastOther = [...chat].reverse().find((m) => m.from === "other");
-    if (!lastOther) return;
-    if (lastOther.id === lastMarkedOtherRef.current) return;
-    lastMarkedOtherRef.current = lastOther.id;
-    const payload = lastOther.utc ? { codeChat, upToUtc: lastOther.utc } : { codeChat };
-    liveHelpChatService.markChatAsRead(idParam, payload).catch(() => {});
-    setInbox((prev) => prev.map((it) => (it.chatCode === codeChat ? { ...it, unread: 0 } : it)));
-  }, [chat, idParam, codeChat]);
+    const unreadMessages = chat.filter((m) => m.from === "other" && !m.read);
+    if (unreadMessages.length === 0) return;
+    const lastUnread = unreadMessages[unreadMessages.length - 1];
+    const ids = unreadMessages
+      .map((m) =>
+        typeof m.id === "number"
+          ? m.id
+          : typeof m.id === "string" && /^\d+$/.test(m.id)
+          ? Number(m.id)
+          : null
+      )
+      .filter((n): n is number => n !== null);
+    const payload: { codeChat: number; upToUtc?: string; messageIds?: number[] } = { codeChat };
+    if (ids.length > 0) payload.messageIds = ids;
+    else if (lastUnread?.utc) payload.upToUtc = lastUnread.utc;
+
+    (async () => {
+      try {
+        await liveHelpChatService.markChatAsRead(idParam, payload);
+      } catch {}
+      setChat((prev) => prev.map((m) => (m.from === "other" ? { ...m, read: true } : m)));
+      if (isOwner === true) {
+        setInbox((prev) => prev.map((it) => (it.chatCode === codeChat ? { ...it, unread: 0 } : it)));
+      }
+    })();
+  }, [chat, idParam, codeChat, isOwner]);
 
   const onSendChat = useCallback(async () => {
     const text = chatInput.trim();
-    if (!text || !idParam) return;
+    if (!text || !idParam || (isOwner === true && !codeChat)) return;
     const tempId = Math.random().toString(36).slice(2);
     const now = Date.now();
-    const tempMessage: ChatMsg = { id: tempId, from: "me", text, at: now, pending: true, delivered: false };
+    const tempMessage: ChatMsg = { id: tempId, from: "me", text, at: now, pending: true, delivered: false, read: false };
     setChat((prev) => [...prev, tempMessage]);
     setChatInput("");
     try {
@@ -427,13 +605,29 @@ export default function LiveHelpDetailByIdPage() {
         chatCodeLocal = createdCode;
         setCodeChat(createdCode);
       }
-      const res = await liveHelpChatService.sendChatMessage(idParam, { codeChat: chatCodeLocal, message: text, connectionId });
+      const res = await liveHelpChatService.sendChatMessage(idParam, { codeChat: chatCodeLocal ?? 0, message: text, connectionId });
       const raw = res?.data;
       if (raw) {
         const mapped = mapChatMessage(raw, userEmail);
-        setChat((prev) => prev.map((m) => (m.id === tempId ? { ...mapped, pending: false, delivered: true } : m)));
+        setChat((prev) => {
+          const idx = prev.findIndex((m) => m.id === tempId);
+          if (idx >= 0) {
+            const next = [...prev];
+            next[idx] = { ...mapped, pending: false, delivered: true };
+            return next;
+          }
+          return [...prev, { ...mapped, pending: false, delivered: true }];
+        });
       } else {
-        setChat((prev) => prev.map((m) => (m.id === tempId ? { ...m, pending: false, delivered: true } : m)));
+        setChat((prev) => {
+          const idx = prev.findIndex((m) => m.id === tempId);
+          if (idx >= 0) {
+            const next = [...prev];
+            next[idx] = { ...next[idx], pending: false, delivered: true };
+            return next;
+          }
+          return [...prev, { id: tempId, from: "me", text, at: now, pending: false, delivered: true, read: false }];
+        });
       }
     } catch {
       setChat((prev) => prev.map((m) => (m.id === tempId ? { ...m, pending: false, delivered: false } : m)));
@@ -567,12 +761,16 @@ export default function LiveHelpDetailByIdPage() {
                         aria-pressed={active}
                       >
                         <div className={styles.inboxAvatarWrap}>
-                          {img ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={img} alt={name} className={styles.inboxAvatarImg} />
-                          ) : (
-                            <div className={styles.inboxAvatar}>{initials}</div>
-                          )}
+                          <AvatarUser
+                            tagUser={initials}
+                            imageUser={img}
+                            descripcionCorta={it?.other?.shortDescription ?? ""}
+                            descripcionLarga={it?.other?.longDescription ?? ""}
+                            nombreCompleto={name}
+                            direction="right"
+                            showDetails={false}
+                            size={36}
+                          />
                           {isOnline && <span className={styles.onlineDot} aria-label="En linea" />}
                         </div>
                         <div className={styles.inboxMain}>
@@ -626,12 +824,48 @@ export default function LiveHelpDetailByIdPage() {
                   return (
                     <div key={m.id} className={`${styles.chatMsg} ${isMe ? styles.chatMsgMe : styles.chatMsgOther}`}>
                       <div className={styles.msgWrap}>
-                        <div className={[styles.msgBubble, isMe ? styles.msgBubbleMe : styles.msgBubbleOther, m.pending ? styles.msgBubblePending : ""].join(" ")}>{m.text || "(sin contenido)"}</div>
+                        <div
+                          className={[
+                            styles.msgBubble,
+                            isMe ? styles.msgBubbleMe : styles.msgBubbleOther,
+                            m.pending ? styles.msgBubblePending : "",
+                            !isMe && !m.read ? styles.msgBubbleUnread : "",
+                          ].join(" ")}
+                        >
+                          {m.text || "(sin contenido)"}
+                        </div>
                         <div className={styles.msgMeta}>
                           <span>{formatTimeLabel(m.at)}</span>
+                          {!isMe && !m.read && <span className={styles.unreadDot} aria-hidden="true" />}
                           {isMe && (
-                            <span className={[styles.tick, m.pending ? styles.tickPending : m.delivered && m.read ? styles.tickRead : styles.tickDouble].join(" ")}>
-                              {m.pending ? "." : m.delivered ? (m.read ? "VV" : "VV") : "-"}
+                            <span
+                              className={[
+                                styles.tick,
+                                m.pending
+                                  ? styles.tickPending
+                                  : !m.delivered
+                                  ? styles.tickError
+                                  : m.read
+                                  ? styles.tickRead
+                                  : styles.tickDelivered,
+                              ].join(" ")}
+                              title={
+                                m.pending
+                                  ? "Enviando"
+                                  : !m.delivered
+                                  ? "No se pudo enviar"
+                                  : m.read
+                                  ? "Le?do"
+                                  : "Entregado"
+                              }
+                            >
+                              {m.pending ? (
+                                <Clock size={12} strokeWidth={2.2} />
+                              ) : !m.delivered ? (
+                                <XCircle size={12} strokeWidth={2.2} />
+                              ) : (
+                                <CheckCheck size={13} strokeWidth={2.2} />
+                              )}
                             </span>
                           )}
                         </div>
@@ -644,7 +878,16 @@ export default function LiveHelpDetailByIdPage() {
             <div className={styles.chatComposer}>
               {(() => {
                 const mustSelectChatFirst = isOwner === true && inbox.length > 0 && !codeChat;
-                const composerDisabled = enterLoading || mustSelectChatFirst || chatLoading || (codeChat !== null && chatError);
+                const ownerWithoutChats = isOwner === true && inbox.length === 0;
+                const composerDisabled =
+                  enterLoading || ownerWithoutChats || mustSelectChatFirst || chatLoading || (codeChat !== null && chatError);
+                const buttonText = ownerWithoutChats
+                  ? "Sin chats"
+                  : mustSelectChatFirst
+                  ? "Elegi un chat"
+                  : chatError
+                  ? "Reintentar carga"
+                  : "Enviar";
                 return (
                   <>
                     <input
@@ -658,7 +901,13 @@ export default function LiveHelpDetailByIdPage() {
                       aria-label="Escribir mensaje"
                       disabled={composerDisabled}
                     />
-                    <Button onClick={onSendChat} text={mustSelectChatFirst ? "Elegi un chat" : chatError ? "Reintentar carga" : "Enviar"} width="110px" height="42px" disabled={composerDisabled} />
+                    <Button
+                      onClick={onSendChat}
+                      text={buttonText}
+                      width="110px"
+                      height="42px"
+                      disabled={composerDisabled}
+                    />
                   </>
                 );
               })()}
@@ -669,29 +918,81 @@ export default function LiveHelpDetailByIdPage() {
         <aside className={styles.rightCol}>
           <div className={styles.sidebarSticky}>
             <div className={styles.availabilityCard}>
-              <h2 className={styles.avTitle}>Disponibilidad</h2>
-              <div className={styles.slotsList} aria-live="polite">
-                {request?.timeSlot?.slots?.length ? (
-                  request.timeSlot.slots.map((s) => {
-                    const label = formatLocalSlot(s.start, s.end);
-                    const isSelected = selectedSlot?.start === s.start && selectedSlot?.end === s.end;
-                    return (
-                      <button key={`${s.start}--${s.end}`} className={`${styles.slotItem} ${isSelected ? styles.slotSelected : ""}`} onClick={() => setSelectedSlot(s)} aria-pressed={isSelected}>
-                        {label}
-                      </button>
-                    );
-                  })
-                ) : (
-                  <div className={styles.noSlots}><p>El creador aun no publico horarios.</p></div>
-                )}
-              </div>
-              <div className={styles.confirmWrap}>
-                <Button onClick={() => {}} width="100%" text="Confirmar" />
-              </div>
+              <h2 className={styles.avTitle}>{isOwner === true ? "Mis horarios disponibles" : "Disponibilidad"}</h2>
+              {isOwner === true ? (
+                <>
+                  <p className={styles.ownerSlotHelper}>Configura franjas de 15 o 30 minutos.</p>
+                  <div className={styles.ownerSlots}>
+                    {editableSlots.map((slot, index) => (
+                      <div className={styles.ownerSlotRow} key={`owner-slot-${index}`}>
+                        <DateTime
+                          label="Inicio"
+                          dateValue={slot.start}
+                          onChange={(value) => handleOwnerSlotStartChange(index, value)}
+                          minDateTime={new Date()}
+                          minutesStep={15}
+                        />
+                        <DateTime
+                          label="Fin"
+                          dateValue={slot.end}
+                          onChange={(value) => handleOwnerSlotEndChange(index, value)}
+                          minDateTime={slot.start ? new Date(slot.start.getTime() + 15 * 60000) : undefined}
+                          maxDateTime={slot.start ? new Date(slot.start.getTime() + 30 * 60000) : undefined}
+                          disabled={!slot.start}
+                          minutesStep={15}
+                        />
+                        <Button
+                          onClick={() => handleOwnerRemoveSlot(index)}
+                          transparent
+                          text="Quitar"
+                          width="88px"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  {slotsError && <div className={styles.error}>{slotsError}</div>}
+                  <div className={styles.ownerSlotButtons}>
+                    <Button onClick={handleOwnerAddSlot} transparent text="Agregar franja" width="auto" />
+                    <Button
+                      onClick={handleOwnerSaveSlots}
+                      text="Guardar disponibilidad"
+                      loading={slotsSaving}
+                      disabled={slotsSaving || !ownerHasValidSlot}
+                      width="100%"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className={styles.slotsList} aria-live="polite">
+                    {request?.timeSlot?.slots?.length ? (
+                      request.timeSlot.slots.map((s) => {
+                        const label = formatLocalSlot(s.start, s.end);
+                        const isSelected = selectedSlot?.start === s.start && selectedSlot?.end === s.end;
+                        return (
+                          <button
+                            key={`${s.start}--${s.end}`}
+                            className={`${styles.slotItem} ${isSelected ? styles.slotSelected : ""}`}
+                            onClick={() => setSelectedSlot(s)}
+                            aria-pressed={isSelected}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })
+                    ) : (
+                      <div className={styles.noSlots}><p>El creador aun no publico horarios.</p></div>
+                    )}
+                  </div>
+                  <div className={styles.confirmWrap}>
+                    <Button onClick={() => {}} width="100%" text="Confirmar" />
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </aside>
       </div>
     </main>
-  );
-}
+  )
+};

@@ -221,14 +221,21 @@
     timeSlot: { slots: HelpTimeSlot[] };
   }
 
+  export interface UpdateDisponibilityRequest {
+    timeSlot: { slots: HelpTimeSlot[] };
+    userId?: string;
+  }
+
   // Live Help - Chat (message DTO)
   export interface ChatMessageResponse {
     codeMessage: number;
     codeChat: number;
     message: string;
     createdAt: string | Date; // API devuelve string (ISO sin Z) o Date
-    readed: boolean;
-    sentByMe: boolean;
+    isRead?: boolean;
+    fromMe?: boolean;
+    readed?: boolean;
+    sentByMe?: boolean;
   }
 
   // Enviar mensaje (gateway: SolicitudAyuda/{id}/Chat/EnviarMensaje)
@@ -270,7 +277,7 @@
       text: string;
       at: string; // ISO
       fromMe: boolean;
-      readByOther: boolean;
+      isRead: boolean;
     }>;
   }
 

@@ -37,7 +37,7 @@ function MyRequestHelpFeedInner({ enabled = true }: Props) {
         <CreateHelpCard />
 
         {/* Skeletons */}
-        {(isLoading || !enabled) &&
+        {((isLoading || !enabled) && items.length === 0) &&
           Array.from({ length: 2 }).map((_, i) => (
             <div key={`my-sk-${i}`} className={styles.cardWrap}>
               <div className={styles.skeleton} />

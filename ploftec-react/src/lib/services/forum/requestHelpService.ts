@@ -16,6 +16,7 @@ import {
   RequestHelpResponse,
   CreateHelpRequest,
   RequestHelpDetailResponse,
+  UpdateDisponibilityRequest,
 } from "@/lib/types/forum";
 
 export const requestHelpService = {
@@ -26,7 +27,7 @@ export const requestHelpService = {
     if (search) p.set("search", search);
     const response = await apiBaseService.execute<CursorPage<RequestHelpResponse>, undefined>({
       method: "GET",
-      url: `ApiForum/ObtenerSolicitudesDeAyuda?${p}`,
+      url: `ApiForum/SolicitudAyuda/ObtenerSolicitudesDeAyuda?${p}`,
       requireCredentials: true,
     });
     return response;
@@ -35,7 +36,7 @@ export const requestHelpService = {
   async createHelpRequest(request: CreateHelpRequest): Promise<GenericApiResponse<SuccessfulResponse>> {
     const response = await apiBaseService.execute<SuccessfulResponse, CreateHelpRequest>({
       method: "POST",
-      url: `ApiForum/CrearSolicitudAyuda`,
+      url: `ApiForum/SolicitudAyuda/CrearSolicitudAyuda`,
       requireCredentials: true,
       body: request,
     });
@@ -45,8 +46,18 @@ export const requestHelpService = {
   async getMyHelpRequests(): Promise<GenericApiResponse<RequestHelpResponse[]>> {
     const response = await apiBaseService.execute<RequestHelpResponse[], undefined>({
       method: "GET",
-      url: `ApiForum/ObtenerMisSolicitudesDeAyuda`,
+      url: `ApiForum/SolicitudAyuda/ObtenerMisSolicitudesDeAyuda`,
       requireCredentials: true,
+    });
+    return response;
+  },
+
+  async updateHelpRequestAvailability(id: number, request: UpdateDisponibilityRequest): Promise<GenericApiResponse<SuccessfulResponse>> {
+    const response = await apiBaseService.execute<SuccessfulResponse, UpdateDisponibilityRequest>({
+      method: "PUT",
+      url: `ApiForum/SolicitudAyuda/${id}/ActualizarHorarios`,
+      requireCredentials: true,
+      body: request,
     });
     return response;
   },

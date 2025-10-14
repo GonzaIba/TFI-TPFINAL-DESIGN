@@ -5,24 +5,66 @@ import { DateTimePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { FilterResponse } from '@/lib/types/forum';
 
-interface Props {
-  item: FilterResponse;
-  dateValue: Date | null;
-  updateFilterValue: (key: number, value: string) => void;
-}
+type DateTimeProps =
+  | {
+      item: FilterResponse;
+      dateValue: Date | null;
+      updateFilterValue: (key: number, value: string) => void;
+      label?: string;
+      minDateTime?: Date;
+      maxDateTime?: Date;
+      disabled?: boolean;
+      minutesStep?: number;
+    }
+  | {
+      item?: undefined;
+      dateValue: Date | null;
+      onChange: (value: Date | null) => void;
+      label: string;
+      minDateTime?: Date;
+      maxDateTime?: Date;
+      disabled?: boolean;
+      minutesStep?: number;
+    };
 
-export function DateTime({ item, dateValue, updateFilterValue }: Props) {
+export function DateTime(props: DateTimeProps) {
+  const {
+    item,
+    dateValue,
+    label,
+    minDateTime,
+    maxDateTime,
+    disabled,
+    minutesStep = 1,
+  } = props;
+
+  const handleChange = (newVal: Date | null) => {
+    if (item && "updateFilterValue" in props) {
+      props.updateFilterValue(item.codeFilter, newVal ? newVal.toISOString() : "");
+    } else if ("onChange" in props) {
+      props.onChange(newVal);
+    }
+  };
+
+  const resolvedLabel = label ?? item?.descriptionFilter ?? "";
+
   return (
     <ThemeProvider theme={darkTheme}>
       <LocalizationProvider dateAdapter={AdapterDateFns}>
         <DateTimePicker
-          label={item.descriptionFilter}
+          label={resolvedLabel}
           value={dateValue}
-          onChange={(newVal: Date | null) =>
-            updateFilterValue(item.codeFilter, newVal ? newVal.toISOString() : '')
-          }
+          onChange={handleChange}
+          minDateTime={minDateTime}
+          maxDateTime={maxDateTime}
+          disabled={disabled}
+          minutesStep={minutesStep}
           slotProps={{
-            textField: { fullWidth: true, size: 'small', variant: 'outlined' },
+            textField: {
+              fullWidth: true,
+              size: 'small',
+              variant: 'outlined',
+            },
 
             // No es muy atractivo el scroll default...
             desktopPaper: {
