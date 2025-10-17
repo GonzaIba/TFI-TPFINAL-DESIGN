@@ -9,6 +9,7 @@ import type { RequestHelpResponse } from "@/lib/types/forum";
 import { useEffect, useMemo, useState } from "react";
 import { Trophy } from "lucide-react";
 import HandshakeIcon from '@mui/icons-material/Handshake';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { parseApiUtc, formatLocalSlot } from '@/lib/utils/datetime';
 import useLiveHelpStore from '@/store/slices/liveHelpStore/liveHelpStore';
 import { RequestAlertBadge } from "@/components/alerts/alertsLayer";
@@ -59,6 +60,13 @@ export function RequestHelpCard({ item, hideOwnerAvatar = false, badges = [] }: 
   const remainingMs = Math.max(0, +expires - now);
   const remainingText = formatRemaining(remainingMs);
   const urgency = variantByMs(remainingMs);
+
+  const warningBadge = useMemo(() => {
+    return badges.find((badge) => {
+      const severity = (badge.severity ?? '').toString().toLowerCase();
+      return severity === 'warning' || severity === 'info';
+    });
+  }, [badges]);
 
   // Reactive tilt + glow using framer-motion
   const tiltX = useSpring(0, { stiffness: 260, damping: 20, mass: 0.6 });
@@ -135,19 +143,6 @@ export function RequestHelpCard({ item, hideOwnerAvatar = false, badges = [] }: 
       onMouseLeave={onMouseLeave}
       onClick={onCardClick}
     >
-      {badges.length > 0 && (
-        <div className={styles.alertBadges} aria-live="polite" role="status">
-          {badges.map((badge) => (
-            <span
-              key={badge.id}
-              className={styles.alertBadge}
-              title={badge.message ?? badge.label}
-            >
-              {truncateBadgeLabel(badge.label)}
-            </span>
-          ))}
-        </div>
-      )}
       <div className={`${styles.flipContainer} ${flipped ? styles.flipped : ''}`}>
         <div className={styles.front}>
           {/* Top row: avatar (optional) + right panel (timer, reward, button) */}
@@ -177,31 +172,45 @@ export function RequestHelpCard({ item, hideOwnerAvatar = false, badges = [] }: 
         </div> */}
 
         <div className={styles.rightPanel}>
-          <div className={styles.timerAndReward}>
-
-            <ExpiryTimer
-              expiresAt={expires}
-              startedAt={created}
-              size={34}
-              onExpire={() => {
-                // opcional: invalidar query, marcar como expirada, etc.
-                // console.log('expired', item.titleHelp);
-              }}
-            />
-            <div className={styles.rewardBadge}>
-              <Trophy size={16} className={styles.trophy} />
-              <span className={styles.regard}>{item.regard.toFixed(2)}</span>
+          {warningBadge && (
+            <div
+              className={styles.alertInline}
+              aria-live="polite"
+              role="status"
+              title={warningBadge.message ?? warningBadge.label}
+            >
+              <WarningAmberIcon fontSize="small" className={styles.alertInlineIcon} />
+              <span className={styles.alertInlineText}>
+                {truncateBadgeLabel(warningBadge.label || warningBadge.message || '')}
+              </span>
             </div>
-          </div>
-          {/* Evitar flip al clickear el botn */}
-          <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
-            <Button 
-              onClick={openDetail}
-              icon={<HandshakeIcon />}
-              circular
-              ariaLabel="Ofrecer ayuda"
-              title="Ofrecer ayuda"
-            />
+          )}
+          <div className={styles.actionCluster}>
+            <div className={styles.timerAndReward}>
+              <ExpiryTimer
+                expiresAt={expires}
+                startedAt={created}
+                size={34}
+                onExpire={() => {
+                  // opcional: invalidar query, marcar como expirada, etc.
+                  // console.log('expired', item.titleHelp);
+                }}
+              />
+              <div className={styles.rewardBadge}>
+                <Trophy size={16} className={styles.trophy} />
+                <span className={styles.regard}>{item.regard.toFixed(2)}</span>
+              </div>
+            </div>
+            {/* Evitar flip al clickear el botn */}
+            <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+              <Button 
+                onClick={openDetail}
+                icon={<HandshakeIcon />}
+                circular
+                ariaLabel="Ofrecer ayuda"
+                title="Ofrecer ayuda"
+              />
+            </div>
           </div>
         </div>
       </div>

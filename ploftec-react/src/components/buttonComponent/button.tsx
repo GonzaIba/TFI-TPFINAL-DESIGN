@@ -11,7 +11,7 @@ import {
   Zoom,
   Fade,
 } from '@mui/material';
-import React from 'react';
+import React, { forwardRef } from 'react';
 
 interface ButtonPloftecProps {
   text?: string;
@@ -32,6 +32,10 @@ interface ButtonPloftecProps {
   ariaLabel?: string;
   /** Título nativo (title attribute) para tooltip simple */
   title?: string;
+  /** Identificador opcional */
+  id?: string;
+  /** Tipo del botón (submit/reset/button) */
+  type?: 'button' | 'submit' | 'reset';
 }
 
 interface TooltipOptions {
@@ -43,23 +47,28 @@ interface TooltipOptions {
   arrow?: boolean;
 }
 
-export default function ButtonPloftec({
-  text = '',
-  onClick,
-  icon,
-  loading = false,
-  disabled = false,
-  circular = false,
-  width = '170px',
-  height = '45px',
-  borderRadius = '5px',
-  transparent = false,
-  backgroundColor = Colors.primary,
-  tooltipOptions,
-  children,
-  ariaLabel,
-  title,
-}: ButtonPloftecProps) {
+const ButtonPloftec = forwardRef<HTMLButtonElement, ButtonPloftecProps>(function ButtonPloftec(
+  {
+    text = '',
+    onClick,
+    icon,
+    loading = false,
+    disabled = false,
+    circular = false,
+    width = '170px',
+    height = '45px',
+    borderRadius = '5px',
+    transparent = false,
+    backgroundColor = Colors.primary,
+    tooltipOptions,
+    children,
+    ariaLabel,
+    title,
+    id,
+    type = 'button',
+  },
+  ref,
+) {
   const {
     title: tooltipTitle,
     placement = 'bottom',
@@ -74,6 +83,9 @@ export default function ButtonPloftec({
 
   const buttonContent = (
     <ButtonMui
+      ref={ref}
+      id={id}
+      type={type}
       onClick={onClick}
       disabled={disabled || loading}
       aria-label={ariaLabel}
@@ -108,7 +120,6 @@ export default function ButtonPloftec({
       {loading ? (
         <CircularProgress size={24} sx={{ color: 'inherit' }} />
       ) : (
-        // Si children existe, lo usamos tal cual. Si no, usamos el layout original.
         children ?? (
           <Stack
             direction="row"
@@ -148,4 +159,6 @@ export default function ButtonPloftec({
   ) : (
     buttonContent
   );
-}
+});
+
+export default ButtonPloftec;

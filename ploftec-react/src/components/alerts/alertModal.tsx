@@ -4,6 +4,8 @@ import React, { useCallback, useId } from 'react';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import { ForumAlert } from '@/lib/types/alerts';
+import { Button } from '@/components';
+import { Colors } from '@/theme/colors';
 import styles from './alertModal.module.css';
 
 type AlertModalProps = {
@@ -82,23 +84,25 @@ export function AlertModal({
 
       <footer className={styles.actions}>
         {alert.cta?.href && (
-          <button
-            type="button"
-            className={`${styles.button} ${styles.primary}`}
-            onClick={onPrimary}
+          <Button
             ref={assignPrimary}
-          >
-            {alert.cta.label}
-          </button>
+            onClick={onPrimary}
+            text={alert.cta.label}
+            width="auto"
+            height="44px"
+            ariaLabel={alert.cta.label}
+          />
         )}
-        <button
-          type="button"
-          className={`${styles.button} ${styles.secondary}`}
-          onClick={onClose}
+        <Button
           ref={assignFallback}
-        >
-          Cerrar
-        </button>
+          onClick={onClose}
+          text="Cerrar"
+          width="auto"
+          height="44px"
+          transparent
+          backgroundColor={Colors.primary}
+          ariaLabel="Cerrar alerta"
+        />
       </footer>
     </div>
   );
