@@ -44,7 +44,7 @@ type RequestBadgesState = Record<string, RequestAlertBadge[]>;
 
 const POLL_INTERVAL_MS = 55000;
 const MODAL_SEVERITIES = new Set(['critical', 'high']);
-const BADGE_SEVERITIES = new Set(['warning', 'info']);
+const BADGE_SEVERITIES = new Set(['high', 'warning', 'info']);
 const FALLBACK_MODAL_TYPES = new Set(['meeting_live', 'meeting_soon', 'no_slots']);
 
 function normalize(value: unknown): string {
@@ -72,9 +72,14 @@ function shouldDisplayAsModal(alert: ForumAlert): boolean {
 }
 
 function shouldDisplayAsBadge(alert: ForumAlert, isModalCandidate: boolean): boolean {
-  if (isModalCandidate) return false;
   const severity = normalize(alert.severity);
-  return BADGE_SEVERITIES.has(severity);
+  if (!BADGE_SEVERITIES.has(severity)) {
+    return false;
+  }
+  if (severity === 'high') {
+    return true;
+  }
+  return !isModalCandidate;
 }
 
 function extractRequestCodes(alert: ForumAlert): string[] {

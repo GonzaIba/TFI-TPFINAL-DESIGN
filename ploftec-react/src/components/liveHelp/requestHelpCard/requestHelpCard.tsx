@@ -61,10 +61,10 @@ export function RequestHelpCard({ item, hideOwnerAvatar = false, badges = [] }: 
   const remainingText = formatRemaining(remainingMs);
   const urgency = variantByMs(remainingMs);
 
-  const warningBadge = useMemo(() => {
+  const visibleBadge = useMemo(() => {
     return badges.find((badge) => {
       const severity = (badge.severity ?? '').toString().toLowerCase();
-      return severity === 'warning' || severity === 'info';
+      return severity === 'high' || severity === 'warning' || severity === 'info';
     });
   }, [badges]);
 
@@ -172,16 +172,16 @@ export function RequestHelpCard({ item, hideOwnerAvatar = false, badges = [] }: 
         </div> */}
 
         <div className={styles.rightPanel}>
-          {warningBadge && (
+          {visibleBadge && (
             <div
               className={styles.alertInline}
               aria-live="polite"
               role="status"
-              title={warningBadge.message ?? warningBadge.label}
+              title={visibleBadge.message ?? visibleBadge.label}
             >
               <WarningAmberIcon fontSize="small" className={styles.alertInlineIcon} />
               <span className={styles.alertInlineText}>
-                {truncateBadgeLabel(warningBadge.label || warningBadge.message || '')}
+                {truncateBadgeLabel(visibleBadge.message || visibleBadge.label || '')}
               </span>
             </div>
           )}
