@@ -1,4 +1,3 @@
-// src/components/liveHelp/myRequestHelpFeed/myRequestHelpFeed.tsx
 "use client";
 
 import { memo, useState } from "react";
@@ -11,7 +10,11 @@ import { useAlertsLayer } from "@/components/alerts/alertsLayer";
 import styles from "../requestHelpFeed/requestHelpFeed.module.css";
 import { Plus } from "lucide-react";
 
-type Props = { enabled?: boolean };
+type Props = {
+  enabled?: boolean;
+  isAuthenticated?: boolean;
+  isAuthLoaded?: boolean;
+};
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } };
 const itemVariant = {
@@ -20,14 +23,21 @@ const itemVariant = {
   exit: { opacity: 0, y: 10, scale: 0.98 },
 };
 
-function MyRequestHelpFeedInner({ enabled = true }: Props) {
+function MyRequestHelpFeedInner({ enabled = true, isAuthenticated = true, isAuthLoaded = true }: Props) {
   const { data: items = [], isLoading, isError, error } = useMyRequestsHelp(enabled);
   const { getBadgesForRequest } = useAlertsLayer();
+  const showSkeletons =
+    items.length === 0 &&
+    (
+      (enabled && isLoading) ||
+      (!enabled && !isAuthLoaded) ||
+      (!enabled && isAuthenticated)
+    );
 
   if (isError) {
     return (
       <div className={styles.error}>
-        Ocurrió un error al cargar tus solicitudes: {(error as Error)?.message}
+        Ocurrio un error al cargar tus solicitudes: {(error as Error)?.message}
       </div>
     );
   }
@@ -35,11 +45,11 @@ function MyRequestHelpFeedInner({ enabled = true }: Props) {
   return (
     <section className={styles.feed}>
       <motion.div className={styles.grid} variants={container} initial="hidden" animate="show">
-        {/* Crear solicitud de ayuda (en esta sección) */}
-        <CreateHelpCard />
+        {/* Crear solicitud de ayuda (en esta seccion) */}
+        <CreateHelpCard requiresLogin={!isAuthenticated} />
 
         {/* Skeletons */}
-        {((isLoading || !enabled) && items.length === 0) &&
+        {showSkeletons &&
           Array.from({ length: 2 }).map((_, i) => (
             <div key={`my-sk-${i}`} className={styles.cardWrap}>
               <div className={styles.skeleton} />
@@ -52,9 +62,7 @@ function MyRequestHelpFeedInner({ enabled = true }: Props) {
             items.map((it, i) => {
               const requestCode =
                 (it as any).CodeRequestHelp ?? (it as any).codeRequestHelp;
-              const badges = requestCode
-                ? getBadgesForRequest(requestCode)
-                : [];
+              const badges = requestCode ? getBadgesForRequest(requestCode) : [];
               return (
                 <motion.div
                   key={`my-${it.titleHelp}-${it.createdAt}-${i}`}
@@ -72,20 +80,18 @@ function MyRequestHelpFeedInner({ enabled = true }: Props) {
             })}
         </AnimatePresence>
       </motion.div>
-
-      {/* No hay paginado en 'mis solicitudes' */}
     </section>
   );
 }
 
 export const MyRequestHelpFeed = memo(MyRequestHelpFeedInner);
 
-function CreateHelpCard() {
+function CreateHelpCard({ requiresLogin = false }: { requiresLogin?: boolean }) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const sp = useSearchParams();
   const qs = sp.toString();
-  const target = `/forum/liveHelp/new${qs ? `?${qs}` : ''}`;
+  const target = requiresLogin ? "/login" : `/forum/liveHelp/new${qs ? `?${qs}` : ""}`;
 
   const tiltX = useSpring(0, { stiffness: 260, damping: 20, mass: 0.6 });
   const tiltY = useSpring(0, { stiffness: 260, damping: 20, mass: 0.6 });

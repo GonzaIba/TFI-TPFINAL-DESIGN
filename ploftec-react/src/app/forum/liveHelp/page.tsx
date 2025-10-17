@@ -15,6 +15,7 @@ import { X } from 'lucide-react';
 import SearchIcon from '@mui/icons-material/Search';
 import { GroupEnum } from '@/lib/types/enum';
 import { Colors } from '@/theme/colors';
+import useAuthStore from '@/store/slices/authStore/authStore';
 
 const container = {
   hidden: {},
@@ -41,8 +42,12 @@ export default function LiveHelpPage() {
   const [hasMore, setHasMore] = useState(false);
   const [refreshCounter, setRefreshCounter] = useState(0);
   const [feedEnabled, setFeedEnabled] = useState(false);
+  const isAuthLoaded = useAuthStore((state) => state.isAuthLoaded);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-  const handleManageFilters = async () => setShowHelpFilters(p => !p);
+  const handleManageFilters = () => {
+    setShowHelpFilters((p) => !p);
+  };
 
   const applySearch = () => {
     const q = queryInput.trim();
@@ -71,6 +76,7 @@ export default function LiveHelpPage() {
   ], []);
 
   const handleSaveUserFilters = async (valuePairs: Record<number, string>) => {
+    if (!isAuthenticated) return;
     const filtered = Object.fromEntries(
       Object.entries(valuePairs).filter(([_, v]) => v.trim() !== '')
     )
@@ -83,6 +89,7 @@ export default function LiveHelpPage() {
   }
 
   const handleResetearFiltros = async () => {
+    if (!isAuthenticated) return;
     if (userFilters.length > 0) {
       await filtrosService.deleteAllFiltersUser(`${GroupEnum.ForumRequestHelp}`)
       const filtrosActualizados = (await filtrosService.getFilterUser(GroupEnum.ForumRequestHelp)).data
@@ -94,6 +101,7 @@ export default function LiveHelpPage() {
   }
 
   const handleEliminarFiltro = async (codigoFiltro: number) => {
+    if (!isAuthenticated) return;
     await filtrosService.deleteFilterUser(codigoFiltro)
     const filtrosActualizados = (await filtrosService.getFilterUser(GroupEnum.ForumRequestHelp)).data
     setUserFilters(filtrosActualizados ?? [])
@@ -102,14 +110,19 @@ export default function LiveHelpPage() {
   }
 
   useEffect(() => {
-    if(feedEnabled){
-      const loadFilters = async () => {
-        const filtros = (await filtrosService.getFilterUser(GroupEnum.ForumRequestHelp)).data
-        setUserFilters(filtros ?? [])
-      }
-      loadFilters()
+    if (!feedEnabled || !isAuthLoaded) return;
+
+    if (!isAuthenticated) {
+      setUserFilters([]);
+      return;
     }
-  }, [feedEnabled])
+
+    const loadFilters = async () => {
+      const filtros = (await filtrosService.getFilterUser(GroupEnum.ForumRequestHelp)).data;
+      setUserFilters(filtros ?? []);
+    };
+    loadFilters();
+  }, [feedEnabled, isAuthLoaded, isAuthenticated])
 
   const handleCountChange = useCallback((visible: number, more: boolean) => {
     setVisibleCount(visible);
@@ -172,7 +185,11 @@ export default function LiveHelpPage() {
         {/* Mis solicitudes de ayuda */}
         <h2 className={styles.sectionTitle}>Mis solicitudes de ayuda</h2>
         <div className={styles.mySectionContainer}>
-          <MyRequestHelpFeed enabled={feedEnabled} />
+          <MyRequestHelpFeed
+            enabled={feedEnabled && isAuthLoaded && isAuthenticated}
+            isAuthenticated={isAuthenticated}
+            isAuthLoaded={isAuthLoaded}
+          />
         </div>
 
         <div className={styles.filterContainer} style={{ paddingBottom: userFilters.length > 0 ? 0 : 24 }}>

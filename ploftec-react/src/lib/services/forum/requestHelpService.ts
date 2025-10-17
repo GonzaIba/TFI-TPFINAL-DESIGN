@@ -29,6 +29,7 @@ export const requestHelpService = {
       method: "GET",
       url: `ApiForum/SolicitudAyuda/ObtenerSolicitudesDeAyuda?${p}`,
       requireCredentials: true,
+      forceLogoutIfException: false,
     });
     return response;
   },
@@ -48,6 +49,7 @@ export const requestHelpService = {
       method: "GET",
       url: `ApiForum/SolicitudAyuda/ObtenerMisSolicitudesDeAyuda`,
       requireCredentials: true,
+      forceLogoutIfException: false,
     });
     return response;
   },

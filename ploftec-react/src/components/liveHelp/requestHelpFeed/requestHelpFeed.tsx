@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { RequestHelpCard } from "@/components/liveHelp/requestHelpCard/requestHelpCard";
 import { useRequestsHelpInfinite } from "@/lib/query/hooks/forum/useRequestHelp";
 import styles from "./requestHelpFeed.module.css";
+import { Button } from "@/components";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 type Props = {
   pageSize?: number;
@@ -76,14 +78,14 @@ function RequestHelpFeedInner({ pageSize = 9, search, refresh = 0, enabled = tru
       {/* Load more */}
       {hasNextPage && (
         <div className={styles.actions}>
-          <button
-            type="button"
+          <Button
             onClick={() => fetchNextPage()}
+            text={isFetchingNextPage ? "Loading..." : "Load more"}
+            icon={<ExpandMoreIcon fontSize="small" />}
+            loading={isFetchingNextPage}
             disabled={!hasNextPage || isFetchingNextPage}
-            className={styles.loadMore}
-          >
-            {isFetchingNextPage ? "Loading..." : "Load more"}
-          </button>
+            width="150px"
+          />
         </div>
       )}
     </section>
