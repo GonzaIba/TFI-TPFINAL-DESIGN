@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import CloseIcon from '@mui/icons-material/Close';
 import style from './modalComponent.module.css'
@@ -35,6 +35,21 @@ export function ModalComponent ({
   title,
   styles
 }: ModalComponentProps) {
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open, onClose]);
+
   return (
     <AnimatePresence>
       {open && (
@@ -59,6 +74,10 @@ export function ModalComponent ({
             transition={{ duration: 0.25 }}
             onClick={e => e.stopPropagation()}
             style={styles}
+            role="dialog"
+            aria-modal="true"
+            aria-live="assertive"
+            tabIndex={-1}
           >
             {/* Botón de cerrar */}
             {closeIcon && title && (

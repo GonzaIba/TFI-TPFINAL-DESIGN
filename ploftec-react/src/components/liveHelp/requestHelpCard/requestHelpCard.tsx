@@ -11,6 +11,7 @@ import { Trophy } from "lucide-react";
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import { parseApiUtc, formatLocalSlot } from '@/lib/utils/datetime';
 import useLiveHelpStore from '@/store/slices/liveHelpStore/liveHelpStore';
+import { RequestAlertBadge } from "@/components/alerts/alertsLayer";
 
 function formatRemaining(ms: number) {
   if (ms <= 0) return "0s";
@@ -28,9 +29,18 @@ function variantByMs(ms: number) {
   return "ok";
 }
 
-type Props = { item: RequestHelpResponse; hideOwnerAvatar?: boolean };
+function truncateBadgeLabel(label: string) {
+  if (!label) return "";
+  return label.length > 60 ? `${label.slice(0, 57)}…` : label;
+}
 
-export function RequestHelpCard({ item, hideOwnerAvatar = false }: Props) {
+type Props = {
+  item: RequestHelpResponse;
+  hideOwnerAvatar?: boolean;
+  badges?: RequestAlertBadge[];
+};
+
+export function RequestHelpCard({ item, hideOwnerAvatar = false, badges = [] }: Props) {
   const router = useRouter();
   const sp = useSearchParams();
   const qs = sp.toString();
@@ -125,6 +135,19 @@ export function RequestHelpCard({ item, hideOwnerAvatar = false }: Props) {
       onMouseLeave={onMouseLeave}
       onClick={onCardClick}
     >
+      {badges.length > 0 && (
+        <div className={styles.alertBadges} aria-live="polite" role="status">
+          {badges.map((badge) => (
+            <span
+              key={badge.id}
+              className={styles.alertBadge}
+              title={badge.message ?? badge.label}
+            >
+              {truncateBadgeLabel(badge.label)}
+            </span>
+          ))}
+        </div>
+      )}
       <div className={`${styles.flipContainer} ${flipped ? styles.flipped : ''}`}>
         <div className={styles.front}>
           {/* Top row: avatar (optional) + right panel (timer, reward, button) */}

@@ -78,13 +78,24 @@ export const apiBaseService = {
 
       return res.data;
     } catch (error: any) {
+      const status = error?.response?.status;
+      if (status === 401 || status === 403) {
+        try {
+          const { clearUser, setAuthLoaded, isAuthenticated } = useAuthStore.getState();
+          if (isAuthenticated) {
+            clearUser();
+          }
+          setAuthLoaded();
+        } catch {}
+      }
 
       if (error.response?.data?.errors?.errorsList?.some((e: ExceptionBase) => e.nameError === "InvalidTokenException")) {
         // En caso de token inválido, limpiamos el estado de autenticación
         // y NO redirigimos automáticamente. El layout mostrará login/registro.
         try {
-          const { clearUser } = useAuthStore.getState();
+          const { clearUser, setAuthLoaded } = useAuthStore.getState();
           clearUser();
+          setAuthLoaded();
         } catch {}
         
         if (req.forceLogoutIfException !== false) {

@@ -1,7 +1,7 @@
 // src/app/forum/layout.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { getUserDetails, logout } from '@/lib/services/auth/authenticationService';
 import { usuariosForoService } from '@/lib/services/forum/usuariosForoService';
@@ -22,6 +22,7 @@ import { Chatbot, Input, SkeletonLine, AvatarUser, Loading, NotificationDropdown
 import { RobotIntro } from '@/components/chatbotComponent/robotIntro/robotIntro';
 import { publicationsService } from '@/lib/services/forum/publicationsService';
 import { NewNotificationEvent, RemoveNotificationEvent } from '@/lib/types/events';
+import { AlertsLayer } from '@/components/alerts/alertsLayer';
 
 export default function ForumLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -36,22 +37,25 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-  const newNotificationAdded = (d: NewNotificationEvent) => {
+  const newNotificationAdded = useCallback((d: NewNotificationEvent) => {
     setUserNotifications(prev => [d, ...(prev ?? [])]);
-  }
+  }, []);
 
-  const notificationRemoved = (d: RemoveNotificationEvent) => {
+  const notificationRemoved = useCallback((d: RemoveNotificationEvent) => {
     setUserNotifications(prev =>
       prev ? prev.filter(n => n.codeNotification !== d.codeNotification) : null
-    )
-  }
+    );
+  }, []);
 
-  const connectionId = isAuthenticated ? 
-    useNotificationSignalR({
+  const notificationHandlers = useMemo(() => {
+    if (!isAuthenticated) return null;
+    return {
       onNewNotificationAdded: newNotificationAdded,
       onNotificationRemoved: notificationRemoved,
-    })
-    : undefined;
+    };
+  }, [isAuthenticated, newNotificationAdded, notificationRemoved]);
+
+  const connectionId = useNotificationSignalR(notificationHandlers);
 
   console.log("LAYOUT page:");
 
@@ -170,7 +174,8 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
   };
 
   return (
-    <div className="forum">
+    <AlertsLayer>
+      <div className="forum">
       {showIntro && <RobotIntro onComplete={handleIntroComplete} />}
       <Loading show={isLoading} />
       <nav className="navBar">
@@ -179,7 +184,9 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
           <label htmlFor="click" className="menu-btn">
             <i className="fas fa-bars"></i>
           </label>
-          <div className="logo">PLOFTEC</div>
+          <div className="logo">
+            <h3>PLOFTEC</h3>
+          </div>
           <div className="align-items-lg-start searchContainer">
             <Input
               placeHolder="Escriba algo..."
@@ -257,6 +264,7 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
 
       {<Chatbot showRobot={showRobot}></Chatbot>}    
       <Footer />
-    </div>
+      </div>
+    </AlertsLayer>
   );
 }

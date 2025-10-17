@@ -1,4 +1,4 @@
-// src/hooks/usePublicationSignalR.ts
+// src/hooks/signalR/useNotificationSignalR.ts
 import { useEffect, useRef, useState } from 'react';
 import { NewNotificationEvent, RemoveNotificationEvent } from '@/lib/types/events';
 import * as signalR from '@microsoft/signalr';
@@ -10,31 +10,41 @@ interface NotificationSignalRProps {
 }
 
 export function useNotificationSignalR(props: NotificationSignalRProps | null): string | null {
-  const connectionRef   = useRef<signalR.HubConnection | null>(null);
-  const roomIdRef       = useRef<string | null>(null);
+  const connectionRef = useRef<signalR.HubConnection | null>(null);
+  const handlersRef = useRef<NotificationSignalRProps | null>(props);
   const [connId, setConnId] = useState<string | null>(null);
 
-  useEffect(() => {
-    //if (!props) return;
+  handlersRef.current = props;
 
-    if (connectionRef.current) return;
+  useEffect(() => {
+    let isActive = true;
 
     const cleanupPrev = async () => {
-      if (connectionRef.current) {
-        try {
-          if (connectionRef.current.state === signalR.HubConnectionState.Connected) {
-            await connectionRef.current.invoke('LeavePublicationRoom', roomIdRef.current);
-          }
-        } finally {
-          await connectionRef.current.stop();
-          connectionRef.current = null;
-          roomIdRef.current     = null;
-          setConnId(null);
-        }
+      const connection = connectionRef.current;
+      if (!connection) return;
+
+      try {
+        await connection.stop();
+      } catch {}
+      finally {
+        connectionRef.current = null;
+        setConnId(null);
       }
     };
 
-    cleanupPrev().then(() => {
+    if (!handlersRef.current) {
+      // No debemos estar conectados → aseguramos cleanup.
+      void cleanupPrev();
+      return () => {
+        isActive = false;
+        void cleanupPrev();
+      };
+    }
+
+    const startConnection = async () => {
+      await cleanupPrev();
+      if (!isActive) return;
+
       const conn = new signalR.HubConnectionBuilder()
         .withUrl('https://localhost:44352/hubs/notifications', { withCredentials: true })
         .withAutomaticReconnect([0, 2000, 5000, 10000])
@@ -43,22 +53,35 @@ export function useNotificationSignalR(props: NotificationSignalRProps | null): 
 
       connectionRef.current = conn;
 
-      conn.on('newNotificationAdded', d => {
-        props?.onNewNotificationAdded(d)
+      conn.on('newNotificationAdded', (d: NewNotificationEvent) => {
+        handlersRef.current?.onNewNotificationAdded?.(d);
       });
 
-      conn.on('notificationRemoved', d => {
-        props?.onNotificationRemoved(d)
+      conn.on('notificationRemoved', (d: RemoveNotificationEvent) => {
+        handlersRef.current?.onNotificationRemoved?.(d);
       });
 
-      conn.start()
-        .then(() => conn.invoke('JoinNotificationRoom'))
-        .then(() => setConnId(conn.connectionId))        //  🆕  ← aquí tenés el id
-        .catch(err => console.error('❌ Negotiation error', err));
-    });
+      try {
+        await conn.start();
+        await conn.invoke('JoinNotificationRoom');
+        if (!isActive) {
+          await cleanupPrev();
+          return;
+        }
+        setConnId(conn.connectionId ?? null);
+      } catch (err) {
+        console.error('❌ Notification hub negotiation error', err);
+        await cleanupPrev();
+      }
+    };
 
-    return () => { cleanupPrev(); };
-  }, []);
+    void startConnection();
+
+    return () => {
+      isActive = false;
+      void cleanupPrev();
+    };
+  }, [Boolean(props)]);
 
   return connId;
 }

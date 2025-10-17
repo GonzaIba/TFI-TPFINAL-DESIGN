@@ -7,6 +7,7 @@ import { motion, AnimatePresence, useSpring, useMotionValue, useMotionTemplate }
 import { RequestHelpCard } from "@/components/liveHelp/requestHelpCard/requestHelpCard";
 import { useMyRequestsHelp } from "@/lib/query/hooks/forum/useRequestHelp";
 import { Loading } from "@/components";
+import { useAlertsLayer } from "@/components/alerts/alertsLayer";
 import styles from "../requestHelpFeed/requestHelpFeed.module.css";
 import { Plus } from "lucide-react";
 
@@ -21,6 +22,7 @@ const itemVariant = {
 
 function MyRequestHelpFeedInner({ enabled = true }: Props) {
   const { data: items = [], isLoading, isError, error } = useMyRequestsHelp(enabled);
+  const { getBadgesForRequest } = useAlertsLayer();
 
   if (isError) {
     return (
@@ -47,11 +49,27 @@ function MyRequestHelpFeedInner({ enabled = true }: Props) {
         {/* Mis Cards */}
         <AnimatePresence initial={false}>
           {!isLoading &&
-            items.map((it, i) => (
-              <motion.div key={`my-${it.titleHelp}-${it.createdAt}-${i}`} className={styles.cardWrap} variants={itemVariant} layout>
-                <RequestHelpCard item={it} hideOwnerAvatar />
-              </motion.div>
-            ))}
+            items.map((it, i) => {
+              const requestCode =
+                (it as any).CodeRequestHelp ?? (it as any).codeRequestHelp;
+              const badges = requestCode
+                ? getBadgesForRequest(requestCode)
+                : [];
+              return (
+                <motion.div
+                  key={`my-${it.titleHelp}-${it.createdAt}-${i}`}
+                  className={styles.cardWrap}
+                  variants={itemVariant}
+                  layout
+                >
+                  <RequestHelpCard
+                    item={it}
+                    hideOwnerAvatar
+                    badges={badges}
+                  />
+                </motion.div>
+              );
+            })}
         </AnimatePresence>
       </motion.div>
 
