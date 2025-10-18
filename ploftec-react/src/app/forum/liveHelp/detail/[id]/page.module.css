@@ -171,3 +171,7 @@
 .modalWrap { padding: 14px; }
 .modalActions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
 .policy { color: #9f9f9f; font-size: 12px; margin-top: 6px; }
+.successModal { display: flex; flex-direction: column; gap: 16px; padding: 18px 12px 12px; text-align: center; color: #e7e7e7; }
+.successTitle { margin: 0; font-size: 20px; color: #ffffff; }
+.successMessage { margin: 0; font-size: 14px; color: #cfcfcf; line-height: 1.45; }
+.successActions { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }

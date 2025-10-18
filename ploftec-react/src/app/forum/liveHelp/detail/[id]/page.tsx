@@ -3,7 +3,7 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import styles from "./page.module.css";
-import { AvatarUser, Button, ExpiryTimer, Loading, DateTime } from "@/components";
+import { AvatarUser, Button, ExpiryTimer, Loading, DateTime, ModalComponent } from "@/components";
 import { Trophy, AlertCircle, CheckCheck, Clock, XCircle } from "lucide-react";
 import ArrowBack from "@mui/icons-material/ArrowBack";
 import { parseApiUtc, formatLocalSlot } from "@/lib/utils/datetime";
@@ -12,6 +12,7 @@ import type {
   ChatMessageResponse,
   RequestHelpDetailResponse,
   HelpRequestChatDetailResponse,
+  HelpTimeSlot
 } from "@/lib/types/forum";
 import useSnackBarStore from "@/store/slices/snackBarStore/snackbarStore";
 import useLiveHelpStore from "@/store/slices/liveHelpStore/liveHelpStore";
@@ -21,9 +22,7 @@ import { liveHelpChatService } from "@/lib/services/forum/liveHelpChatService";
 import { requestHelpService } from "@/lib/services/forum/requestHelpService";
 import { useLiveHelpChatSignalR } from "@/hooks";
 
-type Slot = { start: string; end: string };
-
-type EditableSlot = { start: Date | null; end: Date | null };
+type EditableSlot = { codeSlot: number | null; start: Date | null; end: Date | null };
 
 const SLOT_MINUTES = [15, 30];
 
@@ -191,12 +190,14 @@ export default function LiveHelpDetailByIdPage() {
   const userEmail = useMemo(() => auth?.email?.toLowerCase() ?? null, [auth?.email]);
 
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
-  const [editableSlots, setEditableSlots] = useState<EditableSlot[]>([{ start: null, end: null }]);
+  const [editableSlots, setEditableSlots] = useState<EditableSlot[]>([{codeSlot: null, start: null, end: null }]);
   const [slotsSaving, setSlotsSaving] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
   const ownerHasValidSlot = useMemo(() => editableSlots.some(isEditableSlotValid), [editableSlots]);
 
-  const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<HelpTimeSlot | null>(null);
+  const [confirmingSlot, setConfirmingSlot] = useState(false);
+  const [showConfirmSuccess, setShowConfirmSuccess] = useState(false);
 
   const [chatInput, setChatInput] = useState("");
   const [chat, setChat] = useState<ChatMsg[]>([]);
@@ -326,13 +327,13 @@ export default function LiveHelpDetailByIdPage() {
   };
 
   const handleOwnerAddSlot = () => {
-    setEditableSlots((prev) => [...prev, { start: null, end: null }]);
+    setEditableSlots((prev) => [...prev, { codeSlot: null, start: null, end: null }]);
   };
 
   const handleOwnerRemoveSlot = (index: number) => {
     setEditableSlots((prev) => {
       const next = prev.filter((_, idx) => idx !== index);
-      const normalized = next.length > 0 ? next : [{ start: null, end: null }];
+      const normalized = next.length > 0 ? next : [{codeSlot: null, start: null, end: null }];
       if (slotsError) {
         const valid = normalized.some(isEditableSlotValid);
         if (valid) setSlotsError(null);
@@ -353,6 +354,7 @@ export default function LiveHelpDetailByIdPage() {
     setSlotsSaving(true);
     try {
       const payloadSlots = validSlots.map((slot) => ({
+        codeSlot: slot.codeSlot as number,
         start: slot.start!.toISOString(),
         end: slot.end!.toISOString(),
       }));
@@ -372,6 +374,7 @@ export default function LiveHelpDetailByIdPage() {
 
       setEditableSlots(
         payloadSlots.map((slot) => ({
+          codeSlot: slot.codeSlot as number,
           start: new Date(slot.start),
           end: new Date(slot.end),
         }))
@@ -385,6 +388,35 @@ export default function LiveHelpDetailByIdPage() {
       setSlotsSaving(false);
     }
   };
+
+  const handleConfirmSlot = useCallback(async () => {
+    if (!selectedSlot) {
+      showToast({ message: "Seleccioná un horario antes de confirmar", variant: "warning" });
+      return;
+    }
+    if (!idParam) return;
+    setConfirmingSlot(true);
+    try {
+      const res = await requestHelpService.confirmHelpRequest({
+        codeRequestHelp: idParam,
+        timeSlot: {
+          codeSlot: selectedSlot.codeSlot,
+          start: selectedSlot.start,
+          end: selectedSlot.end,
+        },
+      });
+      if (res?.data?.success) {
+        setShowConfirmSuccess(true);
+      } else {
+        showToast({ message: "No pude confirmar la solicitud", variant: "error" });
+      }
+    } catch (error) {
+      console.error("confirm slot failed", error);
+      showToast({ message: "No pude confirmar la solicitud", variant: "error" });
+    } finally {
+      setConfirmingSlot(false);
+    }
+  }, [idParam, selectedSlot, showToast]);
 
   useEffect(() => {
     if (!enterLoading && isOwner === null) {
@@ -454,14 +486,15 @@ export default function LiveHelpDetailByIdPage() {
     if (isOwner !== true) return;
     const rawSlots = request?.timeSlot?.slots ?? [];
     if (!rawSlots.length) {
-      setEditableSlots([{ start: null, end: null }]);
+      setEditableSlots([{ codeSlot: null, start: null, end: null }]);
       return;
     }
     const mapped = rawSlots.map((slot) => ({
+      codeSlot: slot.codeSlot as number,
       start: toDateOrNull(slot.start),
       end: toDateOrNull(slot.end),
     }));
-    setEditableSlots(mapped.length ? mapped : [{ start: null, end: null }]);
+    setEditableSlots(mapped.length ? mapped : [{ codeSlot: null, start: null, end: null }]);
   }, [isOwner, request?.timeSlot]);
 
   useEffect(() => {
@@ -650,8 +683,14 @@ export default function LiveHelpDetailByIdPage() {
     setTimeout(() => router.push("/forum/liveHelp"), 600);
   };
 
+  const handleCloseConfirmModal = () => {
+    setShowConfirmSuccess(false);
+    onBack();
+  };
+
   return (
-    <main className={styles.container}>
+    <>
+      <main className={styles.container}>
       <Loading show={loading} />
       <div className={styles.headerBar}>
         <Button onClick={onBack} text="Volver" icon={<ArrowBack />} />
@@ -985,7 +1024,13 @@ export default function LiveHelpDetailByIdPage() {
                     )}
                   </div>
                   <div className={styles.confirmWrap}>
-                    <Button onClick={() => {}} width="100%" text="Confirmar" />
+                    <Button
+                      onClick={handleConfirmSlot}
+                      width="100%"
+                      text="Confirmar"
+                      loading={confirmingSlot}
+                      disabled={confirmingSlot || !selectedSlot}
+                    />
                   </div>
                 </>
               )}
@@ -994,5 +1039,22 @@ export default function LiveHelpDetailByIdPage() {
         </aside>
       </div>
     </main>
-  )
+    <ModalComponent
+      open={showConfirmSuccess}
+      onClose={handleCloseConfirmModal}
+      closeIcon={false}
+      styles={{ width: "min(90vw, 420px)", maxWidth: "420px" }}
+    >
+      <div className={styles.successModal}>
+        <h3 className={styles.successTitle}>Solicitud confirmada</h3>
+        <p className={styles.successMessage}>
+          Confirmaste el horario seleccionado. Avisamos al solicitante para coordinar la ayuda.
+        </p>
+        <div className={styles.successActions}>
+          <Button onClick={handleCloseConfirmModal} text="OK" width="100%" />
+        </div>
+      </div>
+    </ModalComponent>
+    </>
+  );
 };

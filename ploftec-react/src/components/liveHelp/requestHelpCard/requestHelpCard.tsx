@@ -202,7 +202,12 @@ export function RequestHelpCard({ item, hideOwnerAvatar = false, badges = [] }: 
               </div>
             </div>
             {/* Evitar flip al clickear el botn */}
-            <div onClick={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+            <div
+              className={styles.helpButtonWrap}
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+            >
               <Button 
                 onClick={openDetail}
                 icon={<HandshakeIcon />}
@@ -231,9 +236,6 @@ export function RequestHelpCard({ item, hideOwnerAvatar = false, badges = [] }: 
               {lang}
             </span>
           ))}
-        </div>
-
-        <div className={styles.tagRow}>
           {(item.labels ?? []).slice(0, 6).map((l) => (
             <span key={l} className={styles.tagChip}>
               {l}

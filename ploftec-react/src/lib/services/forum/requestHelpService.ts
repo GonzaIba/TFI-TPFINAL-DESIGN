@@ -15,6 +15,7 @@ import {
   AnswerResponse,
   RequestHelpResponse,
   CreateHelpRequest,
+  ConfirmHelpRequestPayload,
   RequestHelpDetailResponse,
   UpdateDisponibilityRequest,
 } from "@/lib/types/forum";
@@ -68,6 +69,15 @@ export const requestHelpService = {
     return await apiBaseService.execute<RequestHelpDetailResponse, undefined>({
       method: "GET",
       url: `ApiForum/SolicitudAyuda/${id}/ObtenerDetalleSolicitudAyuda`,
+      requireCredentials: true,
+    });
+  },
+
+  async confirmHelpRequest(payload: ConfirmHelpRequestPayload): Promise<GenericApiResponse<SuccessfulResponse>> {
+    return await apiBaseService.execute<SuccessfulResponse, ConfirmHelpRequestPayload>({
+      method: "POST",
+      url: `ApiForum/SolicitudAyuda/${payload.codeRequestHelp}/ConfirmarSolicitud`,
+      body: payload,
       requireCredentials: true,
     });
   },

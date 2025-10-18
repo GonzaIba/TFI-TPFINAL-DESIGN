@@ -36,6 +36,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .alertInlineIcon {
@@ -47,6 +48,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  display: block;
+  min-width: 0;
 }
 
 /* fancy glow border on hover */
@@ -109,6 +112,10 @@
   align-items: center;
   gap: 12px;
   margin-left: auto;
+}
+
+.helpButtonWrap {
+  display: inline-flex;
 }
 
 /* timer */
@@ -211,6 +218,41 @@
 }
 
 
+/* para que puedan romperse tokens largos y aprovechar todo el ancho */
+.title,
+.description {
+  min-width: 0;              /* clave en layouts con flex/grid */
+  overflow-wrap: anywhere;   /* permite corte en cualquier punto seguro */
+  word-break: break-word;    /* fallback */
+  text-overflow: ellipsis;   /* por si algún UA lo necesita */
+}
+
+/* multi-clamp más consistente (y soporte decente en Firefox) */
+.description {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-height: calc(3 * 1.4em); /* 3 líneas x line-height (ajusta si cambias el line-height) */
+}
+
+/* asegura que contenedores padres no “fijen” el ancho de los textos */
+.topRow,
+.rightPanel,
+.tagsRow,
+.langRow,
+.tagRow {
+  min-width: 0;
+}
+
+.langChip,
+.tagChip {
+  max-width: clamp(84px, 22ch, 160px); /* elegí el rango que te guste */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap; /* ya lo tenés, lo dejo explícito */
+  min-width: 0;        /* por si el contenedor es flex/grid */
+}
 
 
 .langChip, .tagChip { 
@@ -232,14 +274,146 @@
   background-color: #81818F61;
 }
 
-/* responsive tweaks */
+/* 1) el front ocupa toda la altura y apila contenido */
+.front {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 2) el bloque de chips siempre queda visible al pie de la tarjeta */
+.tagsRow {
+  margin-top: auto;   /* empuja los chips hacia abajo */
+  min-width: 0;       /* por si acaso en grid/flex */
+}
+
+/* 3) título más chico y con línea más cerrada (fluido por viewport) */
+.title {
+  font-size: clamp(16px, 4.5vw, 20px); /* antes 20px fijo */
+  line-height: 1.2;
+  margin-top: 8px;                     /* opcional: reduce espacio arriba */
+}
+
+/* 4) descripción: tipografía un poquito menor y clamp adaptable */
+.description {
+  font-size: clamp(13px, 3.6vw, 15px);
+  line-height: 1.35;
+  -webkit-line-clamp: 3;
+  max-height: calc(3 * 1.35em);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* en pantallas chicas recortamos una línea para que entren los chips */
+@media (max-width: 400px) {
+  .description {
+    -webkit-line-clamp: 2;
+    max-height: calc(2 * 1.35em);
+  }
+}
+
+/* ultra angosto (ej. 320–340px): una sola línea */
+@media (max-width: 340px) {
+  .description {
+    -webkit-line-clamp: 1;
+    max-height: calc(1 * 1.35em);
+  }
+}
+
+	
+	/* responsive tweaks */
 @media (max-width: 720px) {
-  .topRow { grid-template-columns: 48px 1fr; }
   .avatar { width: 48px; height: 48px; }
+
+  /* Siempre fila, pero permitimos envolver en 2 líneas */
+  .rightPanel {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* 1ª línea: warning ocupa 100% a la izquierda y trunca con … */
+  .alertInline {
+    order: 1;
+    flex: 1 1 100%;
+    max-width: 100%;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 2ª línea: cluster pegado a la derecha */
+  .actionCluster {
+    order: 2;
+    margin-left: auto;       /* empuja a la derecha */
+    flex: 0 0 auto;
+    gap: 10px;
+    white-space: nowrap;
+  }
+
+  .timerAndReward {
+    flex: 0 0 auto;
+    gap: 8px;
+    flex-wrap: nowrap;       /* que no se corte dentro del cluster */
+  }
+
+  .helpButtonWrap {
+    flex: 0 0 auto;
+  }
+
   /* En móvil, apilar lenguajes arriba y tags debajo */
   .tagsRow { grid-template-columns: 1fr; }
-  .tagRow { justify-content: flex-start; }
+  .tagRow  { justify-content: flex-start; }
 }
+
+
+/* Desktop: warning fijo a la IZQ, resto pegado a la DER */
+@media (min-width: 721px) {
+  .rightPanel {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;  /* por defecto, todo a la derecha */
+    gap: 12px;
+    flex-wrap: nowrap;
+    min-width: 0;
+  }
+
+  /* si existe el warning, lo “ancora” a la izquierda */
+  .alertInline {
+    margin-right: auto;         /* empuja lo demás hacia la derecha */
+    flex: 0 1 auto;
+    max-width: 420px;           /* ajustá si querés más/menos ancho */
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .actionCluster {
+    flex: 0 0 auto;
+    gap: 10px;
+    white-space: nowrap;
+  }
+
+  .timerAndReward {
+    flex: 0 0 auto;
+    gap: 10px;
+  }
+
+  .helpButtonWrap {
+    flex: 0 0 auto;
+  }
+}
+
 
 /* hover lift + subtle tilt */
 .card:hover {

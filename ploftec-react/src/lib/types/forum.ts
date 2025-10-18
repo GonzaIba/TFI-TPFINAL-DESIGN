@@ -206,12 +206,21 @@
     regard: number;
     expiresAt: Date;
     timeSlot?: {
-      slots: { start: string; end: string }[];
+      slots: HelpTimeSlot[];
     };
   };
 
   // Live Help - Create request
-  export type HelpTimeSlot = { start: string; end: string };
+  export type HelpTimeSlot = { 
+    codeSlot: number;
+    start: string; 
+    end: string 
+  };
+
+  export interface ConfirmHelpRequestPayload {
+    codeRequestHelp: number;
+    timeSlot: HelpTimeSlot;
+  }
 
   export interface CreateHelpRequest {
     titleHelp: string;
