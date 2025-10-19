@@ -5,7 +5,7 @@ import styles from './page.module.css';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Button, Grid, GridItem, Input, SideBarFilters, RequestHelpFeed } from '@/components';
+import { Button, Grid, GridItem, Input, SideBarFilters, RequestHelpFeed, RequestHelpConfirmedFeed } from '@/components';
 import { MyRequestHelpFeed } from '@/components/liveHelp/myRequestHelpFeed/myRequestHelpFeed';
 import { UserFilterForumResponse } from '@/lib/types/forum';
 import { filtrosService } from "@/lib/services/forum/filtrosService";
@@ -16,6 +16,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { GroupEnum } from '@/lib/types/enum';
 import { Colors } from '@/theme/colors';
 import useAuthStore from '@/store/slices/authStore/authStore';
+import { useConfirmedHelpRequests } from '@/lib/query/hooks/forum/useRequestHelp';
 
 const container = {
   hidden: {},
@@ -44,6 +45,20 @@ export default function LiveHelpPage() {
   const [feedEnabled, setFeedEnabled] = useState(false);
   const isAuthLoaded = useAuthStore((state) => state.isAuthLoaded);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const { data: confirmedRaw, isLoading: confirmedLoading } = useConfirmedHelpRequests(
+    feedEnabled && isAuthLoaded && isAuthenticated,
+    refreshCounter
+  );
+  const confirmedRequests = useMemo(() => {
+    if (!confirmedRaw) return [];
+    const clone = [...confirmedRaw];
+    const safeTime = (value: string) => {
+      const parsed = Date.parse(value);
+      return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
+    };
+    return clone.sort((a, b) => safeTime(a.initAt) - safeTime(b.initAt));
+  }, [confirmedRaw]);
+  const showConfirmedSection = !confirmedLoading && confirmedRequests.length > 0;
 
   const handleManageFilters = () => {
     setShowHelpFilters((p) => !p);
@@ -181,6 +196,15 @@ export default function LiveHelpPage() {
             </GridItem>
           ))}
         </Grid>
+
+        {showConfirmedSection && (
+          <>
+            <h2 className={styles.sectionTitle}>Confirmadas</h2>
+            <div className={styles.mySectionContainer}>
+              <RequestHelpConfirmedFeed items={confirmedRequests} />
+            </div>
+          </>
+        )}
 
         {/* Mis solicitudes de ayuda */}
         <h2 className={styles.sectionTitle}>Mis solicitudes de ayuda</h2>

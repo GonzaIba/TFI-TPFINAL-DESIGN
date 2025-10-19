@@ -22,6 +22,7 @@ export { LabelCard } from '@/components/forum/labelCard/labelCard'
 export { Grid } from './gridComponent/grid';
 export { GridItem } from './gridComponent/gridItem';
 export { RequestHelpFeed } from '@/components/liveHelp/requestHelpFeed/requestHelpFeed';
+export { RequestHelpConfirmedFeed } from '@/components/liveHelp/requestHelpConfirmedFeed/requestHelpConfirmedFeed';
 export { ExpiryTimer } from '@/components/liveHelp/expiryTimer/expiryTimer';
 export { SideBarFilters } from '@/components/sidebarFiltersComponent/sidebarFilters';
 export { DateTime } from '@/components/dateTimeComponent/dateTimePicker/dateTimePicker';

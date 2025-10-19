@@ -481,3 +481,59 @@
   border-radius: 10px;
   padding: 14px;
 }
+
+.initRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  color: #dcdce3;
+}
+
+.initCountdown {
+  font-size: clamp(16px, 4.5vw, 18px);
+  font-weight: 600;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.initMeta {
+  font-size: 13px;
+  color: #a9a9b3;
+  line-height: 1.35;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid #2a2a2a;
+  background: rgba(21, 21, 21, 0.9);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #dcdcff;
+}
+
+.ownerPill {
+  background: linear-gradient(135deg, rgba(127, 90, 240, 0.18), rgba(44, 182, 125, 0.18));
+  border-color: rgba(127, 90, 240, 0.38);
+  color: #f4f1ff;
+}
+
+.countdownOk {
+  color: #7bd97b;
+}
+
+.countdownWarn {
+  color: #ffd27f;
+}
+
+.countdownDanger {
+  color: #ff8080;
+}

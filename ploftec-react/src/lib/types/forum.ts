@@ -211,15 +211,15 @@
   };
 
   // Live Help - Create request
-  export type HelpTimeSlot = { 
-    codeSlot: number;
-    start: string; 
-    end: string 
+  export type HelpTimeSlot = {
+    start: string;
+    end: string;
+    codeSlot?: number | null;
   };
 
   export interface ConfirmHelpRequestPayload {
     codeRequestHelp: number;
-    timeSlot: HelpTimeSlot;
+    slot: Pick<HelpTimeSlot, "start" | "end">;
   }
 
   export interface CreateHelpRequest {
@@ -269,6 +269,20 @@
   export interface RequestHelpDetailResponse {
     requestHelp: RequestHelpResponse;
     codeChat?: number | null;
+    isOwner: boolean;
+  }
+
+  export interface RequestHelpConfirmedResponse {
+    userCreator: UsersForumPreviewResponse;
+    codeRequestHelp: number;
+    titleHelp: string;
+    message: string;
+    status: string;
+    languages: string[];
+    labels: string[];
+    createdAt: string;
+    regard: number;
+    initAt: string;
     isOwner: boolean;
   }
 

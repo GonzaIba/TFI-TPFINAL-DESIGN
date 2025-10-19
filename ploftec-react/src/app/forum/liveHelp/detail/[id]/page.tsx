@@ -399,13 +399,13 @@ export default function LiveHelpDetailByIdPage() {
     try {
       const res = await requestHelpService.confirmHelpRequest({
         codeRequestHelp: idParam,
-        timeSlot: {
-          codeSlot: selectedSlot.codeSlot,
+        slot: {
           start: selectedSlot.start,
           end: selectedSlot.end,
         },
       });
       if (res?.data?.success) {
+        await queryClient.invalidateQueries({ queryKey: ["livehelp", "confirmed-requests"] });
         setShowConfirmSuccess(true);
       } else {
         showToast({ message: "No pude confirmar la solicitud", variant: "error" });
@@ -416,7 +416,7 @@ export default function LiveHelpDetailByIdPage() {
     } finally {
       setConfirmingSlot(false);
     }
-  }, [idParam, selectedSlot, showToast]);
+  }, [idParam, selectedSlot, showToast, queryClient]);
 
   useEffect(() => {
     if (!enterLoading && isOwner === null) {

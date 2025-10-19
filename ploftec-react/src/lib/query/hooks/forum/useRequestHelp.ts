@@ -2,7 +2,7 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { requestHelpService } from "@/lib/services/forum/requestHelpService";
-import type { RequestHelpResponse } from "@/lib/types/forum";
+import type { RequestHelpConfirmedResponse, RequestHelpResponse } from "@/lib/types/forum";
 import type { CursorPage } from "@/lib/types/apiResponse";
 
 type PageParam = { after?: string; anchor: string; search?: string };
@@ -51,6 +51,19 @@ export function useMyRequestsHelp(enabled = true, refresh = 0) {
     queryFn: async () => {
       const res = await requestHelpService.getMyHelpRequests();
       if (!res.data) throw new Error("No data returned from getMyHelpRequests");
+      return res.data;
+    },
+    enabled,
+    staleTime: 30_000,
+  });
+}
+
+export function useConfirmedHelpRequests(enabled = true, refresh = 0) {
+  return useQuery<RequestHelpConfirmedResponse[], Error>({
+    queryKey: ["livehelp", "confirmed-requests", { refresh }],
+    queryFn: async () => {
+      const res = await requestHelpService.getConfirmedHelpRequests();
+      if (!res.data) return [];
       return res.data;
     },
     enabled,

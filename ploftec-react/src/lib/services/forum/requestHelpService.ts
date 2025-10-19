@@ -18,6 +18,7 @@ import {
   ConfirmHelpRequestPayload,
   RequestHelpDetailResponse,
   UpdateDisponibilityRequest,
+  RequestHelpConfirmedResponse,
 } from "@/lib/types/forum";
 
 export const requestHelpService = {
@@ -55,6 +56,15 @@ export const requestHelpService = {
     return response;
   },
 
+  async getConfirmedHelpRequests(): Promise<GenericApiResponse<RequestHelpConfirmedResponse[]>> {
+    return await apiBaseService.execute<RequestHelpConfirmedResponse[], undefined>({
+      method: "GET",
+      url: `ApiForum/SolicitudAyuda/ObtenerSolicitudesConfirmadas`,
+      requireCredentials: true,
+      forceLogoutIfException: false,
+    });
+  },
+
   async updateHelpRequestAvailability(id: number, request: UpdateDisponibilityRequest): Promise<GenericApiResponse<SuccessfulResponse>> {
     const response = await apiBaseService.execute<SuccessfulResponse, UpdateDisponibilityRequest>({
       method: "PUT",
@@ -76,7 +86,7 @@ export const requestHelpService = {
   async confirmHelpRequest(payload: ConfirmHelpRequestPayload): Promise<GenericApiResponse<SuccessfulResponse>> {
     return await apiBaseService.execute<SuccessfulResponse, ConfirmHelpRequestPayload>({
       method: "POST",
-      url: `ApiForum/SolicitudAyuda/${payload.codeRequestHelp}/ConfirmarSolicitud`,
+      url: `ApiForum/ConfirmarSolicitud`,
       body: payload,
       requireCredentials: true,
     });
