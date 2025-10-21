@@ -20,6 +20,7 @@ import {
   UpdateDisponibilityRequest,
   RequestHelpConfirmedResponse,
   TermsConditionsResponse,
+  LiveHelpSessionResponse,
 } from "@/lib/types/forum";
 
 export const requestHelpService = {
@@ -109,6 +110,26 @@ export const requestHelpService = {
       url: `ApiForum/AceptarTerminosCondiciones?${query}`,
       requireCredentials: true,
       forceLogoutIfException: false,
+    });
+  },
+
+  async getLiveHelpSession(codeRequestHelp: number): Promise<GenericApiResponse<LiveHelpSessionResponse>> {
+    const query = new URLSearchParams({ codeRequestHelp: String(codeRequestHelp) }).toString();
+    return await apiBaseService.execute<LiveHelpSessionResponse, undefined>({
+      method: "GET",
+      url: `ApiForum/ObtenerSesion?${query}`,
+      requireCredentials: true,
+      forceLogoutIfException: false,
+    });
+  },
+
+  async enterLiveHelpSession(codeSession: string): Promise<GenericApiResponse<LiveHelpSessionResponse>> {
+    return await apiBaseService.execute<LiveHelpSessionResponse, { codeSession: string }>({
+      method: "POST",
+      url: `ApiForum/IngresarSesion`,
+      requireCredentials: true,
+      forceLogoutIfException: false,
+      body: { codeSession },
     });
   },
 

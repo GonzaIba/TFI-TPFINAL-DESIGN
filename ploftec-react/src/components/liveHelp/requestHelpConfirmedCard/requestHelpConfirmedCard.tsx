@@ -38,7 +38,7 @@ function variantByMs(ms: number) {
 }
 
 function mapToRequestHelpResponse(item: RequestHelpConfirmedResponse): RequestHelpResponse {
-  return {
+  const mapped: RequestHelpResponse = {
     userCreator: item.userCreator,
     codeRequestHelp: item.codeRequestHelp,
     titleHelp: item.titleHelp,
@@ -51,6 +51,8 @@ function mapToRequestHelpResponse(item: RequestHelpConfirmedResponse): RequestHe
     expiresAt: item.initAt as any,
     timeSlot: undefined,
   };
+  (mapped as any).CodeRequestHelp = item.codeRequestHelp;
+  return mapped;
 }
 
 export function RequestHelpConfirmedCard({ item }: Props) {
@@ -175,20 +177,40 @@ export function RequestHelpConfirmedCard({ item }: Props) {
     setAcceptingTerms(true);
     try {
       const res = await requestHelpService.acceptTermsConditions(item.codeRequestHelp);
-      const success = res?.data?.success !== false;
-      if (!success) {
-        setAcceptError("No pude registrar tu aceptación. Por favor, intenta nuevamente.");
+      const successFlag = (res?.data as any)?.success;
+      if (successFlag === false) {
+        setAcceptError("Necesitamos tu aceptación para continuar con la videollamada.");
         return;
       }
+
+      const sessionRes = await requestHelpService.getLiveHelpSession(item.codeRequestHelp);
+      const session = sessionRes?.data;
+      if (!session) {
+        setAcceptError("No pude obtener los datos de la sesión. Intenta nuevamente.");
+        return;
+      }
+
+      if (typeof window !== "undefined") {
+        try {
+          window.sessionStorage.setItem("livehelp:session", JSON.stringify(session));
+          window.sessionStorage.setItem("livehelp:lastRequest", String(item.codeRequestHelp));
+        } catch {}
+      }
+
       setTermsModalOpen(false);
-      goToDetail();
+
+      const normalizedDomain = session.domain?.replace(/^\/+/, "") ?? "";
+      const basePath = `/forum/${normalizedDomain}`;
+      const separator = basePath.includes("?") ? "&" : "?";
+      const target = `${basePath}${separator}codeRequestHelp=${encodeURIComponent(String(item.codeRequestHelp))}`;
+      router.push(target);
     } catch (error) {
       console.error("accept terms failed", error);
-      setAcceptError("No pude registrar tu aceptación. Por favor, intenta nuevamente.");
+      setAcceptError("Algo salió mal procesando tu acceso. Intenta nuevamente.");
     } finally {
       setAcceptingTerms(false);
     }
-  }, [item.codeRequestHelp, goToDetail]);
+  }, [item.codeRequestHelp, router]);
 
   const handleRetryTerms = useCallback(() => {
     if (!termsLoading) {

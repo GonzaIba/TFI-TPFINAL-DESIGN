@@ -291,6 +291,15 @@
     contenido: string;
   }
 
+  export interface LiveHelpSessionResponse {
+    codeSession: string;
+    domain: string;
+    roomName: string;
+    initAt: string | Date;
+    expiresAt: string | Date;
+    isOwner: boolean;
+  }
+
   // Detalle de chat (gateway: SolicitudAyuda/{id}/Chat/Mensajes)
   export interface HelpRequestChatDetailResponse {
     chatCode: number;
