@@ -350,7 +350,7 @@ export default function LiveHelpMeetingPage() {
         <p className={styles.subtitle}>{subtitle}</p>
       </div>
       <div className={styles.videoWrapper}>
-        <div id="jaas-container" ref={containerRef} style={{ height: "100vh" }} />
+        <div id="jaas-container" ref={containerRef} style={{ width: "100%" }} />
         {state !== "ready" && (
           <div className={styles.loadingOverlay}>
             <span>{state === "loading" ? "Preparando tu sala…" : "Conectando…"}</span>

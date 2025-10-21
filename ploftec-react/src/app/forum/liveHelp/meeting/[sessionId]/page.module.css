@@ -1,5 +1,6 @@
 .container {
   min-height: calc(100dvh - 80px);
+  width: 100%;
   padding: 16px;
   display: flex;
   flex-direction: column;
@@ -27,7 +28,8 @@
 
 .videoWrapper {
   flex: 1;
-  min-height: 70vh;
+  width: 100%;
+  min-height: calc(100dvh - 160px);
   background: #050505;
   border-radius: 12px;
   overflow: hidden;
