@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from 'next/image';
 import logo from "../../images/ploftec-fluid.png";
-import { login } from '@/lib/services/auth/authenticationService';
+import { authenticateExternal, login } from '@/lib/services/auth/authenticationService';
 import useAuthStore from "@/store/slices/authStore/authStore";
+import { ProvidersEnum } from "@/lib/types/auth";
 
 export default function LoginRegister() {
   const router = useRouter();
@@ -29,6 +30,13 @@ export default function LoginRegister() {
   const setUser = useAuthStore((state) => state.setUser);
   const setAuthLoaded = useAuthStore((state) => state.setAuthLoaded);
 
+  const handleExternalLogin = (
+    event: ReactMouseEvent<HTMLAnchorElement>,
+    provider: ProvidersEnum
+  ) => {
+    event.preventDefault();
+    authenticateExternal(provider);
+  };
 
   const triggerAnimation = () => {
     setAnimate(true);
@@ -219,9 +227,21 @@ export default function LoginRegister() {
                 <div className="btn-group-external-login">
                   <div className="socialButtonLogin">
                     <ul>
-                      <li><a href="#"><i className="fab fa-google"></i></a></li>
-                      <li><a href="#"><i className="fab fa-github"></i></a></li>
-                      <li><a href="#"><i className="fab fa-linkedin-in"></i></a></li>
+                      <li>
+                        <a href="#" onClick={(event) => handleExternalLogin(event, ProvidersEnum.Google)}>
+                          <i className="fab fa-google"></i>
+                        </a>
+                      </li>
+                      <li>
+                        <a href="#" onClick={(event) => handleExternalLogin(event, ProvidersEnum.GitHub)}>
+                          <i className="fab fa-github"></i>
+                        </a>
+                      </li>
+                      <li>
+                        <a href="#" onClick={(event) => handleExternalLogin(event, ProvidersEnum.LinkedIn)}>
+                          <i className="fab fa-linkedin-in"></i>
+                        </a>
+                      </li>
                     </ul>
                   </div>
                 </div>
