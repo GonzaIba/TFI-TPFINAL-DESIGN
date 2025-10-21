@@ -123,13 +123,13 @@ export const requestHelpService = {
     });
   },
 
-  async enterLiveHelpSession(codeSession: string): Promise<GenericApiResponse<LiveHelpSessionResponse>> {
-    return await apiBaseService.execute<LiveHelpSessionResponse, { codeSession: string }>({
+  async enterLiveHelpSession(request: { codeSession: string; userId?: string }): Promise<GenericApiResponse<LiveHelpSessionResponse>> {
+    return await apiBaseService.execute<LiveHelpSessionResponse, { codeSession: string; userId?: string }>({
       method: "POST",
       url: `ApiForum/IngresarSesion`,
       requireCredentials: true,
       forceLogoutIfException: false,
-      body: { codeSession },
+      body: request,
     });
   },
 

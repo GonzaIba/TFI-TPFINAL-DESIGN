@@ -1,28 +1,68 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import styles from "./page.module.css";
 import { requestHelpService } from "@/lib/services/forum/requestHelpService";
 import type { LiveHelpSessionResponse } from "@/lib/types/forum";
 import useAuthStore from "@/store/slices/authStore/authStore";
 
-const DEFAULT_JITSI_DOMAIN = process.env.NEXT_PUBLIC_JITSI_DOMAIN ?? "meet.jit.si";
+type ViewState = "loading" | "joining" | "ready";
+
+type JoinPayload = {
+  codeSession: string;
+  userId?: string;
+};
+
+type JaasScriptRef = {
+  src: string;
+  promise: Promise<void>;
+};
+
+type JitsiMeetOptions = {
+  roomName: string;
+  jwt?: string;
+  parentNode: HTMLElement;
+  configOverwrite?: Record<string, unknown>;
+  interfaceConfigOverwrite?: Record<string, unknown>;
+  userInfo?: Record<string, unknown>;
+};
+
+type JitsiExternalAPI = {
+  addEventListener: (event: string, handler: (...args: unknown[]) => void) => void;
+  removeEventListener: (event: string, handler: (...args: unknown[]) => void) => void;
+  executeCommand: (command: string, ...args: unknown[]) => void;
+  dispose: () => void;
+};
+
+declare global {
+  interface Window {
+    JitsiMeetExternalAPI?: new (domain: string, options: JitsiMeetOptions) => JitsiExternalAPI;
+  }
+}
+
+const DEFAULT_SERVER_URL = "https://8x8.vc";
+let jaasScript: JaasScriptRef | null = null;
 
 export default function LiveHelpMeetingPage() {
   const params = useParams<{ sessionId: string }>();
   const searchParams = useSearchParams();
   const sessionId = params?.sessionId ?? "";
+
   const authUser = useAuthStore((state) => state.user);
+  const userId = authUser?.email ?? authUser?.userName ?? undefined;
   const displayName = authUser?.userName ?? authUser?.email ?? "Invitado";
 
   const [session, setSession] = useState<LiveHelpSessionResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [entering, setEntering] = useState(false);
+  const [state, setState] = useState<ViewState>("loading");
   const [error, setError] = useState<string | null>(null);
   const [expired, setExpired] = useState(false);
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const apiRef = useRef<JitsiExternalAPI | null>(null);
   const hasJoinedRef = useRef(false);
-  const expiryTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const expiryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const storedSession = useMemo(() => {
     if (typeof window === "undefined") return null;
@@ -34,19 +74,31 @@ export default function LiveHelpMeetingPage() {
     }
   }, []);
 
+  const persistSession = useCallback((data: LiveHelpSessionResponse) => {
+    if (typeof window !== "undefined") {
+      try {
+        window.sessionStorage.setItem("livehelp:session", JSON.stringify(data));
+      } catch {
+        // ignore storage errors
+      }
+    }
+  }, []);
+
   useEffect(() => {
     let active = true;
     const codeRequestHelp = searchParams?.get("codeRequestHelp");
 
-    async function hydrateSession() {
+    async function hydrate() {
       if (storedSession && storedSession.codeSession === sessionId) {
+        hasJoinedRef.current = false;
+        setExpired(false);
         setSession(storedSession);
-        setLoading(false);
+        setState("joining");
         return;
       }
       if (!codeRequestHelp) {
         setError("No encontramos la información de la reunión.");
-        setLoading(false);
+        setState("loading");
         return;
       }
       try {
@@ -55,92 +107,217 @@ export default function LiveHelpMeetingPage() {
         if (!data || data.codeSession !== sessionId) {
           setError("La sesión solicitada no está disponible.");
         } else {
-          if (typeof window !== "undefined") {
-            try {
-              window.sessionStorage.setItem("livehelp:session", JSON.stringify(data));
-              window.sessionStorage.setItem("livehelp:lastRequest", String(codeRequestHelp));
-            } catch {}
+          persistSession(data);
+          if (active) {
+            hasJoinedRef.current = false;
+            setExpired(false);
+            setSession(data);
+            setState("joining");
           }
-          if (active) setSession(data);
         }
       } catch (err) {
         console.error("get session failed", err);
-        if (active) setError("No pudimos recuperar la reunión. Intenta nuevamente.");
-      } finally {
-        if (active) setLoading(false);
+        if (active) {
+          setError("No pudimos recuperar la reunión. Intenta nuevamente.");
+          setState("loading");
+        }
       }
     }
 
-    hydrateSession();
+    hydrate();
     return () => {
       active = false;
+    };
+  }, [searchParams, sessionId, storedSession, persistSession]);
+
+  const scheduleExpiry = useCallback(
+    (expiresIso?: string) => {
       if (expiryTimerRef.current) {
         clearTimeout(expiryTimerRef.current);
         expiryTimerRef.current = null;
       }
-    };
-  }, [searchParams, sessionId, storedSession]);
+      if (!expiresIso) return;
+      const expiresAt = new Date(expiresIso);
+      const ms = expiresAt.getTime() - Date.now();
+      if (!Number.isFinite(ms)) return;
+      if (ms <= 0) {
+        setExpired(true);
+        return;
+      }
+      expiryTimerRef.current = setTimeout(() => {
+        setExpired(true);
+      }, ms);
+    },
+    []
+  );
 
   useEffect(() => {
-    if (!session || error || hasJoinedRef.current) return;
+    if (!session?.expiresAt) return;
+    const expiresIso =
+      session.expiresAt instanceof Date ? session.expiresAt.toISOString() : session.expiresAt;
+    scheduleExpiry(expiresIso);
+  }, [session?.expiresAt, scheduleExpiry]);
+
+  useEffect(() => {
+    if (!session || error || expired || hasJoinedRef.current) return;
     let cancelled = false;
 
-    async function enter() {
+    async function joinConference() {
       try {
-        setEntering(true);
-        const res = await requestHelpService.enterLiveHelpSession(session.codeSession);
-        const sessionData = res?.data;
-        if (!sessionData) {
-          throw new Error("Session data missing");
+        setState("joining");
+        setError(null);
+        const payload: JoinPayload = { codeSession: session.codeSession, userId };
+        const res = await requestHelpService.enterLiveHelpSession(payload);
+        const data = res?.data;
+        if (!data) {
+          throw new Error("IngresarSesion devolvió un payload vacío");
         }
+        const merged = { ...session, ...data };
+        persistSession(merged);
         if (cancelled) return;
-        hasJoinedRef.current = true;
-        const merged = { ...session, ...sessionData };
         setSession(merged);
-        if (typeof window !== "undefined") {
-          try {
-            window.sessionStorage.setItem("livehelp:session", JSON.stringify(merged));
-          } catch {}
+
+        if (!merged.appId || !merged.room || !merged.jwt) {
+          throw new Error("La sesión no contiene la información necesaria para iniciar JaaS.");
         }
+
+        await loadJaasScript(
+          `${(merged.serverUrl ?? DEFAULT_SERVER_URL).replace(/\/$/, "")}/${merged.appId}/external_api.js`
+        );
+        if (cancelled) return;
+        if (!window.JitsiMeetExternalAPI) {
+          throw new Error("JitsiMeetExternalAPI no disponible");
+        }
+        if (!containerRef.current) {
+          throw new Error("Contenedor de Jitsi no encontrado");
+        }
+
+        if (apiRef.current) {
+          try {
+            apiRef.current.dispose();
+          } catch {
+            // ignore
+          }
+        }
+
+        const serverUrl = merged.serverUrl ?? DEFAULT_SERVER_URL;
+        let domain: string;
+        try {
+          domain = new URL(serverUrl).hostname;
+        } catch {
+          domain = serverUrl.replace(/^https?:\/\//, "").replace(/\/$/, "");
+        }
+        const roomName = merged.room ?? merged.roomName;
+
+        const api = new window.JitsiMeetExternalAPI(domain, {
+          roomName,
+          parentNode: containerRef.current,
+          jwt: merged.jwt,
+          userInfo: {
+            displayName: merged.ui?.displayName ?? displayName,
+            email: authUser?.email,
+          },
+          configOverwrite: {
+            prejoinConfig: {
+              enabled: false,
+            },
+            disableDeepLinking: true,
+            startWithAudioMuted: merged.ui?.startWithAudioMuted ?? false,
+            startWithVideoMuted: merged.ui?.startWithVideoMuted ?? false,
+            requireDisplayName: false,
+          },
+          interfaceConfigOverwrite: {
+            SHOW_JITSI_WATERMARK: false,
+            SHOW_BRAND_WATERMARK: false,
+            SHOW_POWERED_BY: false,
+            HIDE_DEEP_LINKING_LOGO: true,
+          },
+        });
+
+        apiRef.current = api;
+        hasJoinedRef.current = true;
+
+        const handleJoined = () => setState("ready");
+        const handleReadyToClose = () => setExpired(true);
+
+        api.addEventListener("videoConferenceJoined", handleJoined);
+        api.addEventListener("readyToClose", handleReadyToClose);
+
+        if (closeTimerRef.current) {
+          clearTimeout(closeTimerRef.current);
+        }
+        const closeIso = merged.shouldCloseAt ?? merged.expiresAt;
+        if (closeIso) {
+          const closeMs = new Date(closeIso).getTime() - Date.now();
+          if (Number.isFinite(closeMs) && closeMs > 0) {
+            closeTimerRef.current = setTimeout(() => {
+              if (apiRef.current) {
+                apiRef.current.executeCommand("hangup");
+              }
+              setExpired(true);
+              closeTimerRef.current = null;
+            }, closeMs);
+          }
+        }
+
+        const expiresIso =
+          merged.expiresAt instanceof Date ? merged.expiresAt.toISOString() : merged.expiresAt;
+        scheduleExpiry(expiresIso);
       } catch (err) {
         console.error("enter session failed", err);
         if (!cancelled) {
+          hasJoinedRef.current = false;
           setError("No existe la reunión o no tenés permisos para ingresar.");
+          setState("loading");
         }
-      } finally {
-        if (!cancelled) setEntering(false);
       }
     }
 
-    enter();
+    joinConference();
 
     return () => {
       cancelled = true;
     };
-  }, [session, error]);
+  }, [session, error, expired, displayName, authUser?.email, userId, persistSession, scheduleExpiry]);
 
   useEffect(() => {
-    if (!session) return;
-    if (expiryTimerRef.current) {
-      clearTimeout(expiryTimerRef.current);
-      expiryTimerRef.current = null;
-    }
-    const expiresAt = new Date(session.expiresAt ?? session.initAt ?? Date.now());
-    const ms = expiresAt.getTime() - Date.now();
-    if (Number.isFinite(ms) && ms > 0) {
-      expiryTimerRef.current = setTimeout(() => {
-        setExpired(true);
-      }, ms);
-    } else if (ms <= 0) {
-      setExpired(true);
-    }
     return () => {
+      if (apiRef.current) {
+        try {
+          apiRef.current.dispose();
+        } catch {
+          // ignore
+        }
+        apiRef.current = null;
+      }
+      if (closeTimerRef.current) {
+        clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
+      }
       if (expiryTimerRef.current) {
         clearTimeout(expiryTimerRef.current);
         expiryTimerRef.current = null;
       }
+      hasJoinedRef.current = false;
     };
-  }, [session?.expiresAt, session?.initAt]);
+  }, []);
+
+  useEffect(() => {
+    if (!expired) return;
+    if (apiRef.current) {
+      try {
+        apiRef.current.executeCommand("hangup");
+      } catch {
+        // ignore
+      }
+      try {
+        apiRef.current.dispose();
+      } catch {
+        // ignore
+      }
+      apiRef.current = null;
+    }
+  }, [expired]);
 
   if (error) {
     return (
@@ -162,55 +339,52 @@ export default function LiveHelpMeetingPage() {
     );
   }
 
+  const subtitle = session
+    ? `Room: ${session.room ?? session.roomName}`
+    : `Room: ${sessionId}`;
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>Videollamada en vivo</h1>
-        <p className={styles.subtitle}>
-          Room: {session?.roomName ?? sessionId}
-        </p>
+        <p className={styles.subtitle}>{subtitle}</p>
       </div>
       <div className={styles.videoWrapper}>
-        {loading || entering || !session ? (
-          <div className={styles.loadingState}>
-            <span>Preparando tu sala…</span>
+        <div id="jaas-container" ref={containerRef} style={{ height: "100vh" }} />
+        {state !== "ready" && (
+          <div className={styles.loadingOverlay}>
+            <span>{state === "loading" ? "Preparando tu sala…" : "Conectando…"}</span>
           </div>
-        ) : (
-          <iframe
-            src={buildJitsiUrl(session.roomName, displayName)}
-            allow="camera; microphone; fullscreen; speaker; display-capture"
-            allowFullScreen
-            className={styles.iframe}
-            title="Videollamada Live Help"
-          />
         )}
       </div>
     </div>
   );
 }
 
-function buildJitsiUrl(roomName: string, displayName: string) {
-  const base = DEFAULT_JITSI_DOMAIN.startsWith("http")
-    ? DEFAULT_JITSI_DOMAIN
-    : `https://${DEFAULT_JITSI_DOMAIN}`;
+function loadJaasScript(src: string): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  if (window.JitsiMeetExternalAPI) return Promise.resolve();
 
-  const params = [
-    ["config.prejoinConfig.enabled", "false"],
-    ["config.requireDisplayName", "false"],
-    ["config.disableDeepLinking", "true"],
-    ["config.startWithAudioMuted", "false"],
-    ["config.startWithVideoMuted", "false"],
-    ["config.notifications.enabled", "true"],
-    ["interfaceConfig.SHOW_JITSI_WATERMARK", "false"],
-    ["interfaceConfig.SHOW_BRAND_WATERMARK", "false"],
-    ["interfaceConfig.SHOW_POWERED_BY", "false"],
-    ["interfaceConfig.HIDE_DEEP_LINKING_LOGO", "true"],
-    ["userInfo.displayName", displayName],
-  ];
+  if (jaasScript && jaasScript.src === src) {
+    return jaasScript.promise;
+  }
 
-  const hash = params
-    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
-    .join("&");
+  const promise = new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>(`script[src="${src}"]`);
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => reject(new Error("No pude cargar JaaS")), { once: true });
+      return;
+    }
 
-  return `${base}/${encodeURIComponent(roomName)}#${hash}`;
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("No pude cargar JaaS"));
+    document.body.appendChild(script);
+  });
+
+  jaasScript = { src, promise };
+  return promise;
 }

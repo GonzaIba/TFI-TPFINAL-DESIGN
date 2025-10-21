@@ -291,6 +291,13 @@
     contenido: string;
   }
 
+  export interface LiveHelpSessionUi {
+    displayName: string;
+    avatarUrl?: string | null;
+    startWithAudioMuted?: boolean;
+    startWithVideoMuted?: boolean;
+  }
+
   export interface LiveHelpSessionResponse {
     codeSession: string;
     domain: string;
@@ -298,6 +305,14 @@
     initAt: string | Date;
     expiresAt: string | Date;
     isOwner: boolean;
+    provider?: string;
+    appId?: string;
+    room?: string;
+    jwt?: string;
+    serverUrl?: string;
+    role?: string;
+    shouldCloseAt?: string | Date;
+    ui?: LiveHelpSessionUi;
   }
 
   // Detalle de chat (gateway: SolicitudAyuda/{id}/Chat/Mensajes)
