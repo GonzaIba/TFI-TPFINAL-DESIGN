@@ -19,6 +19,7 @@ import {
   RequestHelpDetailResponse,
   UpdateDisponibilityRequest,
   RequestHelpConfirmedResponse,
+  TermsConditionsResponse,
 } from "@/lib/types/forum";
 
 export const requestHelpService = {
@@ -89,6 +90,25 @@ export const requestHelpService = {
       url: `ApiForum/ConfirmarSolicitud`,
       body: payload,
       requireCredentials: true,
+    });
+  },
+
+  async getTermsConditions(): Promise<GenericApiResponse<TermsConditionsResponse>> {
+    return await apiBaseService.execute<TermsConditionsResponse, undefined>({
+      method: "GET",
+      url: `ApiForum/ObtenerTerminosCondiciones`,
+      requireCredentials: true,
+      forceLogoutIfException: false,
+    });
+  },
+
+  async acceptTermsConditions(codeRequestHelp: number): Promise<GenericApiResponse<SuccessfulResponse>> {
+    const query = new URLSearchParams({ codeRequestHelp: String(codeRequestHelp) }).toString();
+    return await apiBaseService.execute<SuccessfulResponse, undefined>({
+      method: "POST",
+      url: `ApiForum/AceptarTerminosCondiciones?${query}`,
+      requireCredentials: true,
+      forceLogoutIfException: false,
     });
   },
 

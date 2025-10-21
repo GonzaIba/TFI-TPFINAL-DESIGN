@@ -196,7 +196,7 @@
 
   export type RequestHelpResponse = {
     userCreator: UsersForumPreviewResponse;
-    CodeRequestHelp: number;
+    codeRequestHelp: number;
     titleHelp: string;
     message: string;
     status: string;
@@ -284,6 +284,11 @@
     regard: number;
     initAt: string;
     isOwner: boolean;
+  }
+
+  export interface TermsConditionsResponse {
+    titulo: string;
+    contenido: string;
   }
 
   // Detalle de chat (gateway: SolicitudAyuda/{id}/Chat/Mensajes)

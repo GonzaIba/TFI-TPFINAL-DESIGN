@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { motion, useMotionTemplate, useMotionValue, useSpring } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { Button, AvatarUser, Loading } from "@/components";
-import type { RequestHelpConfirmedResponse, RequestHelpResponse } from "@/lib/types/forum";
+import { Button, AvatarUser, Loading, ModalComponent } from "@/components";
+import type { RequestHelpConfirmedResponse, RequestHelpResponse, TermsConditionsResponse } from "@/lib/types/forum";
 import { parseApiUtc } from "@/lib/utils/datetime";
-import { Trophy, LogIn, Clock } from "lucide-react";
+import { Trophy, LogIn, Clock, Play } from "lucide-react";
 import styles from "../requestHelpCard/requestHelpCard.module.css";
 import useLiveHelpStore from "@/store/slices/liveHelpStore/liveHelpStore";
+import { requestHelpService } from "@/lib/services/forum/requestHelpService";
 
 type Props = {
   item: RequestHelpConfirmedResponse;
@@ -39,7 +40,6 @@ function variantByMs(ms: number) {
 function mapToRequestHelpResponse(item: RequestHelpConfirmedResponse): RequestHelpResponse {
   return {
     userCreator: item.userCreator,
-    CodeRequestHelp: item.codeRequestHelp,
     codeRequestHelp: item.codeRequestHelp,
     titleHelp: item.titleHelp,
     message: item.message,
@@ -57,6 +57,12 @@ export function RequestHelpConfirmedCard({ item }: Props) {
   const router = useRouter();
   const [now, setNow] = useState(() => Date.now());
   const [navLoading, setNavLoading] = useState(false);
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const [termsLoading, setTermsLoading] = useState(false);
+  const [termsError, setTermsError] = useState<string | null>(null);
+  const [termsData, setTermsData] = useState<TermsConditionsResponse | null>(null);
+  const [acceptingTerms, setAcceptingTerms] = useState(false);
+  const [acceptError, setAcceptError] = useState<string | null>(null);
 
   const initInfo = useMemo(() => {
     let parsed: Date;
@@ -104,9 +110,91 @@ export function RequestHelpConfirmedCard({ item }: Props) {
   const remainingMs = initInfo.valid ? Math.max(0, initInfo.ms - now) : 0;
   const countdownText = initInfo.valid ? formatCountdown(remainingMs) : "Inicio sin definir";
   const urgency = initInfo.valid ? variantByMs(remainingMs) : "warn";
-  const initLabel = initInfo.label ?? "Sin horario disponible";
+  const isLive = initInfo.valid && initInfo.ms <= now;
   const countdownAccentClass =
     styles[`countdown${urgency.charAt(0).toUpperCase()}${urgency.slice(1)}`] ?? "";
+
+  const goToDetail = useCallback(() => {
+    const id = item.codeRequestHelp;
+    try {
+      const mapped = mapToRequestHelpResponse(item);
+      useLiveHelpStore.getState().setSelected(mapped);
+      if (typeof window !== "undefined") {
+        window.sessionStorage.setItem("livehelp:selected", JSON.stringify(mapped));
+      }
+    } catch {}
+    setNavLoading(true);
+    setTimeout(() => {
+      router.push(`/forum/liveHelp/detail/${encodeURIComponent(String(id))}`);
+    }, 550);
+  }, [item, router]);
+
+  const metaLine = useMemo(() => {
+    const segments: string[] = [];
+    segments.push(initInfo.label ?? "Horario por confirmar");
+    if (confirmedLabel) segments.push(`Confirmada el ${confirmedLabel}`);
+    return segments.join(" · ");
+  }, [initInfo.label, confirmedLabel]);
+
+  const termsParagraphs = useMemo(() => {
+    if (!termsData?.contenido) return [];
+    return termsData.contenido.split(/\r?\n+/).filter((line) => line.trim().length > 0);
+  }, [termsData]);
+
+  const fetchTermsConditions = useCallback(async () => {
+    setTermsLoading(true);
+    setTermsError(null);
+    try {
+      const res = await requestHelpService.getTermsConditions();
+      if (!res.data) {
+        throw new Error("empty response");
+      }
+      setTermsData(res.data);
+    } catch (error) {
+      console.error("get terms conditions failed", error);
+      setTermsError("No pude cargar los términos y condiciones. Intenta nuevamente.");
+    } finally {
+      setTermsLoading(false);
+    }
+  }, []);
+
+  const handleCardActivate = useCallback(() => {
+    if (isLive) {
+      setAcceptError(null);
+      setTermsModalOpen(true);
+      if (!termsData && !termsLoading) {
+        fetchTermsConditions();
+      }
+    } else {
+      goToDetail();
+    }
+  }, [isLive, goToDetail, termsData, termsLoading, fetchTermsConditions]);
+
+  const handleAcceptTerms = useCallback(async () => {
+    setAcceptError(null);
+    setAcceptingTerms(true);
+    try {
+      const res = await requestHelpService.acceptTermsConditions(item.codeRequestHelp);
+      const success = res?.data?.success !== false;
+      if (!success) {
+        setAcceptError("No pude registrar tu aceptación. Por favor, intenta nuevamente.");
+        return;
+      }
+      setTermsModalOpen(false);
+      goToDetail();
+    } catch (error) {
+      console.error("accept terms failed", error);
+      setAcceptError("No pude registrar tu aceptación. Por favor, intenta nuevamente.");
+    } finally {
+      setAcceptingTerms(false);
+    }
+  }, [item.codeRequestHelp, goToDetail]);
+
+  const handleRetryTerms = useCallback(() => {
+    if (!termsLoading) {
+      fetchTermsConditions();
+    }
+  }, [fetchTermsConditions, termsLoading]);
 
   const tiltX = useSpring(0, { stiffness: 260, damping: 20, mass: 0.6 });
   const tiltY = useSpring(0, { stiffness: 260, damping: 20, mass: 0.6 });
@@ -132,21 +220,6 @@ export function RequestHelpConfirmedCard({ item }: Props) {
     tiltY.set(0);
   }
 
-  function openDetail() {
-    const id = item.codeRequestHelp;
-    try {
-      const mapped = mapToRequestHelpResponse(item);
-      useLiveHelpStore.getState().setSelected(mapped);
-      if (typeof window !== "undefined") {
-        window.sessionStorage.setItem("livehelp:selected", JSON.stringify(mapped));
-      }
-    } catch {}
-    setNavLoading(true);
-    setTimeout(() => {
-      router.push(`/forum/liveHelp/detail/${encodeURIComponent(String(id))}`);
-    }, 550);
-  }
-
   return (
     <>
       <Loading show={navLoading} />
@@ -166,17 +239,41 @@ export function RequestHelpConfirmedCard({ item }: Props) {
         }}
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
-        onClick={openDetail}
+        onClick={handleCardActivate}
         role="button"
         tabIndex={0}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            openDetail();
+            handleCardActivate();
           }
         }}
       >
-        <div className={styles.topRow}>
+        {isLive && (
+          <div
+            className={styles.liveOverlay}
+            role="presentation"
+            onClick={(event) => {
+              event.stopPropagation();
+              handleCardActivate();
+            }}
+          >
+            <button
+              type="button"
+              className={styles.liveButton}
+              onClick={(event) => {
+                event.stopPropagation();
+                handleCardActivate();
+              }}
+              aria-label="Ingresar a la reunión en vivo"
+            >
+              <Play size={32} />
+            </button>
+          <span className={styles.liveLabel}>En vivo</span>
+        </div>
+      )}
+      <div className={styles.confirmedHeader}>
+        <div className={styles.confirmedHeaderLeft}>
           <AvatarUser
             tagUser={item.userCreator?.initials ?? "?"}
             imageUser={item.userCreator?.image}
@@ -185,42 +282,39 @@ export function RequestHelpConfirmedCard({ item }: Props) {
             nombreCompleto={item.userCreator?.completeName ?? ""}
             direction="right"
           />
-          <div className={styles.rightPanel}>
-            <div className={styles.timerAndReward}>
-              <div className={styles.rewardBadge}>
-                <Trophy size={16} className={styles.trophy} />
-                <span className={styles.regard}>{item.regard.toFixed(2)}</span>
-              </div>
-            </div>
-            <div
-              className={styles.helpButtonWrap}
-              onClick={(e) => e.stopPropagation()}
-              onMouseDown={(e) => e.stopPropagation()}
-              onPointerDown={(e) => e.stopPropagation()}
-            >
-              <Button
-                onClick={openDetail}
-                icon={<LogIn />}
-                circular
-                ariaLabel="Ir al detalle de la ayuda"
-                title="Ir al detalle"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.initRow}>
           <div className={`${styles.initCountdown} ${countdownAccentClass}`}>
             <Clock size={16} />
             <span>{countdownText}</span>
           </div>
-          <div className={styles.initMeta}>
-            Inicio programado: {initLabel}
-            {confirmedLabel && <> · Confirmada el {confirmedLabel}</>}
+        </div>
+        <div className={styles.confirmedHeaderRight}>
+          <div className={styles.rewardBadge}>
+            <Trophy size={16} className={styles.trophy} />
+            <span className={styles.regard}>{item.regard.toFixed(2)}</span>
           </div>
           <div
-            className={`${styles.statusPill} ${item.isOwner ? styles.ownerPill : ""}`}
+            className={styles.helpButtonWrap}
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
           >
+            <Button
+              onClick={handleCardActivate}
+              icon={<LogIn />}
+              circular
+              ariaLabel="Ir al detalle de la ayuda"
+              title="Ir al detalle"
+            />
+          </div>
+        </div>
+      </div>
+
+        <div className={styles.confirmedBody}>
+          <h3 className={styles.confirmedTitle} title={item.titleHelp}>
+            {item.titleHelp}
+          </h3>
+          <div className={styles.confirmedMeta}>{metaLine}</div>
+          <div className={`${styles.statusPill} ${item.isOwner ? styles.ownerPill : ""}`}>
             {item.isOwner ? "Soy el solicitante" : "Voy a ayudar"}
           </div>
         </div>
@@ -242,6 +336,62 @@ export function RequestHelpConfirmedCard({ item }: Props) {
           </div>
         </div>
       </motion.article>
+      <ModalComponent
+        open={termsModalOpen}
+        onClose={() => {
+          if (!acceptingTerms) {
+            setTermsModalOpen(false);
+          }
+        }}
+        closeIcon={false}
+        styles={{ maxWidth: "900px" }}
+      >
+        <div className={styles.termsModal}>
+          <h3 className={styles.termsTitle}>
+            {termsData?.titulo ?? "Términos y Condiciones"}
+          </h3>
+          <div className={styles.termsBody}>
+            {termsLoading ? (
+              <div className={styles.termsLoading}>Cargando términos…</div>
+            ) : termsError ? (
+              <div className={styles.termsError}>
+                <p>{termsError}</p>
+                <Button
+                  onClick={handleRetryTerms}
+                  text="Reintentar"
+                  width="140px"
+                  disabled={acceptingTerms}
+                />
+              </div>
+            ) : termsData ? (
+              termsParagraphs.map((paragraph, idx) => (
+                <p key={`terms-${idx}`}>{paragraph}</p>
+              ))
+            ) : (
+              <div className={styles.termsLoading}>No encontré términos. Intenta nuevamente.</div>
+            )}
+          </div>
+          {acceptError && <div className={styles.termsError}>{acceptError}</div>}
+          <div className={styles.termsActions}>
+            <Button
+              onClick={() => {
+                if (!acceptingTerms) setTermsModalOpen(false);
+              }}
+              text="Cancelar"
+              transparent
+              width="120px"
+              disabled={acceptingTerms}
+            />
+            <Button
+              onClick={handleAcceptTerms}
+              text="Aceptar"
+              width="140px"
+              disabled={acceptingTerms || termsLoading || !!termsError || !termsData}
+              loading={acceptingTerms}
+            />
+          </div>
+        </div>
+      </ModalComponent>
     </>
   );
 }

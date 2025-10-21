@@ -44,7 +44,7 @@ export default function LiveHelpDetailPage() {
   useEffect(() => {
     if (request) return;
     const id = idParam ? Number(idParam) : undefined;
-    if (selectedFromStore && (!id || selectedFromStore.CodeRequestHelp === id)) {
+    if (selectedFromStore && (!id || selectedFromStore.codeRequestHelp === id)) {
       setRequest(selectedFromStore);
       return;
     }
@@ -54,7 +54,7 @@ export default function LiveHelpDetailPage() {
       for (const [, data] of matches) {
         if (!data) continue;
         const items: RequestHelpResponse[] = Array.isArray(data) ? data : (data?.pages?.flatMap?.((p: any) => p.items ?? []) ?? []);
-        const found = items.find((x) => x.CodeRequestHelp === id);
+        const found = items.find((x) => x.codeRequestHelp === id);
         if (found) {
           setRequest(found);
           break;

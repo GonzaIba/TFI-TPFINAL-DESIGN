@@ -102,7 +102,7 @@ export function RequestHelpCard({ item, hideOwnerAvatar = false, badges = [] }: 
   }
 
   function openDetail() {
-    const id = (item as any).CodeRequestHelp ?? (item as any).codeRequestHelp;
+    const id = (item as RequestHelpResponse).codeRequestHelp;
     // Persist selection for the detail page
     try { 
       useLiveHelpStore.getState().setSelected(item); 
@@ -115,11 +115,6 @@ export function RequestHelpCard({ item, hideOwnerAvatar = false, badges = [] }: 
     setTimeout(() => {
       router.push(`/forum/liveHelp/detail/${encodeURIComponent(String(id))}`);
     }, 550);
-  }
-
-  function onHelp() {
-    // TODO: aquí podés abrir modal/detalle o navegar a la solicitud
-    console.log("Ayudar clicked", item.titleHelp);
   }
 
   return (
@@ -158,18 +153,6 @@ export function RequestHelpCard({ item, hideOwnerAvatar = false, badges = [] }: 
             direction='right'
           />
         )}
-
-        {/* <div className={styles.avatar}>
-          {item.userCreator.image ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={item.userCreator.image}
-              alt={item.userCreator.completeName}
-            />
-          ) : (
-            <span>{item.userCreator.initials?.[0] ?? "?"}</span>
-          )}
-        </div> */}
 
         <div className={styles.rightPanel}>
           {visibleBadge && (

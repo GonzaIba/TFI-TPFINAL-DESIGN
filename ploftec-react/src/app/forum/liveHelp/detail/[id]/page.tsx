@@ -12,7 +12,8 @@ import type {
   ChatMessageResponse,
   RequestHelpDetailResponse,
   HelpRequestChatDetailResponse,
-  HelpTimeSlot
+  HelpTimeSlot,
+  HelpRequestChatsResponse
 } from "@/lib/types/forum";
 import useSnackBarStore from "@/store/slices/snackBarStore/snackbarStore";
 import useLiveHelpStore from "@/store/slices/liveHelpStore/liveHelpStore";
@@ -453,7 +454,7 @@ export default function LiveHelpDetailByIdPage() {
     try {
       if (
         selectedFromStore &&
-        ((selectedFromStore as any).CodeRequestHelp === idParam || (selectedFromStore as any).codeRequestHelp === idParam)
+        ((selectedFromStore as any).codeRequestHelp === idParam || (selectedFromStore as any).codeRequestHelp === idParam)
       ) {
         setRequest(selectedFromStore);
         return;
@@ -462,7 +463,7 @@ export default function LiveHelpDetailByIdPage() {
       for (const [, data] of matches) {
         if (!data) continue;
         const items: RequestHelpResponse[] = Array.isArray(data) ? data : data?.pages?.flatMap?.((p: any) => p.items ?? []) ?? [];
-        const found = items.find((x: any) => x?.CodeRequestHelp === idParam || x?.codeRequestHelp === idParam);
+        const found = items.find((x: RequestHelpResponse) => x?.codeRequestHelp === idParam || x?.codeRequestHelp === idParam);
         if (found) {
           setRequest(found);
           return;
@@ -473,7 +474,7 @@ export default function LiveHelpDetailByIdPage() {
         if (raw) {
           try {
             const parsed = JSON.parse(raw) as RequestHelpResponse;
-            if ((parsed as any).CodeRequestHelp === idParam || (parsed as any).codeRequestHelp === idParam) {
+            if (parsed.codeRequestHelp === idParam) {
               setRequest(parsed);
             }
           } catch {}
@@ -511,25 +512,15 @@ export default function LiveHelpDetailByIdPage() {
       setInboxLoading(true);
       try {
         const res = await liveHelpChatService.listMyRequestChats(idParam);
-        const list = (res?.data as any[]) ?? [];
+        const list = (res?.data as HelpRequestChatsResponse[]) ?? [];
         if (cancelled) return;
         const mapped = list.map((raw) => {
-          const chatCode = raw?.chatCode ?? raw?.ChatCode ?? raw?.codeChat ?? raw?.CodeChat ?? raw?.chatId ?? raw?.ChatId;
-          const other = raw?.other ?? raw?.Other ?? {};
-          const lm = raw?.lastMessage ?? raw?.LastMessage ?? null;
-          const lastText =
-            typeof raw?.lastText === "string"
-              ? raw.lastText
-              : typeof raw?.LastText === "string"
-              ? raw.LastText
-              : typeof lm?.preview === "string"
-              ? lm.preview
-              : typeof lm?.Preview === "string"
-              ? lm.Preview
-              : "";
-          const lastAtRaw = raw?.lastAt ?? raw?.LastAt ?? lm?.at ?? lm?.At ?? null;
+          const chatCode = raw?.chatCode;
+          const other = raw?.other ?? {};
+          const lastText = raw.lastText ?? "";
+          const lastAtRaw = raw?.lastAt;
           const lastAt = lastAtRaw ? parseApiUtc(lastAtRaw).toISOString() : null;
-          const unread = raw?.unreadCount ?? raw?.UnreadCount ?? raw?.count ?? 0;
+          const unread = raw?.unreadCount ?? 0;
           return { chatCode, other, lastText, lastAt, unread };
         });
         setInbox(mapped.filter((x) => typeof x.chatCode === "number"));

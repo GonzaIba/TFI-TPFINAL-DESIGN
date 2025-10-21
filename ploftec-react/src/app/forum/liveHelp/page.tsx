@@ -4,7 +4,7 @@
 import styles from './page.module.css';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button, Grid, GridItem, Input, SideBarFilters, RequestHelpFeed, RequestHelpConfirmedFeed } from '@/components';
 import { MyRequestHelpFeed } from '@/components/liveHelp/myRequestHelpFeed/myRequestHelpFeed';
 import { UserFilterForumResponse } from '@/lib/types/forum';
@@ -197,14 +197,22 @@ export default function LiveHelpPage() {
           ))}
         </Grid>
 
-        {showConfirmedSection && (
-          <>
-            <h2 className={styles.sectionTitle}>Confirmadas</h2>
-            <div className={styles.mySectionContainer}>
-              <RequestHelpConfirmedFeed items={confirmedRequests} />
-            </div>
-          </>
-        )}
+        <AnimatePresence>
+          {showConfirmedSection && (
+            <motion.div
+              key="confirmed-section"
+              initial={{ opacity: 0, y: -16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+            >
+              <h2 className={styles.sectionTitle}>Confirmadas</h2>
+              <div className={styles.mySectionContainer}>
+                <RequestHelpConfirmedFeed items={confirmedRequests} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Mis solicitudes de ayuda */}
         <h2 className={styles.sectionTitle}>Mis solicitudes de ayuda</h2>

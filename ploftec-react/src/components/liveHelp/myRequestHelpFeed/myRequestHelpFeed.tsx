@@ -9,6 +9,7 @@ import { Loading } from "@/components";
 import { useAlertsLayer } from "@/components/alerts/alertsLayer";
 import styles from "../requestHelpFeed/requestHelpFeed.module.css";
 import { Plus } from "lucide-react";
+import { RequestHelpResponse } from "@/lib/types/forum";
 
 type Props = {
   enabled?: boolean;
@@ -61,7 +62,7 @@ function MyRequestHelpFeedInner({ enabled = true, isAuthenticated = true, isAuth
           {!isLoading &&
             items.map((it, i) => {
               const requestCode =
-                (it as any).CodeRequestHelp ?? (it as any).codeRequestHelp;
+                (it as RequestHelpResponse).codeRequestHelp;
               const badges = requestCode ? getBadgesForRequest(requestCode) : [];
               return (
                 <motion.div
