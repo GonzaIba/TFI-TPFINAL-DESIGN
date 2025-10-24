@@ -38,7 +38,7 @@ function MyRequestHelpFeedInner({ enabled = true, isAuthenticated = true, isAuth
   if (isError) {
     return (
       <div className={styles.error}>
-        Ocurrio un error al cargar tus solicitudes: {(error as Error)?.message}
+        Ocurrio un error al cargar tus solicitudes. Intenta nuevamente más tarde.
       </div>
     );
   }

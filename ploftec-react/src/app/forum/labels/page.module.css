@@ -93,6 +93,21 @@
   margin-top: 2rem;
 }
 
+.errorState,
+.emptyState {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem 0;
+  grid-column: 1 / -1;
+}
+
+.errorState > * ,
+.emptyState > * {
+  max-width: 560px;
+  width: 100%;
+}
+
 
 
 /* 2 columnas en tablet */

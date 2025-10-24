@@ -172,6 +172,15 @@ export default function PublicationsPage() {
     void refetchTopPubs();
   }, [refetchTopPubs]);
 
+  const showCreatePublicationError = useCallback(() => {
+    handleError([
+      {
+        nameError: 'CreatePublicationError',
+        message: 'Ocurrió un error al crear la publicación.',
+      } as any,
+    ]);
+  }, [handleError]);
+
   const publicationsError = useMemo(() => {
     if (filter === 'all' && isErrorAll) {
       return {
@@ -213,16 +222,16 @@ export default function PublicationsPage() {
       return (
         <ErrorMiniCard
           title="No pudimos cargar el top de usuarios"
-          description={'Se produjo un error. Intentalo nuevamente más tarde.'}
+          description="Se produjo un error. Intentalo nuevamente mas tarde."
           onRetry={retryTopUsers}
         />
       );
     }
     return (
       <p>
-        Aún no hay usuarios con puntos esta semana.
+        Aun no hay usuarios con puntos esta semana.
         <br />
-        ¡Sé el primero!
+        Se el primero!
       </p>
     );
   }, [isErrorTopUsers, errorTopUsers, retryTopUsers]);
@@ -232,12 +241,12 @@ export default function PublicationsPage() {
       return (
         <ErrorMiniCard
           title="No pudimos cargar el top de preguntas"
-          description={'Se produjo un error. Intentalo nuevamente más tarde.'}
+          description="Se produjo un error. Intentalo nuevamente mas tarde."
           onRetry={retryTopPublications}
         />
       );
     }
-    return <p>No hay preguntas destacadas todavía.</p>;
+    return <p>No hay preguntas destacadas todavia.</p>;
   }, [isErrorTopPubs, errorTopPubs, retryTopPublications]);
 
   const toggleFilter = (f: Filter) => {
@@ -347,14 +356,21 @@ export default function PublicationsPage() {
   }
 
   const handleOnCreatePublication = async (data : CreatePublicationRequest) => {
+    setLoadingCreatePublication(true);
     try {
-      setLoadingCreatePublication(true);
-      await publicationsService.createPublication(data);
+      const response = await publicationsService.createPublication(data);
+      if (response.errors?.errorsList?.length) {
+        handleError(response.errors.errorsList);
+        showCreatePublicationError();
+        return;
+      }
+
+      setShowModalNewPub(false);
     } catch(error) {
-      console.error(error)
+      console.error(error);
+      showCreatePublicationError();
     } finally {
       setLoadingCreatePublication(false);
-      setShowModalNewPub(false);
     }
   }
 
@@ -460,7 +476,7 @@ export default function PublicationsPage() {
                 {publicationsError ? (
                   <ErrorMiniCard
                     title={publicationsError.title}
-                    description={'Se produjo un error. Intentalo nuevamente más tarde.'}
+                    description={publicationsError.description}
                     onRetry={publicationsError.onRetry}
                   />
                 ) : loadingPubs ? (

@@ -43,7 +43,7 @@ function RequestHelpFeedInner({ pageSize = 9, search, refresh = 0, enabled = tru
   if (isError) {
     return (
       <div className={styles.error}>
-        Ocurrió un error al cargar las solicitudes: {(error as Error)?.message}
+        Ocurrió un error al cargar las solicitudes de ayuda. Intenta nuevamente más tarde.
       </div>
     );
   }

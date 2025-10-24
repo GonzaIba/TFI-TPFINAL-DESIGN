@@ -3,10 +3,10 @@
 
 import styles from './page.module.css';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
-import { Button, LabelCard, SkeletonLabelCard, Paginator } from '@/components';
+import { LabelCard, SkeletonLabelCard, Paginator, ErrorMiniCard } from '@/components';
 import AnimatedSelect, { UiOption } from '@/components/selectComponent/selectComponent';
 import { useLabels } from '@/lib/query/hooks';
 import { LabelFiltersEnum } from '@/lib/types/enum';
@@ -38,9 +38,25 @@ export default function LabelsPage() {
   const postsPerPage = 16;
 
   // Data
-  const { data: labels, isLoading, isFetching } = useLabels(page, postsPerPage, search, filter);
+  const {
+    data: labels,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch,
+  } = useLabels(page, postsPerPage, search, filter);
   const labelsData = labels?.list ?? [];
   const totalPages = labels?.totalPages ?? 1;
+
+  const hasError = isError;
+  const retryLabels = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+  const labelsErrorDescription = useMemo(
+    () => 'No pudimos cargar las etiquetas. Intenta nuevamente más tarde.',
+    [error],
+  );
 
   const onPageChange = (newPage: number) => setPage(newPage);
 
@@ -69,8 +85,8 @@ export default function LabelsPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [filterOpen]);
 
-  const loading = isLoading || isFetching;
-  const selectedText = FILTER_OPTIONS.find(o => o.value === filter)?.text ?? 'Filtrar por:';
+  const loading = !hasError && (isLoading || isFetching);
+  const isEmpty = !loading && !hasError && labelsData.length === 0;
 
   return (
     <section className={styles.labelsPage}>
@@ -86,7 +102,7 @@ export default function LabelsPage() {
             <AnimatedSelect<LabelFiltersEnum>
               options={FILTER_OPTIONS}
               value={filter}
-              onChange={(opt) => { setFilter(opt.value); setPage(1); }}
+              onChange={handleOnFilterSelect}
               placeholder="Filtrar por:"
               width={220}
               icon={<FilterAltIcon />}
@@ -98,42 +114,57 @@ export default function LabelsPage() {
       </header>
 
       <main className={styles.grid}>
-        {loading
-          ? Array.from({ length: postsPerPage }).map((_, i) => (
-              <div key={i} className={styles.containerLabel}>
-                <SkeletonLabelCard />
-              </div>
-            ))
-          : labelsData.map((label, i) => (
-              <motion.div
-                key={label.codeLabel}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.3 }}
-                variants={{
-                  hidden: { opacity: 0, y: 20, scale: 0.98 },
-                  visible: { opacity: 1, y: 0, scale: 1 },
-                }}
-                transition={{ duration: 0.4, ease: 'easeOut', delay: i * 0.05 }}
-                className={styles.containerLabel}
-              >
-                <LabelCard
-                  label={label}
-                  onClick={() => handleOnLabelClick(label.name)}
-                />
-              </motion.div>
-            ))
-        }
+        {hasError ? (
+          <div className={styles.errorState}>
+            <ErrorMiniCard
+              title="No pudimos cargar las etiquetas"
+              description={labelsErrorDescription}
+              onRetry={retryLabels}
+            />
+          </div>
+        ) : loading ? (
+          Array.from({ length: postsPerPage }).map((_, i) => (
+            <div key={i} className={styles.containerLabel}>
+              <SkeletonLabelCard />
+            </div>
+          ))
+        ) : isEmpty ? (
+          <div className={styles.emptyState}>
+            <p>No encontramos etiquetas para mostrar.</p>
+          </div>
+        ) : (
+          labelsData.map((label, i) => (
+            <motion.div
+              key={label.codeLabel}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
+              variants={{
+                hidden: { opacity: 0, y: 20, scale: 0.98 },
+                visible: { opacity: 1, y: 0, scale: 1 },
+              }}
+              transition={{ duration: 0.4, ease: 'easeOut', delay: i * 0.05 }}
+              className={styles.containerLabel}
+            >
+              <LabelCard
+                label={label}
+                onClick={() => handleOnLabelClick(label.name)}
+              />
+            </motion.div>
+          ))
+        )}
       </main>
 
-      <div className={styles.containerPaginator}>
-        <Paginator
-          currentPage={page}
-          totalPages={totalPages}
-          onPageChange={onPageChange}
-          isComponentLoading={loading}
-        />
-      </div>
+      {!hasError && (
+        <div className={styles.containerPaginator}>
+          <Paginator
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={onPageChange}
+            isComponentLoading={loading}
+          />
+        </div>
+      )}
     </section>
   );
 }
