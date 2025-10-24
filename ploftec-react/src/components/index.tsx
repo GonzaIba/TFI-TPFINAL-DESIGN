@@ -11,6 +11,7 @@ export { SkeletonAnswerCard } from '@/components/skeletonComponent/skeletonAnswe
 export { SkeletonEditorComment } from '@/components/skeletonComponent/skeletonEditorComment';
 export { SkeletonLabelCard } from '@/components/skeletonComponent/skeletonLabelCard';
 export { PanelSection } from '@/components/forum/panelSection/panelSection';
+export { ErrorMiniCard } from '@/components/forum/errorState/errorMiniCard';
 export { TopPublicationCard } from '@/components/forum/topPublicationCard/topPublicationCard';
 export { ModalComponent } from '@/components/modalComponent/modalComponent';
 export { InputLabel } from '@/components/inputLabelComponent/inputLabel';

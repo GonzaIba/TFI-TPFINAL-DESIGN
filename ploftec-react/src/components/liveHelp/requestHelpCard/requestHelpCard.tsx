@@ -7,7 +7,7 @@ import styles from "./requestHelpCard.module.css";
 import { Button, ExpiryTimer, AvatarUser, Loading } from "@/components";
 import type { RequestHelpResponse } from "@/lib/types/forum";
 import { useEffect, useMemo, useState } from "react";
-import { Trophy } from "lucide-react";
+import { Trophy, LogIn } from "lucide-react";
 import HandshakeIcon from '@mui/icons-material/Handshake';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { parseApiUtc, formatLocalSlot } from '@/lib/utils/datetime';
@@ -117,6 +117,10 @@ export function RequestHelpCard({ item, hideOwnerAvatar = false, badges = [] }: 
     }, 550);
   }
 
+  const isOwnerCard = hideOwnerAvatar || (item as any)?.isOwner === true;
+  const actionIcon = isOwnerCard ? <LogIn /> : <HandshakeIcon />;
+  const actionLabel = isOwnerCard ? "Ir al detalle de la ayuda" : "Ofrecer ayuda";
+
   return (
     <>
     <Loading show={navLoading} />
@@ -193,10 +197,10 @@ export function RequestHelpCard({ item, hideOwnerAvatar = false, badges = [] }: 
             >
               <Button 
                 onClick={openDetail}
-                icon={<HandshakeIcon />}
+                icon={actionIcon}
                 circular
-                ariaLabel="Ofrecer ayuda"
-                title="Ofrecer ayuda"
+                ariaLabel={actionLabel}
+                title={actionLabel}
               />
             </div>
           </div>

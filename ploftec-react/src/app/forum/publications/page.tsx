@@ -1,13 +1,14 @@
 // src/app/Forum/Publications/page.tsx
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation'
 import { 
   SkeletonPublication, 
   SkeletonAvatarAndName, 
   PanelSection, 
+  ErrorMiniCard,
   TopPublicationCard, 
   SkeletonLine,
   ModalComponent,
@@ -86,17 +87,26 @@ export default function PublicationsPage() {
     data: paginatedPubs,
     isLoading: loadingAll,
     isFetching: fetchingAll,
+    isError: isErrorAll,
+    error: errorAll,
+    refetch: refetchAll,
   } = usePublications(currentPage, postsPerPage, search)
 
   const {
     data: paginatedSaved,
     isLoading: loadingSaved,
     isFetching: fetchingSaved,
+    isError: isErrorSaved,
+    error: errorSaved,
+    refetch: refetchSaved,
   } = useSavedPublications(filter === 'saved', currentPage, postsPerPage)
 
   const {
     data: paginatedCreated,
     isLoading: loadingCreated,
+    isError: isErrorCreated,
+    error: errorCreated,
+    refetch: refetchCreated,
   } = useCreatedPublications(filter === 'created', currentPage, postsPerPage)
 
   // determinar datos y totalPages según filtro
@@ -124,22 +134,111 @@ export default function PublicationsPage() {
   const {
     data: publicacionesTop = [],
     isLoading: loadingTopPubs,
+    isError: isErrorTopPubs,
+    error: errorTopPubs,
+    refetch: refetchTopPubs,
   } = useTopPublications();
 
   const {
     data: usuariosTop = [],
     isLoading: loadingTopUsers,
+    isError: isErrorTopUsers,
+    error: errorTopUsers,
+    refetch: refetchTopUsers,
   } = useTopUsers();
 
-  const isPageLoading =
-    (filter === 'all' && (loadingAll || fetchingAll)) ||
-    (filter === 'saved' && loadingSaved) ||
-    (filter === 'created' && loadingCreated) ||
-    loadingTopPubs ||
-    loadingTopUsers
+  const isPaginatorLoading = loadingPubs
 
   const handleError = useErrorHandler();
   const queryClient = useQueryClient();
+
+  const retryAllPublications = useCallback(() => {
+    void refetchAll();
+  }, [refetchAll]);
+
+  const retrySavedPublications = useCallback(() => {
+    void refetchSaved();
+  }, [refetchSaved]);
+
+  const retryCreatedPublications = useCallback(() => {
+    void refetchCreated();
+  }, [refetchCreated]);
+
+  const retryTopUsers = useCallback(() => {
+    void refetchTopUsers();
+  }, [refetchTopUsers]);
+
+  const retryTopPublications = useCallback(() => {
+    void refetchTopPubs();
+  }, [refetchTopPubs]);
+
+  const publicationsError = useMemo(() => {
+    if (filter === 'all' && isErrorAll) {
+      return {
+        title: 'No pudimos cargar las publicaciones',
+        description: 'Reintenta en unos segundos para ver las publicaciones mas recientes.',
+        onRetry: retryAllPublications,
+      };
+    }
+    if (filter === 'saved' && isErrorSaved) {
+      return {
+        title: 'No pudimos cargar tus publicaciones guardadas',
+        description: 'Actualiza la pagina o proba nuevamente en unos instantes.',
+        onRetry: retrySavedPublications,
+      };
+    }
+    if (filter === 'created' && isErrorCreated) {
+      return {
+        title: 'No pudimos cargar tus publicaciones creadas',
+        description: 'Proba recargar o intenta nuevamente la consulta.',
+        onRetry: retryCreatedPublications,
+      };
+    }
+    return null;
+  }, [
+    filter,
+    isErrorAll,
+    errorAll,
+    retryAllPublications,
+    isErrorSaved,
+    errorSaved,
+    retrySavedPublications,
+    isErrorCreated,
+    errorCreated,
+    retryCreatedPublications,
+  ]);
+
+  const topUsersEmptyState = useMemo(() => {
+    if (isErrorTopUsers) {
+      return (
+        <ErrorMiniCard
+          title="No pudimos cargar el top de usuarios"
+          description={'Se produjo un error. Intentalo nuevamente más tarde.'}
+          onRetry={retryTopUsers}
+        />
+      );
+    }
+    return (
+      <p>
+        Aún no hay usuarios con puntos esta semana.
+        <br />
+        ¡Sé el primero!
+      </p>
+    );
+  }, [isErrorTopUsers, errorTopUsers, retryTopUsers]);
+
+  const topQuestionsEmptyState = useMemo(() => {
+    if (isErrorTopPubs) {
+      return (
+        <ErrorMiniCard
+          title="No pudimos cargar el top de preguntas"
+          description={'Se produjo un error. Intentalo nuevamente más tarde.'}
+          onRetry={retryTopPublications}
+        />
+      );
+    }
+    return <p>No hay preguntas destacadas todavía.</p>;
+  }, [isErrorTopPubs, errorTopPubs, retryTopPublications]);
 
   const toggleFilter = (f: Filter) => {
     setFilter(prev => (prev === f ? 'all' : f));   // si vuelven a pulsar, vuelve a 'all'
@@ -358,7 +457,13 @@ export default function PublicationsPage() {
                 </div>
 
                 {/* ––– LISTA PUBLICACIONES ––– */}
-                {loadingPubs ? (
+                {publicationsError ? (
+                  <ErrorMiniCard
+                    title={publicationsError.title}
+                    description={'Se produjo un error. Intentalo nuevamente más tarde.'}
+                    onRetry={publicationsError.onRetry}
+                  />
+                ) : loadingPubs ? (
                   <>
                     <SkeletonPublication />
                     <SkeletonPublication />
@@ -396,7 +501,7 @@ export default function PublicationsPage() {
                       currentPage={currentPage}
                       totalPages={totalPages}
                       onPageChange={onPageChange}
-                      isComponentLoading={isPageLoading}
+                      isComponentLoading={isPaginatorLoading}
                     />
                   </>
                 ) : filter === 'created' ? (
@@ -439,13 +544,8 @@ export default function PublicationsPage() {
                     />
                   )}
                   /* ---------- vacío ---------- */
-                  emptyMessage={
-                    <p>
-                      Aún no hay usuarios con puntos esta semana.
-                      <br />
-                      ¡Sé el primero!
-                    </p>
-                  }
+                  emptyMessage={topUsersEmptyState}
+
                 />
 
                 <PanelSection
@@ -467,7 +567,8 @@ export default function PublicationsPage() {
                       onClickTitle={async () => { await onClickTitle(publication.codePublication); }}
                     />
                   )}
-                  emptyMessage={<p>No hay preguntas destacadas todavía.</p>}
+                  emptyMessage={topQuestionsEmptyState}
+
                 />
               </div>
             </div>

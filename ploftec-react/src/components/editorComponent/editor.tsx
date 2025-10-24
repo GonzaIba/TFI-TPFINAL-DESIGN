@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useCallback } from 'react';
 //import { startTransition, useDeferredValue } from 'react';
 // Kit base
 import RichTextEditor, { BaseKit, useEditorState } from 'reactjs-tiptap-editor';
@@ -80,23 +80,32 @@ const EditorInput = ({
   onChangeContent,
 }: Props) => {
   const { isReady, editor, editorRef } = useEditorState();
-  const [content, setContent] = useState(initialContent);
+  const contentRef = useRef(initialContent);
 
-  // 1) Cuando cambie initialContent, actualizamos el estado y el editor
+  // Persist the latest content without triggering re-renders on every keystroke.
+  const handleChange = useCallback(
+    (html: string) => {
+      if (contentRef.current !== html) {
+        contentRef.current = html;
+        onChangeContent?.(html);
+      }
+    },
+    [onChangeContent],
+  );
+
+  // Sync external changes into the editor instance once it's ready.
   useEffect(() => {
-    setContent(initialContent);
+    contentRef.current = initialContent;
     if (editor) {
-      editor.commands.setContent(initialContent);
+      editor.commands.setContent(initialContent, false);
     }
   }, [initialContent, editor]);
 
-  // 2) Al editar, actualizamos estado y notificamos al padre (si existe)
-  const handleChange = (html: string) => {
-    setContent(html);
-    onChangeContent?.(html);
-  };
+  const handleComment = useCallback(() => {
+    onComment?.(contentRef.current);
+  }, [onComment]);
 
-  const extensions = React.useMemo(() => [
+  const extensions = useMemo(() => [
     BaseKit.configure({
       placeholder: { showOnlyCurrent: true },
       characterCount: { limit: 15000 },
@@ -172,7 +181,7 @@ const EditorInput = ({
         <RichTextEditor
           output='html'
           ref={editorRef}
-          content={content}
+          content={contentRef.current}
           onChangeContent={handleChange}
           extensions={extensions}
           useEditorOptions={{ immediatelyRender: true }}
@@ -198,7 +207,7 @@ const EditorInput = ({
       {isReady && !isInternal && (
         <Button
           text="Comentar"
-          onClick={() => onComment?.(content)}
+          onClick={handleComment}
           width="100%"
         />
       )}
