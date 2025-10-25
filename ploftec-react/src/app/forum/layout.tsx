@@ -23,6 +23,8 @@ import { RobotIntro } from '@/components/chatbotComponent/robotIntro/robotIntro'
 import { publicationsService } from '@/lib/services/forum/publicationsService';
 import { NewNotificationEvent, RemoveNotificationEvent } from '@/lib/types/events';
 import { AlertsLayer } from '@/components/alerts/alertsLayer';
+import { onboardingService } from '@/lib/services/auth/onboardingService';
+import { OnboardingUserEnum } from '@/lib/types/onboarding';
 
 export default function ForumLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -36,6 +38,7 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
   const isAuthLoaded = useAuthStore((state) => state.isAuthLoaded);
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const setUser = useAuthStore((state) => state.setUser);
 
   const newNotificationAdded = useCallback((d: NewNotificationEvent) => {
     setUserNotifications(prev => [d, ...(prev ?? [])]);
@@ -142,10 +145,43 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
 
   const [showIntro, setShowIntro] = useState(false);
   const [showRobot, setShowRobot] = useState(true);
+  const [hasDismissedOnboarding, setHasDismissedOnboarding] = useState(false);
 
-  const handleIntroComplete = () => {
+  useEffect(() => {
+    if (!user) {
+      setShowIntro(false);
+      setShowRobot(true);
+      setHasDismissedOnboarding(false);
+      return;
+    }
+
+    if (!user.isOnboarded && !hasDismissedOnboarding) {
+      setShowIntro(true);
+      setShowRobot(false);
+      return;
+    }
+
     setShowIntro(false);
     setShowRobot(true);
+  }, [user, hasDismissedOnboarding]);
+
+  const handleIntroComplete = () => {
+    setHasDismissedOnboarding(true);
+    setShowIntro(false);
+    setShowRobot(true);
+
+    if (!user) return;
+
+    const completeOnboarding = async () => {
+      try {
+        await onboardingService.completeOnboarding(OnboardingUserEnum.Onboarding);
+        setUser({ ...user, isOnboarded: true });
+      } catch (error) {
+        console.error('No pude completar el onboarding', error);
+      }
+    };
+
+    void completeOnboarding();
   };
 
   const handleOnSubmitSearch = async (query: string) => {

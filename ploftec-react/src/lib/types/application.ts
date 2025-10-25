@@ -13,4 +13,7 @@
     hasSeenIntroLabels?: boolean;
     hasSeenIntroUsers?: boolean;
     hasSeenIntroLiveHelp?: boolean;
+    hasSeenIntroLiveHelpConfirmed?: boolean;
+    hasSeenIntroLiveHelpDetailHelp?: boolean;
+    hasSeenIntroLiveHelpDetailHelped?: boolean;
   }

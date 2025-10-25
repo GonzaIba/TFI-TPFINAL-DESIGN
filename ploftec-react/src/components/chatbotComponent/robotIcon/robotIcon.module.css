@@ -1,0 +1,38 @@
+.wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.animated {
+  animation: robotFloat 4s ease-in-out infinite, robotWave 2.6s ease-in-out infinite;
+  transform-origin: 50% 80%;
+}
+
+@keyframes robotFloat {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes robotWave {
+  0%,
+  100% {
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.25));
+  }
+  50% {
+    filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.35));
+  }
+}

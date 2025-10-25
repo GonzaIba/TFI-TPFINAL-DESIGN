@@ -1,7 +1,7 @@
 // src/app/Forum/Publications/page.tsx
 'use client'
 
-import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback, useLayoutEffect } from 'react'
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/navigation'
 import { 
@@ -30,6 +30,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { publicationsKeys } from '@/lib/query/keys';
 import { useWindowWidth } from '@/hooks';
+import useAuthStore from '@/store/slices/authStore/authStore';
+import { SpotlightTour } from '@/components/onboarding/spotlight/spotlightTour';
+import { onboardingService } from '@/lib/services/auth/onboardingService';
+import { OnboardingUserEnum } from '@/lib/types/onboarding';
 import {
   usePublications,
   useTopPublications,
@@ -39,6 +43,54 @@ import {
 } from '@/lib/query/hooks';
 
 type Filter = 'all' | 'saved' | 'created';
+
+type PublicationsIntroTarget = 'paginator' | 'create' | 'saved' | 'created' | 'insights';
+
+type PublicationsIntroStep = {
+  target: PublicationsIntroTarget;
+  title: string;
+  description: string;
+  placement: 'left' | 'right' | 'top' | 'bottom';
+  gap?: number;
+};
+
+const PUBLICATIONS_INTRO_STEPS: PublicationsIntroStep[] = [
+  {
+    target: 'paginator',
+    title: 'Recorré todas las publicaciones',
+    description: 'Usá el paginador para avanzar o retroceder entre páginas sin perderte ninguna pregunta.',
+    placement: 'top',
+    gap: 36,
+  },
+  {
+    target: 'create',
+    title: 'Creá tu propia consulta',
+    description: 'Con este botón abrís el modal para redactar una nueva publicación y obtener ayuda de la comunidad.',
+    placement: 'right',
+    gap: 28,
+  },
+  {
+    target: 'saved',
+    title: 'Tus publicaciones guardadas',
+    description: 'Accedé rápidamente a las publicaciones que marcaste para retomarlas más tarde.',
+    placement: 'right',
+    gap: 24,
+  },
+  {
+    target: 'created',
+    title: 'Tus aportes',
+    description: 'Filtrá por las publicaciones que vos mismo creaste para seguir sus respuestas y actividad.',
+    placement: 'right',
+    gap: 24,
+  },
+  {
+    target: 'insights',
+    title: 'Inspirate con lo mejor de la semana',
+    description: 'Explorá los top usuarios y preguntas destacadas para descubrir contenido relevante.',
+    placement: 'left',
+    gap: 32,
+  },
+];
 
 export default function PublicationsPage() {
   const router = useRouter()
@@ -63,10 +115,27 @@ export default function PublicationsPage() {
   const width = useWindowWidth();
   const [isMobile, setIsMobile] = useState(width < 768)
   const isTinyPhone = width <= 320
+  const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
+
+  const paginatorRef = useRef<HTMLDivElement | null>(null);
+  const createButtonRef = useRef<HTMLDivElement | null>(null);
+  const savedButtonRef = useRef<HTMLDivElement | null>(null);
+  const createdButtonRef = useRef<HTMLDivElement | null>(null);
+  const insightsPanelRef = useRef<HTMLDivElement | null>(null);
+
+  const [showPublicationsIntro, setShowPublicationsIntro] = useState(false);
+  const [publicationsIntroDismissed, setPublicationsIntroDismissed] = useState(false);
+  const [publicationsIntroStepIndex, setPublicationsIntroStepIndex] = useState(-1);
+  const [publicationsHighlightRect, setPublicationsHighlightRect] = useState<DOMRect | null>(null);
 
   useEffect(() => {
     setIsMobile(width < 768)
   }, [width])
+
+  useEffect(() => {
+    setPublicationsIntroDismissed(false);
+  }, [user?.email]);
 
   // Extract label filter from `search` if it comes as [label]
   const [labelFilter, setLabelFilter] = useState<string | null>(null)
@@ -384,6 +453,108 @@ export default function PublicationsPage() {
     router.push('/forum/publications')
   }
   
+  const getElementForTarget = useCallback((target: PublicationsIntroTarget) => {
+    switch (target) {
+      case 'paginator':
+        return paginatorRef.current;
+      case 'create':
+        return createButtonRef.current;
+      case 'saved':
+        return savedButtonRef.current;
+      case 'created':
+        return createdButtonRef.current;
+      case 'insights':
+        return insightsPanelRef.current;
+      default:
+        return null;
+    }
+  }, []);
+
+  const computePublicationsHighlight = useCallback(() => {
+    if (publicationsIntroStepIndex < 0) return null;
+    const step = PUBLICATIONS_INTRO_STEPS[publicationsIntroStepIndex];
+    if (!step) return null;
+    const element = getElementForTarget(step.target);
+    return element ? element.getBoundingClientRect() : null;
+  }, [publicationsIntroStepIndex, getElementForTarget]);
+
+  useLayoutEffect(() => {
+    if (!showPublicationsIntro) return;
+    setPublicationsHighlightRect(computePublicationsHighlight());
+  }, [showPublicationsIntro, publicationsIntroStepIndex, publicacionesData, computePublicationsHighlight]);
+
+  useEffect(() => {
+    if (!showPublicationsIntro) return;
+
+    const handleUpdate = () => {
+      setPublicationsHighlightRect(computePublicationsHighlight());
+    };
+
+    window.addEventListener('resize', handleUpdate);
+    window.addEventListener('scroll', handleUpdate, true);
+    return () => {
+      window.removeEventListener('resize', handleUpdate);
+      window.removeEventListener('scroll', handleUpdate, true);
+    };
+  }, [showPublicationsIntro, computePublicationsHighlight]);
+
+  useEffect(() => {
+    if (!user || user.hasSeenIntroPublications || showPublicationsIntro || publicationsIntroDismissed) return;
+    if (loadingPubs || loadingSaved || loadingCreated) return;
+    if (!publicacionesData?.length) return;
+    const firstElement = getElementForTarget(PUBLICATIONS_INTRO_STEPS[0].target);
+    if (!firstElement) return;
+
+    setPublicationsIntroStepIndex(0);
+    setShowPublicationsIntro(true);
+  }, [
+    user,
+    showPublicationsIntro,
+    publicationsIntroDismissed,
+    loadingPubs,
+    loadingSaved,
+    loadingCreated,
+    publicacionesData,
+    getElementForTarget,
+  ]);
+
+  const finishPublicationsIntro = useCallback(async () => {
+    setShowPublicationsIntro(false);
+    setPublicationsIntroDismissed(true);
+    setPublicationsIntroStepIndex(-1);
+    setPublicationsHighlightRect(null);
+
+    if (!user || user.hasSeenIntroPublications) return;
+
+    try {
+      await onboardingService.completeOnboarding(OnboardingUserEnum.HasSeenIntroPublications);
+      setUser({ ...user, hasSeenIntroPublications: true });
+    } catch (err) {
+      console.error('No pude marcar la intro de publicaciones', err);
+    }
+  }, [user, setUser]);
+
+  const handleIntroNext = useCallback(() => {
+    if (publicationsIntroStepIndex + 1 >= PUBLICATIONS_INTRO_STEPS.length) {
+      void finishPublicationsIntro();
+      return;
+    }
+
+    setPublicationsIntroStepIndex((prev) => prev + 1);
+  }, [finishPublicationsIntro, publicationsIntroStepIndex]);
+
+  const handleIntroBack = useCallback(() => {
+    setPublicationsIntroStepIndex((prev) => (prev > 0 ? prev - 1 : prev));
+  }, []);
+
+  const handleIntroSkip = useCallback(() => {
+    void finishPublicationsIntro();
+  }, [finishPublicationsIntro]);
+
+  const publicationsIntroStep =
+    publicationsIntroStepIndex >= 0 ? PUBLICATIONS_INTRO_STEPS[publicationsIntroStepIndex] : null;
+  const canGoBack = publicationsIntroStepIndex > 0;
+  
   // console.log('Page publications Main:')
   
   return (
@@ -426,41 +597,47 @@ export default function PublicationsPage() {
               {/* —————— Lado izquierdo —————— */}
               <div className="forum-left">
                 <div className="question-create open-modal">
-                  <Button
-                    text={isTinyPhone ? '' : 'Crear Publicación'}
-                    onClick={onNewPublication}
-                    icon={<Add fontSize="medium" />}
-                    circular={isTinyPhone}
-                    width={isTinyPhone ? '45px' : '200px'}
-                  />
+                  <div ref={createButtonRef} style={{ display: 'flex' }}>
+                    <Button
+                      text={isTinyPhone ? '' : 'Crear Publicación'}
+                      onClick={onNewPublication}
+                      icon={<Add fontSize="medium" />}
+                      circular={isTinyPhone}
+                      width={isTinyPhone ? '45px' : '200px'}
+                    />
+                  </div>
 
                   {/* Guardadas */}
-                  <Button
-                    onClick={() => toggleFilter('saved')}
-                    icon={
-                      filter === 'saved' ? (
-                        <Bookmark sx={{ color: Colors.primary }} fontSize="medium" />
-                      ) : (
-                        <BookmarkBorder sx={{ color: Colors.white }} fontSize="medium" />
-                      )
-                    }
-                    transparent
-                    width="40px"
-                  />
+                  <div ref={savedButtonRef} style={{ display: 'flex' }}>
+                    <Button
+                      onClick={() => toggleFilter('saved')}
+                      icon={
+                        filter === 'saved' ? (
+                          <Bookmark sx={{ color: Colors.primary }} fontSize="medium" />
+                        ) : (
+                          <BookmarkBorder sx={{ color: Colors.white }} fontSize="medium" />
+                        )
+                      }
+                      transparent
+                      width="40px"
+                    />
+                  </div>
 
                   {/* Creadas */}
-                  <Button
-                    onClick={() => toggleFilter('created')}
-                    icon={
-                      filter === 'created' ? (
-                        <BorderColor sx={{ color: Colors.primary }} fontSize="medium" />
-                      ) : (
-                        <BorderColorOutlined sx={{ color: Colors.white }} fontSize="medium" />
-                      )
-                    }
-                    transparent
-                    width="40px"
-                  />
+                  <div ref={createdButtonRef} style={{ display: 'flex' }}>
+                    <Button
+                      onClick={() => toggleFilter('created')}
+                      icon={
+                        filter === 'created' ? (
+                          <BorderColor sx={{ color: Colors.primary }} fontSize="medium" />
+                        ) : (
+                          <BorderColorOutlined sx={{ color: Colors.white }} fontSize="medium" />
+                        )
+                      }
+                      transparent
+                      width="40px"
+                    />
+                  </div>
 
                   {labelFilter && (
                     <div className="active-filter-chip" title="Filtrando por etiqueta">
@@ -513,12 +690,14 @@ export default function PublicationsPage() {
                       </motion.div>
                     ))}
                   
-                    <Paginator
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={onPageChange}
-                      isComponentLoading={isPaginatorLoading}
-                    />
+                    <div ref={paginatorRef}>
+                      <Paginator
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={onPageChange}
+                        isComponentLoading={isPaginatorLoading}
+                      />
+                    </div>
                   </>
                 ) : filter === 'created' ? (
                   <p>Aún no tenés publicaciones creadas…</p>
@@ -528,7 +707,7 @@ export default function PublicationsPage() {
               </div>
 
               {/* —————— Lado derecho (top-users y top-questions) —————— */}
-              <div className="forum-right">
+              <div className="forum-right" ref={insightsPanelRef}>
                 
                 <PanelSection
                   title="Top usuarios esta semana"
@@ -600,6 +779,23 @@ export default function PublicationsPage() {
       >
         <CreatePublicationComponent onSubmit={handleOnCreatePublication} close={() => setShowModalNewPub(false) } loadingSubmit={loadingCreatePublication}/>
       </ModalComponent>
+
+      {publicationsIntroStep && (
+        <SpotlightTour
+          isVisible={showPublicationsIntro}
+          stepIndex={publicationsIntroStepIndex}
+          totalSteps={PUBLICATIONS_INTRO_STEPS.length}
+          title={publicationsIntroStep.title}
+          description={publicationsIntroStep.description}
+          highlightRect={publicationsHighlightRect}
+          panelPlacement={publicationsIntroStep.placement}
+          panelGap={publicationsIntroStep.gap}
+          canGoBack={canGoBack}
+          onPrev={handleIntroBack}
+          onNext={handleIntroNext}
+          onSkip={handleIntroSkip}
+        />
+      )}
     </div>
   )
 }

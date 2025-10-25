@@ -1,24 +1,29 @@
 // components/RobotWaveIcon.tsx
-import { useRef } from 'react';
-import Lottie from 'lottie-react';
-import animationData from './robotIcon.json'; // Asegúrate de colocar el archivo JSON en la ruta correcta
 import robotImage from './robotImage.png';
+import styles from './robotIcon.module.css';
 
-export function RobotAnimated({ showImage }: { showImage: boolean }) {
+type RobotAnimatedProps = {
+  showImage: boolean;
+  size?: number;
+  animated?: boolean;
+};
+
+export function RobotAnimated({ showImage, size = 80, animated = false }: RobotAnimatedProps) {
+  if (!showImage) return null;
+
   return (
-    <div style={{ width: 80, height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      {showImage && (
-        <img
-          src={robotImage.src}
-          alt="Robot"
-          style={{
-            width: '100%', // usa el ancho máximo permitido
-            height: 'auto', // mantiene proporción
-            //objectFit: 'contain'
-            paddingTop: 10
-          }}
-        />
-      )}
+    <div
+      className={styles.wrapper}
+      style={{
+        width: size,
+        height: size,
+      }}
+    >
+      <img
+        src={robotImage.src}
+        alt="Robot"
+        className={`${styles.image} ${animated ? styles.animated : ''}`}
+      />
     </div>
   );
 }
