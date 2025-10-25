@@ -9,4 +9,8 @@
     email: string;
     roleName: string;
     isOnboarded: boolean;
+    hasSeenIntroPublications?: boolean;
+    hasSeenIntroLabels?: boolean;
+    hasSeenIntroUsers?: boolean;
+    hasSeenIntroLiveHelp?: boolean;
   }

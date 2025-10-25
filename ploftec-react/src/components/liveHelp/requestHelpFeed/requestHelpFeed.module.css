@@ -1,9 +1,22 @@
-/* 👇 grilla robusta con minmax para que no “empuje” columnas */
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.errorCardWrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 0;
+}
+
+/* Grid robusta con minmax para que no empuje columnas */
 .grid {
   display: grid;
   gap: 16px;
   align-items: stretch;
-  grid-template-columns: repeat(1, minmax(0, 1fr)); /* móvil por defecto */
+  grid-template-columns: repeat(1, minmax(0, 1fr)); /* movil por defecto */
 }
 
 /* 2 cols tablet */
@@ -95,4 +108,4 @@
 
 .actions { display: flex; justify-content: center; margin-top: 14px; }
 
-.error { color: #ff6b6b; padding: 8px 0; }
+

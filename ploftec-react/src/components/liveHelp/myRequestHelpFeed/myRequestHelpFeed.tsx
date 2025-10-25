@@ -1,15 +1,16 @@
 "use client";
 
-import { memo, useState } from "react";
+import { memo, useState, useMemo, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, useSpring, useMotionValue, useMotionTemplate } from "framer-motion";
 import { RequestHelpCard } from "@/components/liveHelp/requestHelpCard/requestHelpCard";
 import { useMyRequestsHelp } from "@/lib/query/hooks/forum/useRequestHelp";
-import { Loading } from "@/components";
+import { Loading, LiveHelpErrorCard } from "@/components";
 import { useAlertsLayer } from "@/components/alerts/alertsLayer";
 import styles from "../requestHelpFeed/requestHelpFeed.module.css";
 import { Plus } from "lucide-react";
 import { RequestHelpResponse } from "@/lib/types/forum";
+import { getErrorMessage } from "@/lib/utils/getErrorMessage";
 
 type Props = {
   enabled?: boolean;
@@ -25,21 +26,44 @@ const itemVariant = {
 };
 
 function MyRequestHelpFeedInner({ enabled = true, isAuthenticated = true, isAuthLoaded = true }: Props) {
-  const { data: items = [], isLoading, isError, error } = useMyRequestsHelp(enabled);
+  const retryModeRef = useRef<"auto" | "manual">("auto");
+  const { data: items = [], isLoading, isError, error, refetch } = useMyRequestsHelp(enabled, undefined, () => retryModeRef.current);
   const { getBadgesForRequest } = useAlertsLayer();
   const showSkeletons =
     items.length === 0 &&
-    (
-      (enabled && isLoading) ||
-      (!enabled && !isAuthLoaded) ||
-      (!enabled && isAuthenticated)
-    );
+    ((enabled && isLoading) || (!enabled && !isAuthLoaded) || (!enabled && isAuthenticated));
+
+  const errorMessage = useMemo(
+    () => getErrorMessage(error, "No pudimos cargar tus solicitudes de ayuda. Intenta nuevamente mas tarde."),
+    [error],
+  );
+
+  const handleRetry = useCallback(() => {
+    retryModeRef.current = "manual";
+    void refetch().finally(() => {
+      retryModeRef.current = "auto";
+    });
+  }, [refetch]);
+
+  const handleSupport = useCallback(() => {
+    if (typeof window === "undefined") return;
+    window.open("mailto:soporte@ploftec.com?subject=LiveHelp%20incident", "_blank");
+  }, []);
 
   if (isError) {
     return (
-      <div className={styles.error}>
-        Ocurrio un error al cargar tus solicitudes. Intenta nuevamente más tarde.
-      </div>
+      <section className={styles.feed}>
+        <div className={styles.errorCardWrap}>
+          <LiveHelpErrorCard
+            title="No pudimos cargar tus solicitudes"
+            description={errorMessage}
+            onRetry={handleRetry}
+            hint="Verifica tu conexion o volve a intentarlo en unos segundos."
+            supportText="Reportar incidente"
+            onSupport={handleSupport}
+          />
+        </div>
+      </section>
     );
   }
 
@@ -61,8 +85,7 @@ function MyRequestHelpFeedInner({ enabled = true, isAuthenticated = true, isAuth
         <AnimatePresence initial={false}>
           {!isLoading &&
             items.map((it, i) => {
-              const requestCode =
-                (it as RequestHelpResponse).codeRequestHelp;
+              const requestCode = (it as RequestHelpResponse).codeRequestHelp;
               const badges = requestCode ? getBadgesForRequest(requestCode) : [];
               return (
                 <motion.div
@@ -71,11 +94,7 @@ function MyRequestHelpFeedInner({ enabled = true, isAuthenticated = true, isAuth
                   variants={itemVariant}
                   layout
                 >
-                  <RequestHelpCard
-                    item={it}
-                    hideOwnerAvatar
-                    badges={badges}
-                  />
+                  <RequestHelpCard item={it} hideOwnerAvatar badges={badges} />
                 </motion.div>
               );
             })}

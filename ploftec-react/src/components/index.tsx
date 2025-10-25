@@ -27,3 +27,4 @@ export { RequestHelpConfirmedFeed } from '@/components/liveHelp/requestHelpConfi
 export { ExpiryTimer } from '@/components/liveHelp/expiryTimer/expiryTimer';
 export { SideBarFilters } from '@/components/sidebarFiltersComponent/sidebarFilters';
 export { DateTime } from '@/components/dateTimeComponent/dateTimePicker/dateTimePicker';
+export { LiveHelpErrorCard } from '@/components/liveHelp/errorCard/liveHelpErrorCard';

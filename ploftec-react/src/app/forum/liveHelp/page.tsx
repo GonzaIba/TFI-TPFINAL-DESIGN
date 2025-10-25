@@ -226,10 +226,10 @@ export default function LiveHelpPage() {
 
         <div className={styles.filterContainer} style={{ paddingBottom: userFilters.length > 0 ? 0 : 24 }}>
           <div className={styles.totalBox}>
-            <span className={styles.totalLabel}>Total solicitudes: </span>
-            <strong className={styles.totalValue}>
-              {visibleCount}{hasMore ? '+' : ''}
-            </strong>
+            <h2 className={`${styles.sectionTitle} ${styles.sectionTitleCompact}`}>
+              Solicitudes: {visibleCount}
+              {hasMore ? '+' : ''}
+            </h2>
           </div>
 
           <div className={styles.searchRow}>
