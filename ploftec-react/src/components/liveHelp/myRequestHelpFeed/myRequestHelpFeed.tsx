@@ -1,6 +1,7 @@
 "use client";
 
-import { memo, useState, useMemo, useCallback, useRef } from "react";
+import { memo, useState, useMemo, useCallback, useRef, forwardRef } from "react";
+import type { Ref } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence, useSpring, useMotionValue, useMotionTemplate } from "framer-motion";
 import { RequestHelpCard } from "@/components/liveHelp/requestHelpCard/requestHelpCard";
@@ -16,6 +17,7 @@ type Props = {
   enabled?: boolean;
   isAuthenticated?: boolean;
   isAuthLoaded?: boolean;
+  createCardRef?: Ref<HTMLDivElement>;
 };
 
 const container = { hidden: {}, show: { transition: { staggerChildren: 0.06 } } };
@@ -25,7 +27,7 @@ const itemVariant = {
   exit: { opacity: 0, y: 10, scale: 0.98 },
 };
 
-function MyRequestHelpFeedInner({ enabled = true, isAuthenticated = true, isAuthLoaded = true }: Props) {
+function MyRequestHelpFeedInner({ enabled = true, isAuthenticated = true, isAuthLoaded = true, createCardRef }: Props) {
   const retryModeRef = useRef<"auto" | "manual">("auto");
   const { data: items = [], isLoading, isError, error, refetch } = useMyRequestsHelp(enabled, undefined, () => retryModeRef.current);
   const { getBadgesForRequest } = useAlertsLayer();
@@ -71,7 +73,7 @@ function MyRequestHelpFeedInner({ enabled = true, isAuthenticated = true, isAuth
     <section className={styles.feed}>
       <motion.div className={styles.grid} variants={container} initial="hidden" animate="show">
         {/* Crear solicitud de ayuda (en esta seccion) */}
-        <CreateHelpCard requiresLogin={!isAuthenticated} />
+        <CreateHelpCard requiresLogin={!isAuthenticated} ref={createCardRef} />
 
         {/* Skeletons */}
         {showSkeletons &&
@@ -106,7 +108,14 @@ function MyRequestHelpFeedInner({ enabled = true, isAuthenticated = true, isAuth
 
 export const MyRequestHelpFeed = memo(MyRequestHelpFeedInner);
 
-function CreateHelpCard({ requiresLogin = false }: { requiresLogin?: boolean }) {
+type CreateHelpCardProps = {
+  requiresLogin?: boolean;
+};
+
+const CreateHelpCard = forwardRef<HTMLDivElement, CreateHelpCardProps>(function CreateHelpCard(
+  { requiresLogin = false },
+  ref
+) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const sp = useSearchParams();
@@ -145,7 +154,7 @@ function CreateHelpCard({ requiresLogin = false }: { requiresLogin?: boolean }) 
   return (
     <>
       <Loading show={loading} />
-      <motion.div className={styles.cardWrap} variants={itemVariant} layout>
+      <motion.div className={styles.cardWrap} variants={itemVariant} layout ref={ref}>
         <motion.article
           className={styles.createCard}
           onClick={() => redirectCreate()}
@@ -166,4 +175,4 @@ function CreateHelpCard({ requiresLogin = false }: { requiresLogin?: boolean }) 
       </motion.div>
     </>
   );
-}
+});

@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMemo, useState, useEffect, useRef, useCallback } from "react";
+import { useMemo, useState, useEffect, useRef, useCallback, useLayoutEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import styles from "./page.module.css";
 import { AvatarUser, Button, ExpiryTimer, Loading, DateTime, ModalComponent } from "@/components";
@@ -22,10 +22,68 @@ import useAuthStore from "@/store/slices/authStore/authStore";
 import { liveHelpChatService } from "@/lib/services/forum/liveHelpChatService";
 import { requestHelpService } from "@/lib/services/forum/requestHelpService";
 import { useLiveHelpChatSignalR } from "@/hooks";
+import { SpotlightTour } from "@/components/onboarding/spotlight/spotlightTour";
+import { onboardingService } from "@/lib/services/auth/onboardingService";
+import { OnboardingUserEnum } from "@/lib/types/onboarding";
 
 type EditableSlot = { codeSlot: number | null; start: Date | null; end: Date | null };
 
 const SLOT_MINUTES = [15, 30];
+
+type DetailIntroTarget = "inbox" | "chat" | "availability";
+
+const OWNER_INTRO_STEPS: Array<{
+  target: DetailIntroTarget;
+  title: string;
+  description: string;
+  placement: "left" | "right" | "top" | "bottom";
+  gap?: number;
+}> = [
+  {
+    target: "inbox",
+    title: "Chats de tu solicitud",
+    description: "Cuando alguien responde, aparece en esta lista. Elegí un chat para seguir la conversación.",
+    placement: "left",
+    gap: 24,
+  },
+  {
+    target: "chat",
+    title: "Continuá la conversación",
+    description: "Acá ves el historial y podés enviar mensajes para coordinar la ayuda en vivo.",
+    placement: "left",
+    gap: 28,
+  },
+  {
+    target: "availability",
+    title: "Actualizá tus horarios",
+    description: "Publicá nuevas franjas disponibles o editá las existentes para que puedan agendarte.",
+    placement: "right",
+    gap: 28,
+  },
+];
+
+const HELPER_INTRO_STEPS: Array<{
+  target: DetailIntroTarget;
+  title: string;
+  description: string;
+  placement: "left" | "right" | "top" | "bottom";
+  gap?: number;
+}> = [
+  {
+    target: "availability",
+    title: "Confirmá una franja",
+    description: "Seleccioná sólo un horario disponible para coordinar la sesión con el usuario.",
+    placement: "right",
+    gap: 28,
+  },
+  {
+    target: "chat",
+    title: "Chateá con el solicitante",
+    description: "Usá este chat para aclarar dudas y preparar la reunión antes del encuentro.",
+    placement: "left",
+    gap: 28,
+  },
+];
 
 const isDurationValid = (start: Date, end: Date) => {
   const diff = Math.round((end.getTime() - start.getTime()) / 60000);
@@ -188,7 +246,19 @@ export default function LiveHelpDetailByIdPage() {
   const selectedFromStore = useLiveHelpStore((s) => s.selected);
   const queryClient = useQueryClient();
   const auth = useAuthStore((s) => s.user);
+  const setAuthUser = useAuthStore((s) => s.setUser);
   const userEmail = useMemo(() => auth?.email?.toLowerCase() ?? null, [auth?.email]);
+  const inboxRef = useRef<HTMLDivElement | null>(null);
+  const chatPanelRef = useRef<HTMLElement | null>(null);
+  const availabilityRef = useRef<HTMLDivElement | null>(null);
+  const [showOwnerIntro, setShowOwnerIntro] = useState(false);
+  const [ownerIntroIndex, setOwnerIntroIndex] = useState(-1);
+  const [ownerHighlight, setOwnerHighlight] = useState<DOMRect | null>(null);
+  const [ownerIntroDismissed, setOwnerIntroDismissed] = useState(false);
+  const [showHelperIntro, setShowHelperIntro] = useState(false);
+  const [helperIntroIndex, setHelperIntroIndex] = useState(-1);
+  const [helperHighlight, setHelperHighlight] = useState<DOMRect | null>(null);
+  const [helperIntroDismissed, setHelperIntroDismissed] = useState(false);
 
   const [isOwner, setIsOwner] = useState<boolean | null>(null);
   const [editableSlots, setEditableSlots] = useState<EditableSlot[]>([{codeSlot: null, start: null, end: null }]);
@@ -208,8 +278,146 @@ export default function LiveHelpDetailByIdPage() {
   const [codeChat, setCodeChat] = useState<number | null>(null);
   const [inbox, setInbox] = useState<any[]>([]);
   const [inboxLoading, setInboxLoading] = useState(false);
+  const getDetailTargetElement = useCallback(
+    (target: DetailIntroTarget) => {
+      switch (target) {
+        case "inbox":
+          return inboxRef.current;
+        case "chat":
+          return chatPanelRef.current;
+        case "availability":
+          return availabilityRef.current;
+        default:
+          return null;
+      }
+    },
+    []
+  );
 
   const showToast = useSnackBarStore((s) => s.showToast);
+
+  useLayoutEffect(() => {
+    if (!showOwnerIntro) return;
+    setOwnerHighlight(getDetailTargetElement(OWNER_INTRO_STEPS[ownerIntroIndex]?.target ?? "inbox")?.getBoundingClientRect() ?? null);
+  }, [showOwnerIntro, ownerIntroIndex, inbox.length, chat.length, editableSlots, getDetailTargetElement]);
+
+  useLayoutEffect(() => {
+    if (!showHelperIntro) return;
+    setHelperHighlight(getDetailTargetElement(HELPER_INTRO_STEPS[helperIntroIndex]?.target ?? "availability")?.getBoundingClientRect() ?? null);
+  }, [showHelperIntro, helperIntroIndex, inbox.length, chat.length, request?.timeSlot?.slots, getDetailTargetElement]);
+
+  useEffect(() => {
+    if (!showOwnerIntro) return;
+    const update = () =>
+      setOwnerHighlight(
+        getDetailTargetElement(OWNER_INTRO_STEPS[ownerIntroIndex]?.target ?? "inbox")?.getBoundingClientRect() ?? null
+      );
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [showOwnerIntro, ownerIntroIndex, getDetailTargetElement]);
+
+  useEffect(() => {
+    if (!showHelperIntro) return;
+    const update = () =>
+      setHelperHighlight(
+        getDetailTargetElement(HELPER_INTRO_STEPS[helperIntroIndex]?.target ?? "availability")?.getBoundingClientRect() ?? null
+      );
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [showHelperIntro, helperIntroIndex, getDetailTargetElement]);
+
+  useEffect(() => {
+    setOwnerIntroDismissed(false);
+    setHelperIntroDismissed(false);
+  }, [auth?.email, idParam]);
+
+  useEffect(() => {
+    if (isOwner !== true) return;
+    if (!auth || auth.hasSeenIntroLiveHelpDetailHelped || showOwnerIntro || ownerIntroDismissed) return;
+    if (!inboxRef.current || !chatPanelRef.current || !availabilityRef.current) return;
+
+    setOwnerIntroIndex(0);
+    setShowOwnerIntro(true);
+  }, [isOwner, auth, showOwnerIntro, ownerIntroDismissed, inbox.length]);
+
+  useEffect(() => {
+    if (isOwner !== false) return;
+    if (!auth || auth.hasSeenIntroLiveHelpDetailHelp || showHelperIntro || helperIntroDismissed || showOwnerIntro) return;
+    if (!chatPanelRef.current || !availabilityRef.current) return;
+
+    setHelperIntroIndex(0);
+    setShowHelperIntro(true);
+  }, [isOwner, auth, showHelperIntro, helperIntroDismissed, showOwnerIntro]);
+
+  const finishOwnerIntro = useCallback(async () => {
+    setShowOwnerIntro(false);
+    setOwnerIntroIndex(-1);
+    setOwnerHighlight(null);
+    setOwnerIntroDismissed(true);
+
+    if (!auth || auth.hasSeenIntroLiveHelpDetailHelped) return;
+    try {
+      await onboardingService.completeOnboarding(OnboardingUserEnum.HasSeenIntroLiveHelpDetailHelped);
+      setAuthUser({ ...auth, hasSeenIntroLiveHelpDetailHelped: true });
+    } catch (err) {
+      console.error("No pude marcar la intro de mis solicitudes", err);
+    }
+  }, [auth, setAuthUser]);
+
+  const finishHelperIntro = useCallback(async () => {
+    setShowHelperIntro(false);
+    setHelperIntroIndex(-1);
+    setHelperHighlight(null);
+    setHelperIntroDismissed(true);
+
+    if (!auth || auth.hasSeenIntroLiveHelpDetailHelp) return;
+    try {
+      await onboardingService.completeOnboarding(OnboardingUserEnum.HasSeenIntroLiveHelpDetailHelp);
+      setAuthUser({ ...auth, hasSeenIntroLiveHelpDetailHelp: true });
+    } catch (err) {
+      console.error("No pude marcar la intro de helper", err);
+    }
+  }, [auth, setAuthUser]);
+
+  const handleOwnerNext = useCallback(() => {
+    if (ownerIntroIndex + 1 >= OWNER_INTRO_STEPS.length) {
+      void finishOwnerIntro();
+      return;
+    }
+    setOwnerIntroIndex((prev) => prev + 1);
+  }, [ownerIntroIndex, finishOwnerIntro]);
+
+  const handleOwnerBack = useCallback(() => {
+    setOwnerIntroIndex((prev) => (prev > 0 ? prev - 1 : prev));
+  }, []);
+
+  const handleOwnerSkip = useCallback(() => {
+    void finishOwnerIntro();
+  }, [finishOwnerIntro]);
+
+  const handleHelperNext = useCallback(() => {
+    if (helperIntroIndex + 1 >= HELPER_INTRO_STEPS.length) {
+      void finishHelperIntro();
+      return;
+    }
+    setHelperIntroIndex((prev) => prev + 1);
+  }, [helperIntroIndex, finishHelperIntro]);
+
+  const handleHelperBack = useCallback(() => {
+    setHelperIntroIndex((prev) => (prev > 0 ? prev - 1 : prev));
+  }, []);
+
+  const handleHelperSkip = useCallback(() => {
+    void finishHelperIntro();
+  }, [finishHelperIntro]);
 
   const toChatMessage = useCallback((raw: any) => mapChatMessage(raw, userEmail), [userEmail]);
 
@@ -759,7 +967,7 @@ export default function LiveHelpDetailByIdPage() {
               <div className={styles.skeletonLine} />
             </section>
           ) : isOwner === true && (
-            <section className={styles.inboxPanel} aria-labelledby="inbox-heading">
+            <section className={styles.inboxPanel} aria-labelledby="inbox-heading" ref={inboxRef}>
               <div className={styles.inboxHeader}>
                 <h2 id="inbox-heading" className={styles.inboxTitle}>Chats de mi solicitud</h2>
               </div>
@@ -821,7 +1029,7 @@ export default function LiveHelpDetailByIdPage() {
             </section>
           )}
 
-          <section className={styles.chatPanel} aria-labelledby="chat-heading">
+          <section className={styles.chatPanel} aria-labelledby="chat-heading" ref={chatPanelRef}>
             <h2 id="chat-heading" className={styles.sectionTitle}>Chat</h2>
             <div ref={chatBodyRef} className={styles.chatHistory} aria-live="polite">
               {enterLoading ? (
@@ -947,7 +1155,7 @@ export default function LiveHelpDetailByIdPage() {
 
         <aside className={styles.rightCol}>
           <div className={styles.sidebarSticky}>
-            <div className={styles.availabilityCard}>
+            <div className={styles.availabilityCard} ref={availabilityRef}>
               <h2 className={styles.avTitle}>{isOwner === true ? "Mis horarios disponibles" : "Disponibilidad"}</h2>
               {isOwner === true ? (
                 <>
@@ -1046,6 +1254,38 @@ export default function LiveHelpDetailByIdPage() {
         </div>
       </div>
     </ModalComponent>
+    {showOwnerIntro && ownerHighlight && (
+      <SpotlightTour
+        isVisible={showOwnerIntro}
+        stepIndex={ownerIntroIndex}
+        totalSteps={OWNER_INTRO_STEPS.length}
+        title={OWNER_INTRO_STEPS[ownerIntroIndex]?.title ?? ""}
+        description={OWNER_INTRO_STEPS[ownerIntroIndex]?.description ?? ""}
+        highlightRect={ownerHighlight}
+        panelPlacement={OWNER_INTRO_STEPS[ownerIntroIndex]?.placement ?? "left"}
+        panelGap={OWNER_INTRO_STEPS[ownerIntroIndex]?.gap}
+        canGoBack={ownerIntroIndex > 0}
+        onPrev={handleOwnerBack}
+        onNext={handleOwnerNext}
+        onSkip={handleOwnerSkip}
+      />
+    )}
+    {showHelperIntro && helperHighlight && (
+      <SpotlightTour
+        isVisible={showHelperIntro}
+        stepIndex={helperIntroIndex}
+        totalSteps={HELPER_INTRO_STEPS.length}
+        title={HELPER_INTRO_STEPS[helperIntroIndex]?.title ?? ""}
+        description={HELPER_INTRO_STEPS[helperIntroIndex]?.description ?? ""}
+        highlightRect={helperHighlight}
+        panelPlacement={HELPER_INTRO_STEPS[helperIntroIndex]?.placement ?? "right"}
+        panelGap={HELPER_INTRO_STEPS[helperIntroIndex]?.gap}
+        canGoBack={helperIntroIndex > 0}
+        onPrev={handleHelperBack}
+        onNext={handleHelperNext}
+        onSkip={handleHelperSkip}
+      />
+    )}
     </>
   );
 };

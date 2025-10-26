@@ -3,7 +3,7 @@
 
 import styles from './page.module.css';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button, Grid, GridItem, Input, SideBarFilters, RequestHelpFeed, RequestHelpConfirmedFeed } from '@/components';
 import { MyRequestHelpFeed } from '@/components/liveHelp/myRequestHelpFeed/myRequestHelpFeed';
@@ -17,10 +17,53 @@ import { GroupEnum } from '@/lib/types/enum';
 import { Colors } from '@/theme/colors';
 import useAuthStore from '@/store/slices/authStore/authStore';
 import { useConfirmedHelpRequests } from '@/lib/query/hooks/forum/useRequestHelp';
+import { SpotlightTour } from '@/components/onboarding/spotlight/spotlightTour';
+import { onboardingService } from '@/lib/services/auth/onboardingService';
+import { OnboardingUserEnum } from '@/lib/types/onboarding';
 
 const container = {
   hidden: {},
   show: { transition: { staggerChildren: 0.18 } }, // escalonado limpio
+};
+
+type LiveHelpIntroTarget = 'create' | 'others' | 'mine';
+
+const LIVEHELP_INTRO_STEPS: Array<{
+  target: LiveHelpIntroTarget;
+  title: string;
+  description: string;
+  placement: 'left' | 'right' | 'top' | 'bottom';
+  gap?: number;
+}> = [
+  {
+    target: 'create',
+    title: 'Creá tu solicitud',
+    description: 'Desde aquí abrís el formulario para pedir ayuda en vivo. Contá tu problema y publicalo.',
+    placement: 'right',
+    gap: 28,
+  },
+  {
+    target: 'others',
+    title: 'Explorá solicitudes abiertas',
+    description: 'En este feed ves las solicitudes de otras personas para ayudar o inspirarte.',
+    placement: 'left',
+    gap: 28,
+  },
+  {
+    target: 'mine',
+    title: 'Gestioná tus pedidos',
+    description: 'Acá aparecen todas tus solicitudes publicadas para que sigas su estado y actualices datos.',
+    placement: 'top',
+    gap: 36,
+  },
+];
+
+const LIVEHELP_CONFIRMED_STEP = {
+  title: 'Sesiones confirmadas',
+  description:
+    'Cuando se acerque el horario te avisamos con una alerta. En el horario pactado este listado te permite entrar a la reunión.',
+  placement: 'left' as const,
+  gap: 28,
 };
 
 export default function LiveHelpPage() {
@@ -45,6 +88,18 @@ export default function LiveHelpPage() {
   const [feedEnabled, setFeedEnabled] = useState(false);
   const isAuthLoaded = useAuthStore((state) => state.isAuthLoaded);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const user = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
+  const createCardRef = useRef<HTMLDivElement | null>(null);
+  const myRequestsRef = useRef<HTMLDivElement | null>(null);
+  const requestFeedRef = useRef<HTMLDivElement | null>(null);
+  const confirmedListRef = useRef<HTMLDivElement | null>(null);
+  const [showLiveHelpIntro, setShowLiveHelpIntro] = useState(false);
+  const [liveHelpIntroDismissed, setLiveHelpIntroDismissed] = useState(false);
+  const [liveHelpIntroStepIndex, setLiveHelpIntroStepIndex] = useState(-1);
+  const [liveHelpHighlightRect, setLiveHelpHighlightRect] = useState<DOMRect | null>(null);
+  const [showConfirmedIntro, setShowConfirmedIntro] = useState(false);
+  const [confirmedHighlightRect, setConfirmedHighlightRect] = useState<DOMRect | null>(null);
   const { data: confirmedRaw, isLoading: confirmedLoading } = useConfirmedHelpRequests(
     feedEnabled && isAuthLoaded && isAuthenticated,
     refreshCounter
@@ -59,6 +114,23 @@ export default function LiveHelpPage() {
     return clone.sort((a, b) => safeTime(a.initAt) - safeTime(b.initAt));
   }, [confirmedRaw]);
   const showConfirmedSection = !confirmedLoading && confirmedRequests.length > 0;
+
+  useEffect(() => {
+    setLiveHelpIntroDismissed(false);
+  }, [user?.email]);
+
+  const getLiveHelpTargetElement = useCallback((target: LiveHelpIntroTarget) => {
+    switch (target) {
+      case 'create':
+        return createCardRef.current;
+      case 'others':
+        return requestFeedRef.current;
+      case 'mine':
+        return myRequestsRef.current;
+      default:
+        return null;
+    }
+  }, []);
 
   const handleManageFilters = () => {
     setShowHelpFilters((p) => !p);
@@ -79,6 +151,113 @@ export default function LiveHelpPage() {
     p.delete('q');
     router.replace(`?${p.toString()}`, { scroll: false });
   };
+
+  const computeLiveHelpHighlight = useCallback(() => {
+    if (liveHelpIntroStepIndex < 0) return null;
+    const step = LIVEHELP_INTRO_STEPS[liveHelpIntroStepIndex];
+    if (!step) return null;
+    const element = getLiveHelpTargetElement(step.target);
+    return element ? element.getBoundingClientRect() : null;
+  }, [liveHelpIntroStepIndex, getLiveHelpTargetElement]);
+
+  useLayoutEffect(() => {
+    if (!showLiveHelpIntro) return;
+    setLiveHelpHighlightRect(computeLiveHelpHighlight());
+  }, [showLiveHelpIntro, liveHelpIntroStepIndex, visibleCount, computeLiveHelpHighlight]);
+
+  useEffect(() => {
+    if (!showLiveHelpIntro) return;
+
+    const update = () => setLiveHelpHighlightRect(computeLiveHelpHighlight());
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, true);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
+    };
+  }, [showLiveHelpIntro, computeLiveHelpHighlight]);
+
+  useEffect(() => {
+    if (!user || user.hasSeenIntroLiveHelp || showLiveHelpIntro || liveHelpIntroDismissed) return;
+    if (!createCardRef.current || !requestFeedRef.current || !myRequestsRef.current) return;
+
+    setLiveHelpIntroStepIndex(0);
+    setShowLiveHelpIntro(true);
+  }, [user, showLiveHelpIntro, liveHelpIntroDismissed, visibleCount]);
+
+  const finishLiveHelpIntro = useCallback(async () => {
+    setShowLiveHelpIntro(false);
+    setLiveHelpIntroDismissed(true);
+    setLiveHelpIntroStepIndex(-1);
+    setLiveHelpHighlightRect(null);
+
+    if (!user || user.hasSeenIntroLiveHelp) return;
+
+    try {
+      await onboardingService.completeOnboarding(OnboardingUserEnum.HasSeenIntroLiveHelp);
+      setUser({ ...user, hasSeenIntroLiveHelp: true });
+    } catch (err) {
+      console.error('No pude marcar la intro de live help', err);
+    }
+  }, [user, setUser]);
+
+  const handleLiveHelpIntroNext = useCallback(() => {
+    if (liveHelpIntroStepIndex + 1 >= LIVEHELP_INTRO_STEPS.length) {
+      void finishLiveHelpIntro();
+      return;
+    }
+    setLiveHelpIntroStepIndex((prev) => prev + 1);
+  }, [finishLiveHelpIntro, liveHelpIntroStepIndex]);
+
+  const handleLiveHelpIntroBack = useCallback(() => {
+    setLiveHelpIntroStepIndex((prev) => (prev > 0 ? prev - 1 : prev));
+  }, []);
+
+  const handleLiveHelpIntroSkip = useCallback(() => {
+    void finishLiveHelpIntro();
+  }, [finishLiveHelpIntro]);
+
+  const liveHelpIntroStep =
+    liveHelpIntroStepIndex >= 0 ? LIVEHELP_INTRO_STEPS[liveHelpIntroStepIndex] : null;
+
+  useLayoutEffect(() => {
+    if (!showConfirmedIntro) return;
+    setConfirmedHighlightRect(confirmedListRef.current ? confirmedListRef.current.getBoundingClientRect() : null);
+  }, [showConfirmedIntro, confirmedRequests]);
+
+  useEffect(() => {
+    if (!showConfirmedIntro) return;
+    const update = () =>
+      setConfirmedHighlightRect(confirmedListRef.current ? confirmedListRef.current.getBoundingClientRect() : null);
+    window.addEventListener('resize', update);
+    window.addEventListener('scroll', update, true);
+    return () => {
+      window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', update, true);
+    };
+  }, [showConfirmedIntro]);
+
+  useEffect(() => {
+    if (showLiveHelpIntro) return; // no overlap
+    if (!user || user.hasSeenIntroLiveHelpConfirmed || showConfirmedIntro) return;
+    if (!showConfirmedSection || !confirmedListRef.current) return;
+
+    setShowConfirmedIntro(true);
+  }, [user, showLiveHelpIntro, showConfirmedIntro, showConfirmedSection, confirmedRequests]);
+
+  const finishConfirmedIntro = useCallback(async () => {
+    setShowConfirmedIntro(false);
+    setConfirmedHighlightRect(null);
+
+    if (!user || user.hasSeenIntroLiveHelpConfirmed) return;
+
+    try {
+      await onboardingService.completeOnboarding(OnboardingUserEnum.HasSeenIntroLiveHelpConfirmed);
+      setUser({ ...user, hasSeenIntroLiveHelpConfirmed: true });
+    } catch (err) {
+      console.error('No pude marcar la intro de confirmados', err);
+    }
+  }, [user, setUser]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') applySearch();
@@ -207,7 +386,7 @@ export default function LiveHelpPage() {
               transition={{ duration: 0.35, ease: 'easeOut' }}
             >
               <h2 className={styles.sectionTitle}>Confirmadas</h2>
-              <div className={styles.mySectionContainer}>
+              <div className={styles.mySectionContainer} ref={confirmedListRef}>
                 <RequestHelpConfirmedFeed items={confirmedRequests} />
               </div>
             </motion.div>
@@ -216,11 +395,12 @@ export default function LiveHelpPage() {
 
         {/* Mis solicitudes de ayuda */}
         <h2 className={styles.sectionTitle}>Mis solicitudes de ayuda</h2>
-        <div className={styles.mySectionContainer}>
+        <div className={styles.mySectionContainer} ref={myRequestsRef}>
           <MyRequestHelpFeed
             enabled={feedEnabled && isAuthLoaded && isAuthenticated}
             isAuthenticated={isAuthenticated}
             isAuthLoaded={isAuthLoaded}
+            createCardRef={createCardRef}
           />
         </div>
 
@@ -322,7 +502,7 @@ export default function LiveHelpPage() {
         )}
 
         {/* Feed */}
-        <div className={styles.feedContainer}>
+        <div className={styles.feedContainer} ref={requestFeedRef}>
           <RequestHelpFeed
             pageSize={9}
             search={appliedSearch}
@@ -332,6 +512,39 @@ export default function LiveHelpPage() {
           />
         </div>
       </motion.section>
+      {liveHelpIntroStep && (
+        <SpotlightTour
+          isVisible={showLiveHelpIntro}
+          stepIndex={liveHelpIntroStepIndex}
+          totalSteps={LIVEHELP_INTRO_STEPS.length}
+          title={liveHelpIntroStep.title}
+          description={liveHelpIntroStep.description}
+          highlightRect={liveHelpHighlightRect}
+          panelPlacement={liveHelpIntroStep.placement}
+          panelGap={liveHelpIntroStep.gap}
+          canGoBack={liveHelpIntroStepIndex > 0}
+          onPrev={handleLiveHelpIntroBack}
+          onNext={handleLiveHelpIntroNext}
+          onSkip={handleLiveHelpIntroSkip}
+        />
+      )}
+
+      {showConfirmedIntro && confirmedHighlightRect && (
+        <SpotlightTour
+          isVisible={showConfirmedIntro}
+          stepIndex={0}
+          totalSteps={1}
+          title={LIVEHELP_CONFIRMED_STEP.title}
+          description={LIVEHELP_CONFIRMED_STEP.description}
+          highlightRect={confirmedHighlightRect}
+          panelPlacement={LIVEHELP_CONFIRMED_STEP.placement}
+          panelGap={LIVEHELP_CONFIRMED_STEP.gap}
+          canGoBack={false}
+          onPrev={undefined}
+          onNext={() => void finishConfirmedIntro()}
+          onSkip={() => void finishConfirmedIntro()}
+        />
+      )}
     </div>
   );
 }

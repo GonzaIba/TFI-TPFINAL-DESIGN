@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Ref, MutableRefObject } from 'react'
 import { usuariosForoService } from '@/lib/services/forum/usuariosForoService'
 import { UsersForumResponse, DetailsUserForumResponse } from '@/lib/types/forum'
 import { getPublicationTimeAgo } from '@/lib/helpers/timeHelper'
@@ -11,7 +11,14 @@ import { useErrorHandler } from '@/hooks/errors/useErrorHandler'
 import { Colors } from '@/theme/colors'
 import './tableUsers.css'
 
-export default function TableUsers({ reload, onReloadCompleted }: { reload: boolean, onReloadCompleted: () => void }) {
+type TableUsersProps = {
+  reload: boolean;
+  onReloadCompleted: () => void;
+  tableRef?: Ref<HTMLDivElement>;
+  firstActionRef?: Ref<HTMLDivElement>;
+};
+
+export default function TableUsers({ reload, onReloadCompleted, tableRef, firstActionRef }: TableUsersProps) {
   const [usuarios, setUsuarios] = useState<UsersForumResponse[] | undefined>([])
   const [isLoading, setIsLoading] = useState(true)
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<DetailsUserForumResponse | undefined>(undefined)
@@ -70,8 +77,20 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
     setUsuarioSeleccionado(undefined)
   }
 
+  const assignFirstActionRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (!firstActionRef) return;
+      if (typeof firstActionRef === 'function') {
+        firstActionRef(node);
+      } else {
+        (firstActionRef as MutableRefObject<HTMLDivElement | null>).current = node;
+      }
+    },
+    [firstActionRef]
+  );
+
   return (
-    <div className="table-users">
+    <div className="table-users" ref={tableRef}>
       <table className="table-fixed">
         <thead>
           <tr>
@@ -115,14 +134,17 @@ export default function TableUsers({ reload, onReloadCompleted }: { reload: bool
                       : ''
                 }</td>
                 <td>
-
-                  <Button
-                    onClick={() => openSheet(u.email)}
-                    icon={<VisibilityIcon sx={{ color: Colors.white }} fontSize='medium'/>}
-                    transparent
-                    circular
-                    width="45px"
-                  />
+                  <div
+                    ref={i === 0 ? assignFirstActionRef : undefined}
+                  >
+                    <Button
+                      onClick={() => openSheet(u.email)}
+                      icon={<VisibilityIcon sx={{ color: Colors.white }} fontSize='medium'/>}
+                      transparent
+                      circular
+                      width="45px"
+                    />
+                  </div>
                 </td>
               </tr>
             ))
