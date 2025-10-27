@@ -1,7 +1,7 @@
 // src/app/forum/layout.tsx
 'use client';
 
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useLayoutEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { getUserDetails, logout } from '@/lib/services/auth/authenticationService';
 import { usuariosForoService } from '@/lib/services/forum/usuariosForoService';
@@ -10,6 +10,7 @@ import { UserApplication } from '@/lib/types/application';
 import { DetailsUserForumResponse, NotificationsResponse } from '@/lib/types/forum';
 import Footer from '@/components/footerComponent/footer';
 import useAuthStore from "@/store/slices/authStore/authStore";
+import useAlertsConfigStore from '@/store/slices/alertsStore/alertsStore';
 import ProtectedRoute from "@/components/auth/protectedRoute";
 import { useNotificationSignalR } from '@/hooks';
 import {
@@ -26,6 +27,64 @@ import { AlertsLayer } from '@/components/alerts/alertsLayer';
 import { onboardingService } from '@/lib/services/auth/onboardingService';
 import { OnboardingUserEnum } from '@/lib/types/onboarding';
 
+type IntroFlagKey = Extract<
+  keyof UserApplication,
+  | 'hasSeenIntroPublications'
+  | 'hasSeenIntroLabels'
+  | 'hasSeenIntroUsers'
+  | 'hasSeenIntroLiveHelp'
+  | 'hasSeenIntroLiveHelpConfirmed'
+  | 'hasSeenIntroLiveHelpDetailHelp'
+  | 'hasSeenIntroLiveHelpDetailHelped'
+>;
+
+type RouteIntroRequirement = {
+  match: (path: string) => boolean;
+  flags: IntroFlagKey[];
+};
+
+const startsWithRoute = (expected: string) => {
+  const normalized = expected.toLowerCase();
+  return (path: string) => path.startsWith(normalized);
+};
+
+const ROUTE_INTRO_REQUIREMENTS: RouteIntroRequirement[] = [
+  {
+    match: startsWithRoute('/forum/livehelp/detail'),
+    flags: ['hasSeenIntroLiveHelpDetailHelp', 'hasSeenIntroLiveHelpDetailHelped'],
+  },
+  {
+    match: startsWithRoute('/forum/livehelp'),
+    flags: ['hasSeenIntroLiveHelp', 'hasSeenIntroLiveHelpConfirmed'],
+  },
+  {
+    match: startsWithRoute('/forum/publications'),
+    flags: ['hasSeenIntroPublications'],
+  },
+  {
+    match: startsWithRoute('/forum/labels'),
+    flags: ['hasSeenIntroLabels'],
+  },
+  {
+    match: startsWithRoute('/forum/users'),
+    flags: ['hasSeenIntroUsers'],
+  },
+];
+
+const hasPendingIntroForRoute = (
+  pathname: string,
+  user: UserApplication | null,
+): boolean => {
+  if (!user) return false;
+  const normalizedPath = pathname?.toLowerCase() ?? '';
+  const requirement = ROUTE_INTRO_REQUIREMENTS.find(({ match }) =>
+    match(normalizedPath),
+  );
+  if (!requirement) return false;
+
+  return requirement.flags.some((flag) => !user[flag]);
+};
+
 export default function ForumLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -39,6 +98,7 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
   const user = useAuthStore((state) => state.user);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const setUser = useAuthStore((state) => state.setUser);
+  const setAlertsEnabled = useAlertsConfigStore((state) => state.setAlertsEnabled);
 
   const newNotificationAdded = useCallback((d: NewNotificationEvent) => {
     setUserNotifications(prev => [d, ...(prev ?? [])]);
@@ -146,6 +206,29 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
   const [showIntro, setShowIntro] = useState(false);
   const [showRobot, setShowRobot] = useState(true);
   const [hasDismissedOnboarding, setHasDismissedOnboarding] = useState(false);
+  const routeIntroPending = useMemo(
+    () => hasPendingIntroForRoute(pathname, user),
+    [pathname, user],
+  );
+
+  useLayoutEffect(() => {
+    if (!isAuthLoaded) {
+      setAlertsEnabled(false);
+      return;
+    }
+
+    const shouldPauseGlobalOnboarding =
+      !!user && !user.isOnboarded && !hasDismissedOnboarding;
+    const shouldPauseRouteOnboarding = routeIntroPending;
+
+    setAlertsEnabled(!(shouldPauseGlobalOnboarding || shouldPauseRouteOnboarding));
+  }, [
+    isAuthLoaded,
+    user,
+    hasDismissedOnboarding,
+    routeIntroPending,
+    setAlertsEnabled,
+  ]);
 
   useEffect(() => {
     if (!user) {
@@ -169,6 +252,7 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
     setHasDismissedOnboarding(true);
     setShowIntro(false);
     setShowRobot(true);
+    setAlertsEnabled(true);
 
     if (!user) return;
 

@@ -12,6 +12,7 @@ import React, {
 } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import useAuthStore from '@/store/slices/authStore/authStore';
+import useAlertsConfigStore from '@/store/slices/alertsStore/alertsStore';
 import { alertsService } from '@/lib/services/forum/alertsService';
 import { ForumAlert, AlertSeverity } from '@/lib/types/alerts';
 import { ModalComponent } from '@/components/modalComponent/modalComponent';
@@ -173,6 +174,7 @@ export function AlertsLayer({ children }: PropsWithChildren) {
 
   const isAuthLoaded = useAuthStore((state) => state.isAuthLoaded);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const alertsEnabled = useAlertsConfigStore((state) => state.alertsEnabled);
 
   const [modalQueue, setModalQueue] = useState<ForumAlert[]>([]);
   const modalAlertRef = useRef<ForumAlert | null>(null);
@@ -195,10 +197,18 @@ export function AlertsLayer({ children }: PropsWithChildren) {
 
   const fetchAlerts = useCallback(
     async (origin: string) => {
-      if (!mountedRef.current || !isAuthLoaded || !isAuthenticated) return;
+      if (
+        !mountedRef.current ||
+        !isAuthLoaded ||
+        !isAuthenticated ||
+        !alertsEnabled
+      ) {
+        return;
+      }
       if (fetchingRef.current) return;
       fetchingRef.current = true;
       try {
+        console.log('Fetching alerts, origin:', alertsEnabled);
         const response = await alertsService.getAlerts();
         if (!mountedRef.current) return;
         const alerts = response.data ?? [];
@@ -256,7 +266,7 @@ export function AlertsLayer({ children }: PropsWithChildren) {
         fetchingRef.current = false;
       }
     },
-    [isAuthLoaded, isAuthenticated]
+    [isAuthLoaded, isAuthenticated, alertsEnabled]
   );
 
   const stopPolling = useCallback(() => {
@@ -268,14 +278,21 @@ export function AlertsLayer({ children }: PropsWithChildren) {
 
   const schedulePolling = useCallback(() => {
     stopPolling();
+    if (!alertsEnabled) return;
     intervalRef.current = window.setInterval(() => {
       if (document.visibilityState === 'visible') {
         void fetchAlerts('interval');
       }
     }, POLL_INTERVAL_MS);
-  }, [fetchAlerts, stopPolling]);
+  }, [alertsEnabled, fetchAlerts, stopPolling]);
 
   const handleVisibilityChange = useCallback(() => {
+    if (!alertsEnabled) {
+      stopPolling();
+      setModalQueue([]);
+      return;
+    }
+
     if (document.visibilityState === 'visible') {
       void fetchAlerts('visibility');
       schedulePolling();
@@ -283,11 +300,11 @@ export function AlertsLayer({ children }: PropsWithChildren) {
       stopPolling();
       setModalQueue([]);
     }
-  }, [fetchAlerts, schedulePolling, stopPolling]);
+  }, [alertsEnabled, fetchAlerts, schedulePolling, stopPolling]);
 
   useEffect(() => {
     if (!isAuthLoaded) return;
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !alertsEnabled) {
       stopPolling();
       setModalQueue([]);
       modalAlertRef.current = null;
@@ -302,18 +319,21 @@ export function AlertsLayer({ children }: PropsWithChildren) {
     return () => {
       stopPolling();
     };
-  }, [isAuthLoaded, isAuthenticated, fetchAlerts, schedulePolling, stopPolling]);
+  }, [
+    alertsEnabled,
+    isAuthLoaded,
+    isAuthenticated,
+    fetchAlerts,
+    schedulePolling,
+    stopPolling,
+  ]);
 
   useEffect(() => {
-    if (!isAuthenticated || !isAuthLoaded) return;
-    void fetchAlerts('route');
-  }, [
-    pathname,
-    searchParams?.toString(),
-    isAuthenticated,
-    isAuthLoaded,
-    fetchAlerts,
-  ]);
+    if (!alertsEnabled || !isAuthenticated || !isAuthLoaded) {
+      return;
+    }
+    void fetchAlerts('enabled');
+  }, [alertsEnabled, isAuthenticated, isAuthLoaded, fetchAlerts]);
 
   useEffect(() => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
