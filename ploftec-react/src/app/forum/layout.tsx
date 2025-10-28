@@ -55,7 +55,7 @@ const ROUTE_INTRO_REQUIREMENTS: RouteIntroRequirement[] = [
   },
   {
     match: startsWithRoute('/forum/livehelp'),
-    flags: ['hasSeenIntroLiveHelp', 'hasSeenIntroLiveHelpConfirmed'],
+    flags: ['hasSeenIntroLiveHelp'],
   },
   {
     match: startsWithRoute('/forum/publications'),
@@ -96,6 +96,7 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
   const [isLoading, setIsLoading] = useState(false);
   const isAuthLoaded = useAuthStore((state) => state.isAuthLoaded);
   const user = useAuthStore((state) => state.user);
+  const userEmail = user?.email ?? null;
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const setUser = useAuthStore((state) => state.setUser);
   const setAlertsEnabled = useAlertsConfigStore((state) => state.setAlertsEnabled);
@@ -131,9 +132,9 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
       if (isAuthLoaded) {
         setIsUserLoading(true);
 
-        if (isAuthenticated && user?.email) {
+        if (isAuthenticated && userEmail) {
           try {
-            const res = await usuariosForoService.getDetailUser(user.email);
+            const res = await usuariosForoService.getDetailUser(userEmail);
             const resNotif = await usuariosForoService.getNotifications();
             setUserNotifications(resNotif.data as NotificationsResponse[]);
             ///////
@@ -148,7 +149,7 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
     };
 
     fetchUserForum();
-  }, [isAuthLoaded, isAuthenticated, user]);
+  }, [isAuthLoaded, isAuthenticated, userEmail]);
 
   useEffect(() => {
     if (pathname === '/forum') {
