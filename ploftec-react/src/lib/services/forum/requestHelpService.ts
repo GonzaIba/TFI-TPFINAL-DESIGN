@@ -2,12 +2,6 @@
 import { CursorPage, GenericApiResponse } from "@/lib/types/apiResponse";
 import { apiBaseService } from "../apiBaseService";
 import {
-  CreatePublicationRequest,
-  AnswerVoteRequest,
-  PublicationVoteRequest,
-  AddAnswerRequest,
-  DeleteAnswerRequest,
-  EditAnswerRequest,
   PublicationDetailResponse,
   PublicationResponse,
   SuccessfulResponse,
@@ -21,6 +15,7 @@ import {
   RequestHelpConfirmedResponse,
   TermsConditionsResponse,
   LiveHelpSessionResponse,
+  CancelHelpRequestPayload,
 } from "@/lib/types/forum";
 
 export const requestHelpService = {
@@ -85,10 +80,10 @@ export const requestHelpService = {
     });
   },
 
-  async confirmHelpRequest(payload: ConfirmHelpRequestPayload): Promise<GenericApiResponse<SuccessfulResponse>> {
+  async confirmHelpRequest(id: number, payload: ConfirmHelpRequestPayload): Promise<GenericApiResponse<SuccessfulResponse>> {
     return await apiBaseService.execute<SuccessfulResponse, ConfirmHelpRequestPayload>({
       method: "POST",
-      url: `ApiForum/ConfirmarSolicitud`,
+      url: `ApiForum/SolicitudAyuda/${id}/ConfirmarSolicitud`,
       body: payload,
       requireCredentials: true,
     });
@@ -133,12 +128,12 @@ export const requestHelpService = {
     });
   },
 
-  async cancelHelpRequest(id: number, reason?: string): Promise<GenericApiResponse<SuccessfulResponse>> {
-    return await apiBaseService.execute<SuccessfulResponse, { codeRequestHelp: number; reason?: string } | undefined>({
-      method: "POST",
+  async cancelHelpRequest(id: number): Promise<GenericApiResponse<SuccessfulResponse>> {
+    return await apiBaseService.execute<SuccessfulResponse, CancelHelpRequestPayload>({
+      method: "DELETE",
       url: `ApiForum/SolicitudAyuda/${id}/CancelarSolicitudAyuda`,
-      body: { codeRequestHelp: id, reason },
       requireCredentials: true,
+      body: {},
     });
   },
 

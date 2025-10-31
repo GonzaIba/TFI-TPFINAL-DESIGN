@@ -25,6 +25,7 @@ import { useLiveHelpChatSignalR } from "@/hooks";
 import { SpotlightTour } from "@/components/onboarding/spotlight/spotlightTour";
 import { onboardingService } from "@/lib/services/auth/onboardingService";
 import { OnboardingUserEnum } from "@/lib/types/onboarding";
+import { Colors } from "@/theme/colors";
 
 type EditableSlot = { codeSlot: number | null; start: Date | null; end: Date | null };
 
@@ -265,6 +266,8 @@ export default function LiveHelpDetailByIdPage() {
   const [slotsSaving, setSlotsSaving] = useState(false);
   const [slotsError, setSlotsError] = useState<string | null>(null);
   const ownerHasValidSlot = useMemo(() => editableSlots.some(isEditableSlotValid), [editableSlots]);
+  const [cancellingRequest, setCancellingRequest] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const [selectedSlot, setSelectedSlot] = useState<HelpTimeSlot | null>(null);
   const [confirmingSlot, setConfirmingSlot] = useState(false);
@@ -606,9 +609,9 @@ export default function LiveHelpDetailByIdPage() {
     if (!idParam) return;
     setConfirmingSlot(true);
     try {
-      const res = await requestHelpService.confirmHelpRequest({
-        codeRequestHelp: idParam,
-        slot: {
+      const res = await requestHelpService.confirmHelpRequest(idParam,{
+        timeSlot: {
+          codeSlot: selectedSlot.codeSlot ?? 0,
           start: selectedSlot.start,
           end: selectedSlot.end,
         },
@@ -626,6 +629,42 @@ export default function LiveHelpDetailByIdPage() {
       setConfirmingSlot(false);
     }
   }, [idParam, selectedSlot, showToast, queryClient]);
+
+  const onBack = useCallback(() => {
+    setLoading(true);
+    setTimeout(() => router.push("/forum/liveHelp"), 600);
+  }, [router]);
+
+  const handleOpenCancelModal = useCallback(() => {
+    setShowCancelConfirm(true);
+  }, []);
+
+  const handleCloseCancelModal = useCallback(() => {
+    if (cancellingRequest) return;
+    setShowCancelConfirm(false);
+  }, [cancellingRequest]);
+
+  const handleOwnerCancelRequest = useCallback(async () => {
+    if (!idParam || cancellingRequest) return;
+    setCancellingRequest(true);
+    try {
+      const res = await requestHelpService.cancelHelpRequest(idParam);
+      if (res?.data?.success) {
+        showToast({ message: "Solicitud dada de baja", variant: "success" });
+        await queryClient.invalidateQueries({ queryKey: ["livehelp", "requests-cursor"] });
+        await queryClient.invalidateQueries({ queryKey: ["livehelp", "my-requests"] });
+        setShowCancelConfirm(false);
+        onBack();
+      } else {
+        showToast({ message: "No pude dar de baja la solicitud", variant: "error" });
+      }
+    } catch (error) {
+      console.error("cancel help request failed", error);
+      showToast({ message: "No pude dar de baja la solicitud", variant: "error" });
+    } finally {
+      setCancellingRequest(false);
+    }
+  }, [cancellingRequest, idParam, onBack, queryClient, showToast]);
 
   useEffect(() => {
     if (!enterLoading && isOwner === null) {
@@ -876,11 +915,6 @@ export default function LiveHelpDetailByIdPage() {
 
   const created = useMemo(() => (request ? parseApiUtc(request.createdAt as any) : null), [request]);
   const expires = useMemo(() => (request ? parseApiUtc(request.expiresAt as any) : null), [request]);
-
-  const onBack = () => {
-    setLoading(true);
-    setTimeout(() => router.push("/forum/liveHelp"), 600);
-  };
 
   const handleCloseConfirmModal = () => {
     setShowConfirmSuccess(false);
@@ -1235,6 +1269,19 @@ export default function LiveHelpDetailByIdPage() {
               )}
             </div>
           </div>
+          {isOwner === true && (
+            <div className={styles.ownerCancelCard}>
+              <h2 className={styles.ownerCancelTitle}>Cancelar solicitud</h2>
+              <Button
+                onClick={handleOpenCancelModal}
+                text="Dar de baja"
+                width="100%"
+                backgroundColor={Colors.danger}
+                loading={cancellingRequest}
+                disabled={cancellingRequest}
+              />
+            </div>
+          )}
         </aside>
       </div>
     </main>
@@ -1251,6 +1298,33 @@ export default function LiveHelpDetailByIdPage() {
         </p>
         <div className={styles.successActions}>
           <Button onClick={handleCloseConfirmModal} text="OK" width="100%" />
+        </div>
+      </div>
+    </ModalComponent>
+    <ModalComponent
+      open={showCancelConfirm}
+      onClose={handleCloseCancelModal}
+      styles={{ width: "min(90vw, 420px)", maxWidth: "420px" }}
+    >
+      <div className={styles.confirmModal}>
+        <h3 className={styles.confirmTitle}>Cancelar solicitud</h3>
+        <p className={styles.confirmMessage}>¿Querés dar de baja esta solicitud? Luego no podrás recuperar las franjas cargadas.</p>
+        <div className={styles.confirmActions}>
+          <Button
+            onClick={handleCloseCancelModal}
+            text="Mantener activa"
+            transparent
+            width="100%"
+            disabled={cancellingRequest}
+          />
+          <Button
+            onClick={handleOwnerCancelRequest}
+            text="Dar de baja"
+            width="100%"
+            backgroundColor={Colors.danger}
+            loading={cancellingRequest}
+            disabled={cancellingRequest}
+          />
         </div>
       </div>
     </ModalComponent>

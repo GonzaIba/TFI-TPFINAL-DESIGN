@@ -218,8 +218,7 @@
   };
 
   export interface ConfirmHelpRequestPayload {
-    codeRequestHelp: number;
-    slot: Pick<HelpTimeSlot, "start" | "end">;
+    timeSlot: Pick<HelpTimeSlot, "start" | "end" > & { codeSlot: number };
   }
 
   export interface CreateHelpRequest {
@@ -230,13 +229,18 @@
     timeSlot: { slots: HelpTimeSlot[] };
   }
 
-  export interface UpdateDisponibilityRequest {
-    timeSlot: { slots: HelpTimeSlot[] };
-    userId?: string;
-  }
+export interface UpdateDisponibilityRequest {
+  timeSlot: { slots: HelpTimeSlot[] };
+  userId?: string;
+}
 
-  // Live Help - Chat (message DTO)
-  export interface ChatMessageResponse {
+export interface CancelHelpRequestPayload {
+  reason?: string | null;
+  userId?: string | null;
+}
+
+// Live Help - Chat (message DTO)
+export interface ChatMessageResponse {
     codeMessage: number;
     codeChat: number;
     message: string;

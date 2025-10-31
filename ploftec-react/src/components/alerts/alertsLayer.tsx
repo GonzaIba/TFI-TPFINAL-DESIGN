@@ -304,11 +304,25 @@ export function AlertsLayer({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (!isAuthLoaded) return;
-    if (!isAuthenticated || !alertsEnabled) {
+
+    if (!isAuthenticated) {
       stopPolling();
       setModalQueue([]);
       modalAlertRef.current = null;
       dismissedModalIdsRef.current.clear();
+      setRequestBadges({});
+      return;
+    }
+
+    if (!alertsEnabled) {
+      stopPolling();
+      modalAlertRef.current = null;
+      setModalQueue((prev) => {
+        if (prev.length > 0) {
+          prev.forEach((alert) => dismissedModalIdsRef.current.add(alert.id));
+        }
+        return [];
+      });
       setRequestBadges({});
       return;
     }

@@ -127,6 +127,8 @@
   color: #dcdcdc;
 }
 .ownerSlotButtons { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.ownerCancelCard { margin-top: 20px; padding: 16px; border: 1px solid #2a2a2a; border-radius: 12px; background: #121212; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; width: 100%; }
+.ownerCancelTitle { composes: avTitle; }
 
 /* Skeleton elements */
 .skeletonHeaderRow { display: grid; grid-template-columns: 56px 1fr; gap: 16px; align-items: center; }
@@ -175,3 +177,9 @@
 .successTitle { margin: 0; font-size: 20px; color: #ffffff; }
 .successMessage { margin: 0; font-size: 14px; color: #cfcfcf; line-height: 1.45; }
 .successActions { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.confirmModal { display: flex; flex-direction: column; gap: 16px; padding: 18px 12px 12px; text-align: center; color: #e7e7e7; }
+.confirmTitle { composes: successTitle; }
+.confirmMessage { composes: successMessage; }
+.confirmActions { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; width: 100%; }
+.confirmActions > * { flex: 1; }
+@media (min-width: 520px) { .confirmActions { flex-direction: row; } }
