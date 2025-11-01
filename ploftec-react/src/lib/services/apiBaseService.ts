@@ -79,7 +79,8 @@ export const apiBaseService = {
       return res.data;
     } catch (error: any) {
       const status = error?.response?.status;
-      if (status === 401 || status === 403) {
+      // if (status === 401 || status === 403) {
+      if (status === 401) {
         try {
           const { clearUser, setAuthLoaded, isAuthenticated } = useAuthStore.getState();
           if (isAuthenticated) {

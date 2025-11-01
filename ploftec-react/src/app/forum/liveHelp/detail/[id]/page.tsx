@@ -18,6 +18,7 @@ import type {
 import useSnackBarStore from "@/store/slices/snackBarStore/snackbarStore";
 import useLiveHelpStore from "@/store/slices/liveHelpStore/liveHelpStore";
 import { useQueryClient } from "@tanstack/react-query";
+import { useConfirmedHelpRequests } from "@/lib/query/hooks/forum/useRequestHelp";
 import useAuthStore from "@/store/slices/authStore/authStore";
 import { liveHelpChatService } from "@/lib/services/forum/liveHelpChatService";
 import { requestHelpService } from "@/lib/services/forum/requestHelpService";
@@ -26,6 +27,7 @@ import { SpotlightTour } from "@/components/onboarding/spotlight/spotlightTour";
 import { onboardingService } from "@/lib/services/auth/onboardingService";
 import { OnboardingUserEnum } from "@/lib/types/onboarding";
 import { Colors } from "@/theme/colors";
+import { useErrorHandler } from '@/hooks/errors/useErrorHandler'
 
 type EditableSlot = { codeSlot: number | null; start: Date | null; end: Date | null };
 
@@ -272,6 +274,9 @@ export default function LiveHelpDetailByIdPage() {
   const [selectedSlot, setSelectedSlot] = useState<HelpTimeSlot | null>(null);
   const [confirmingSlot, setConfirmingSlot] = useState(false);
   const [showConfirmSuccess, setShowConfirmSuccess] = useState(false);
+  const [showHelperCancelModal, setShowHelperCancelModal] = useState(false);
+  const [helperCancellingReservation, setHelperCancellingReservation] = useState(false);
+  const handleError = useErrorHandler();
 
   const [chatInput, setChatInput] = useState("");
   const [chat, setChat] = useState<ChatMsg[]>([]);
@@ -298,7 +303,75 @@ export default function LiveHelpDetailByIdPage() {
   );
 
   const showToast = useSnackBarStore((s) => s.showToast);
+  const { data: confirmedRequests, isLoading: confirmedLoading } = useConfirmedHelpRequests(isOwner === false);
+  const helperConfirmed = useMemo(() => {
+    if (isOwner !== false || !request?.codeRequestHelp) return null;
+    const list = confirmedRequests ?? [];
+    return list.find((item) => item.codeRequestHelp === request.codeRequestHelp) ?? null;
+  }, [confirmedRequests, isOwner, request?.codeRequestHelp]);
 
+  const helperReservedSlot = useMemo(() => {
+    if (!helperConfirmed) return null;
+    const target = helperConfirmed.initAt;
+    if (!target) return null;
+    let targetMs = Number.NaN;
+    try {
+      targetMs = parseApiUtc(target as any).getTime();
+    } catch {
+      try {
+        targetMs = new Date(target).getTime();
+      } catch {
+        targetMs = Number.NaN;
+      }
+    }
+    if (!Number.isFinite(targetMs)) return null;
+    const rawSlots = request?.timeSlot?.slots ?? [];
+    const matched = rawSlots.find((slot) => {
+      if (!slot?.start) return false;
+      try {
+        const slotStart = parseApiUtc(slot.start as any).getTime();
+        return Math.abs(slotStart - targetMs) < 60000;
+      } catch {
+        try {
+          const slotStart = new Date(slot.start).getTime();
+          return Math.abs(slotStart - targetMs) < 60000;
+        } catch {
+          return false;
+        }
+      }
+    });
+    return matched ?? null;
+  }, [helperConfirmed, request?.timeSlot?.slots]);
+
+  const helperReservedLabel = useMemo(() => {
+    if (!helperConfirmed) return null;
+    if (helperReservedSlot?.start && helperReservedSlot?.end) {
+      return formatLocalSlot(helperReservedSlot.start, helperReservedSlot.end);
+    }
+    const start = helperConfirmed.initAt;
+    if (!start) return null;
+    try {
+      const parsed = parseApiUtc(start as any);
+      return new Intl.DateTimeFormat(undefined, {
+        weekday: "short",
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      }).format(parsed);
+    } catch {
+      try {
+        return new Intl.DateTimeFormat(undefined, {
+          day: "2-digit",
+          month: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+        }).format(new Date(start));
+      } catch {
+        return start;
+      }
+    }
+  }, [helperConfirmed, helperReservedSlot]);
   useLayoutEffect(() => {
     if (!showOwnerIntro) return;
     setOwnerHighlight(getDetailTargetElement(OWNER_INTRO_STEPS[ownerIntroIndex]?.target ?? "inbox")?.getBoundingClientRect() ?? null);
@@ -359,6 +432,12 @@ export default function LiveHelpDetailByIdPage() {
     setHelperIntroIndex(0);
     setShowHelperIntro(true);
   }, [isOwner, auth, showHelperIntro, helperIntroDismissed, showOwnerIntro]);
+
+  useEffect(() => {
+    if (!helperConfirmed && showHelperCancelModal) {
+      setShowHelperCancelModal(false);
+    }
+  }, [helperConfirmed, showHelperCancelModal]);
 
   const finishOwnerIntro = useCallback(async () => {
     setShowOwnerIntro(false);
@@ -629,6 +708,60 @@ export default function LiveHelpDetailByIdPage() {
       setConfirmingSlot(false);
     }
   }, [idParam, selectedSlot, showToast, queryClient]);
+
+  const handleOpenHelperCancelModal = useCallback(() => {
+    setShowHelperCancelModal(true);
+  }, []);
+
+  const handleCloseHelperCancelModal = useCallback(() => {
+    if (helperCancellingReservation) return;
+    setShowHelperCancelModal(false);
+  }, [helperCancellingReservation]);
+
+  const handleHelperCancelReservation = useCallback(async () => {
+    if (!idParam || helperCancellingReservation) return;
+    setHelperCancellingReservation(true);
+    try {
+      const res = await requestHelpService.cancelConfirmedHelpRequest(idParam);
+      if (res.errors?.errorsList?.length > 0) {
+        handleError(res.errors.errorsList);
+        return;
+      }
+
+      if (res?.data?.success) {
+        showToast({ message: "Reserva cancelada", variant: "success" });
+        setSelectedSlot(null);
+        setShowHelperCancelModal(false);
+        await queryClient.invalidateQueries({ queryKey: ["livehelp", "confirmed-requests"] });
+        await queryClient.invalidateQueries({ queryKey: ["livehelp", "requests-cursor"] });
+        try {
+          const detailRes = await requestHelpService.getRequestHelpDetail(idParam);
+          const data = detailRes?.data as RequestHelpDetailResponse | undefined;
+          if (data) {
+            setRequest(data.requestHelp);
+            const cc = (data as any)?.codeChat ?? (data as any)?.CodeChat ?? null;
+            setCodeChat(typeof cc === "number" ? cc : null);
+            setIsOwner(data?.isOwner === true);
+          }
+        } catch (detailError) {
+          console.error("refresh detail after cancel reservation failed", detailError);
+        }
+      } else {
+        showToast({ message: "No pude cancelar la reserva", variant: "error" });
+      }
+    } catch (error: any) {
+      handleCloseHelperCancelModal();
+      if (error?.response?.data?.errors?.errorsList?.length > 0) {
+        handleError(error?.response?.data?.errors?.errorsList);
+        return;
+      }
+      else {
+        showToast({ message: "No pude cancelar la reserva", variant: "error" });
+      }
+    } finally {
+      setHelperCancellingReservation(false);
+    }
+  }, [helperCancellingReservation, idParam, queryClient, showToast]);
 
   const onBack = useCallback(() => {
     setLoading(true);
@@ -1234,6 +1367,25 @@ export default function LiveHelpDetailByIdPage() {
                     />
                   </div>
                 </>
+              ) : helperConfirmed ? (
+                <div className={styles.helperReservedCard}>
+                  <div className={styles.helperReservedSlot}>
+                    <Clock size={18} />
+                    <span>{helperReservedLabel ?? "Reserva confirmada"}</span>
+                  </div>
+                  <p className={styles.helperReservedHint}>
+                    Si no vas a poder asistir, cancela la reserva para liberar el horario.
+                  </p>
+                  <Button
+                    onClick={handleOpenHelperCancelModal}
+                    width="100%"
+                    text="Cancelar reserva"
+                    backgroundColor={Colors.danger}
+                    disabled={helperCancellingReservation}
+                  />
+                </div>
+              ) : confirmedLoading ? (
+                <div className={styles.helperReservedLoading}>Cargando disponibilidad...</div>
               ) : (
                 <>
                   <div className={styles.slotsList} aria-live="polite">
@@ -1298,6 +1450,33 @@ export default function LiveHelpDetailByIdPage() {
         </p>
         <div className={styles.successActions}>
           <Button onClick={handleCloseConfirmModal} text="OK" width="100%" />
+        </div>
+      </div>
+    </ModalComponent>
+    <ModalComponent
+      open={showHelperCancelModal}
+      onClose={handleCloseHelperCancelModal}
+      styles={{ width: "min(90vw, 420px)", maxWidth: "420px" }}
+    >
+      <div className={styles.confirmModal}>
+        <h3 className={styles.confirmTitle}>Cancelar reserva</h3>
+        <p className={styles.confirmMessage}>Queres cancelar esta reserva? Vamos a avisarle al solicitante que el horario se libero.</p>
+        <div className={styles.confirmActions}>
+          <Button
+            onClick={handleCloseHelperCancelModal}
+            text="Mantener reserva"
+            transparent
+            width="100%"
+            disabled={helperCancellingReservation}
+          />
+          <Button
+            onClick={handleHelperCancelReservation}
+            text="Cancelar reserva"
+            width="100%"
+            backgroundColor={Colors.danger}
+            loading={helperCancellingReservation}
+            disabled={helperCancellingReservation}
+          />
         </div>
       </div>
     </ModalComponent>

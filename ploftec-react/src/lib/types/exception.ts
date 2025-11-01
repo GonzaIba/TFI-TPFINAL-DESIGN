@@ -31,6 +31,7 @@ export const errorUIMapper: Record<string, ErrorUIConfig> = {
   PublicationVoteExpiredException: { type: "toast" },
   CantDeleteAnswerException: { type: "toast" },
   CreatePublicationError: { type: "toast" },
+  RequestHelpTooLateToCancelException: { type: "modal" },
   // Agregá más según tu sistema
 };
 

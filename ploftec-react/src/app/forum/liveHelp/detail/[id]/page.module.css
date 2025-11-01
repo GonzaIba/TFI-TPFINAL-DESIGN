@@ -156,6 +156,11 @@
 .slotItem:hover { border-color: #6f56d9; }
 .slotSelected { border-color: #7f5af0; background: #221b30; }
 .selected { composes: slotSelected; }
+.helperReservedCard { display: flex; flex-direction: column; gap: 12px; padding: 18px 14px; border: 1px solid #2a2a2a; border-radius: 12px; background: #131313; text-align: center; }
+.helperReservedSlot { display: inline-flex; align-items: center; justify-content: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: #1f1f1f; border: 1px solid #2e2e2e; font-weight: 600; color: #f5f5f5; }
+.helperReservedSlot svg { color: #7f5af0; }
+.helperReservedHint { margin: 0; font-size: 13px; color: #bdbdbd; }
+.helperReservedLoading { text-align: center; color: #bdbdbd; padding: 18px; border: 1px dashed #2a2a2a; border-radius: 10px; background: #141414; }
 .noSlots { text-align: center; color: #bdbdbd; display: grid; gap: 12px; padding: 18px; }
 .confirmWrap { margin-top: 8px; }
 .confirmText { font-weight: 600; }

@@ -89,6 +89,15 @@ export const requestHelpService = {
     });
   },
 
+  async cancelConfirmedHelpRequest(id: number): Promise<GenericApiResponse<SuccessfulResponse>> {
+    return await apiBaseService.execute<SuccessfulResponse, undefined>({
+      method: "DELETE",
+      url: `ApiForum/SolicitudAyuda/${id}/CancelarConfirmacion`,
+      requireCredentials: true,
+      handleError: true
+    });
+  },
+
   async getTermsConditions(): Promise<GenericApiResponse<TermsConditionsResponse>> {
     return await apiBaseService.execute<TermsConditionsResponse, undefined>({
       method: "GET",
