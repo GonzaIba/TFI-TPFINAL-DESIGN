@@ -499,7 +499,14 @@ export default function PublicationsPage() {
   }, [showPublicationsIntro, computePublicationsHighlight]);
 
   useEffect(() => {
-    if (!user || user.hasSeenIntroPublications || showPublicationsIntro || publicationsIntroDismissed) return;
+    if (
+      !user ||
+      !user.isOnboarded ||
+      user.hasSeenIntroPublications ||
+      showPublicationsIntro ||
+      publicationsIntroDismissed
+    )
+      return;
     if (loadingPubs || loadingSaved || loadingCreated) return;
     if (!publicacionesData?.length) return;
     const firstElement = getElementForTarget(PUBLICATIONS_INTRO_STEPS[0].target);

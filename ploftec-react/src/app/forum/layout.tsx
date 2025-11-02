@@ -55,7 +55,7 @@ const ROUTE_INTRO_REQUIREMENTS: RouteIntroRequirement[] = [
   },
   {
     match: startsWithRoute('/forum/livehelp'),
-    flags: ['hasSeenIntroLiveHelp'],
+    flags: ['hasSeenIntroLiveHelp', 'hasSeenIntroLiveHelpConfirmed'],
   },
   {
     match: startsWithRoute('/forum/publications'),
@@ -253,7 +253,6 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
     setHasDismissedOnboarding(true);
     setShowIntro(false);
     setShowRobot(true);
-    setAlertsEnabled(true);
 
     if (!user) return;
 

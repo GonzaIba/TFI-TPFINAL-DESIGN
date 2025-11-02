@@ -178,7 +178,14 @@ export default function LiveHelpPage() {
   }, [showLiveHelpIntro, computeLiveHelpHighlight]);
 
   useEffect(() => {
-    if (!user || user.hasSeenIntroLiveHelp || showLiveHelpIntro || liveHelpIntroDismissed) return;
+    if (
+      !user ||
+      !user.isOnboarded ||
+      user.hasSeenIntroLiveHelp ||
+      showLiveHelpIntro ||
+      liveHelpIntroDismissed
+    )
+      return;
     if (!createCardRef.current || !requestFeedRef.current || !myRequestsRef.current) return;
 
     setLiveHelpIntroStepIndex(0);
@@ -239,10 +246,29 @@ export default function LiveHelpPage() {
 
   useEffect(() => {
     if (showLiveHelpIntro) return; // no overlap
-    if (!user || user.hasSeenIntroLiveHelpConfirmed || showConfirmedIntro) return;
+    if (!user || !user.isOnboarded) return;
+    if (!user.hasSeenIntroLiveHelp) return;
+    if (user.hasSeenIntroLiveHelpConfirmed || showConfirmedIntro) return;
     if (!showConfirmedSection || !confirmedListRef.current) return;
 
-    setShowConfirmedIntro(true);
+    const firstConfirmedSlotIndex = confirmedRequests?.findIndex(
+      (request) => request.status?.toLowerCase() === 'confirmado'
+    );
+
+    if (firstConfirmedSlotIndex === 0) {
+      setShowConfirmedIntro(true);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      if (!confirmedListRef.current) return;
+      const highlightRect = confirmedListRef.current.getBoundingClientRect();
+      if (!highlightRect) return;
+      setConfirmedHighlightRect(highlightRect);
+      setShowConfirmedIntro(true);
+    }, 200);
+
+    return () => window.clearTimeout(timer);
   }, [user, showLiveHelpIntro, showConfirmedIntro, showConfirmedSection, confirmedRequests]);
 
   const finishConfirmedIntro = useCallback(async () => {
@@ -258,6 +284,23 @@ export default function LiveHelpPage() {
       console.error('No pude marcar la intro de confirmados', err);
     }
   }, [user, setUser]);
+
+  useEffect(() => {
+    if (showLiveHelpIntro || showConfirmedIntro) return;
+    if (!user || !user.isOnboarded) return;
+    if (user.hasSeenIntroLiveHelpConfirmed) return;
+    if (confirmedLoading) return;
+    if (showConfirmedSection) return;
+
+    void finishConfirmedIntro();
+  }, [
+    user,
+    confirmedLoading,
+    showConfirmedSection,
+    showLiveHelpIntro,
+    showConfirmedIntro,
+    finishConfirmedIntro,
+  ]);
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') applySearch();

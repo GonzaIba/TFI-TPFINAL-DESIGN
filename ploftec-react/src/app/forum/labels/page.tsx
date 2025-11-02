@@ -144,7 +144,14 @@ export default function LabelsPage() {
   }, [user?.email]);
 
   useEffect(() => {
-    if (!user || user.hasSeenIntroLabels || showLabelsIntro || labelsIntroDismissed) return;
+    if (
+      !user ||
+      !user.isOnboarded ||
+      user.hasSeenIntroLabels ||
+      showLabelsIntro ||
+      labelsIntroDismissed
+    )
+      return;
     if (loading || hasError || labelsData.length === 0) return;
 
     setIntroStepIndex(0);

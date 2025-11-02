@@ -17,6 +17,11 @@ type Props = {
 
 function formatCountdown(ms: number) {
   if (ms <= 0) return "Ya comenzó";
+  if (ms < 60_000) {
+    const seconds = Math.max(0, Math.floor(ms / 1000));
+    return `Inicia en ${seconds}s`;
+  }
+
   const totalMinutes = Math.floor(ms / 60000);
   const days = Math.floor(totalMinutes / (60 * 24));
   const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
@@ -31,6 +36,7 @@ function formatCountdown(ms: number) {
 
 function variantByMs(ms: number) {
   if (ms <= 0) return "danger";
+  if (ms <= 60_000) return "critical";
   const hours = ms / (1000 * 60 * 60);
   if (hours <= 1) return "danger";
   if (hours <= 6) return "warn";
@@ -104,17 +110,37 @@ export function RequestHelpConfirmedCard({ item }: Props) {
     }
   }, [item.createdAt]);
 
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(id);
-  }, []);
+  const remainingMs = useMemo(() => {
+    if (!initInfo.valid) return 0;
+    return Math.max(0, initInfo.ms - now);
+  }, [initInfo.ms, initInfo.valid, now]);
 
-  const remainingMs = initInfo.valid ? Math.max(0, initInfo.ms - now) : 0;
+  useEffect(() => {
+    if (!initInfo.valid) return;
+    if (remainingMs === 0) return;
+
+    const delay = remainingMs <= 60_000 ? 1000 : 60_000;
+    const id = window.setTimeout(() => setNow(Date.now()), delay);
+    return () => clearTimeout(id);
+  }, [initInfo.valid, remainingMs]);
+
+  const showSecondsCountdown = initInfo.valid && remainingMs > 0 && remainingMs <= 60_000;
   const countdownText = initInfo.valid ? formatCountdown(remainingMs) : "Inicio sin definir";
   const urgency = initInfo.valid ? variantByMs(remainingMs) : "warn";
   const isLive = initInfo.valid && initInfo.ms <= now;
   const countdownAccentClass =
     styles[`countdown${urgency.charAt(0).toUpperCase()}${urgency.slice(1)}`] ?? "";
+  const countdownClassName = [
+    styles.initCountdown,
+    countdownAccentClass,
+    showSecondsCountdown ? styles.countdownSeconds : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const secondsPulseAnimation = showSecondsCountdown ? { scale: [1, 1.08, 1] } : { scale: 1 };
+  const secondsPulseTransition = showSecondsCountdown
+    ? { duration: 1, repeat: Infinity, ease: "easeInOut" as const }
+    : { duration: 0.2, ease: "easeOut" as const };
 
   const goToDetail = useCallback(() => {
     const id = item.codeRequestHelp;
@@ -304,9 +330,27 @@ export function RequestHelpConfirmedCard({ item }: Props) {
             nombreCompleto={item.userCreator?.completeName ?? ""}
             direction="right"
           />
-          <div className={`${styles.initCountdown} ${countdownAccentClass}`}>
-            <Clock size={16} />
-            <span>{countdownText}</span>
+          <div className={countdownClassName}>
+            {showSecondsCountdown ? (
+              <motion.span
+                className={styles.urgentClock}
+                aria-hidden
+                animate={secondsPulseAnimation}
+                transition={secondsPulseTransition}
+              >
+                <span className={styles.urgentClockHandMinute} />
+                <span className={styles.urgentClockHandSecond} />
+              </motion.span>
+            ) : (
+              <Clock size={16} />
+            )}
+            <motion.span
+              className={showSecondsCountdown ? styles.countdownSecondsText : undefined}
+              animate={secondsPulseAnimation}
+              transition={secondsPulseTransition}
+            >
+              {countdownText}
+            </motion.span>
           </div>
         </div>
         <div className={styles.confirmedHeaderRight}>

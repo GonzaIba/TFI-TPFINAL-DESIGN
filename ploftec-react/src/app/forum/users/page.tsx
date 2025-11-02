@@ -109,7 +109,14 @@ export default function UsersPage() {
   }, [showUsersIntro, usersIntroStepIndex, getUsersIntroTarget]);
 
   useEffect(() => {
-    if (!user || user.hasSeenIntroUsers || showUsersIntro || usersIntroDismissed) return;
+    if (
+      !user ||
+      !user.isOnboarded ||
+      user.hasSeenIntroUsers ||
+      showUsersIntro ||
+      usersIntroDismissed
+    )
+      return;
     if (!tableRef.current || !filterButtonRef.current || !actionButtonRef.current) return;
 
     setUsersIntroStepIndex(0);

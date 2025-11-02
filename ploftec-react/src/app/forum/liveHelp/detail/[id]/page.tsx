@@ -417,7 +417,8 @@ export default function LiveHelpDetailByIdPage() {
 
   useEffect(() => {
     if (isOwner !== true) return;
-    if (!auth || auth.hasSeenIntroLiveHelpDetailHelped || showOwnerIntro || ownerIntroDismissed) return;
+    if (!auth || !auth.isOnboarded || auth.hasSeenIntroLiveHelpDetailHelped || showOwnerIntro || ownerIntroDismissed)
+      return;
     if (!inboxRef.current || !chatPanelRef.current || !availabilityRef.current) return;
 
     setOwnerIntroIndex(0);
@@ -426,7 +427,15 @@ export default function LiveHelpDetailByIdPage() {
 
   useEffect(() => {
     if (isOwner !== false) return;
-    if (!auth || auth.hasSeenIntroLiveHelpDetailHelp || showHelperIntro || helperIntroDismissed || showOwnerIntro) return;
+    if (
+      !auth ||
+      !auth.isOnboarded ||
+      auth.hasSeenIntroLiveHelpDetailHelp ||
+      showHelperIntro ||
+      helperIntroDismissed ||
+      showOwnerIntro
+    )
+      return;
     if (!chatPanelRef.current || !availabilityRef.current) return;
 
     setHelperIntroIndex(0);

@@ -637,6 +637,83 @@
   color: #ff8080;
 }
 
+.countdownCritical {
+  color: #ff5a5a;
+  text-shadow: 0 0 14px rgba(255, 70, 70, 0.55);
+}
+
+.countdownSeconds {
+  gap: 10px;
+}
+
+.countdownSecondsText {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.urgentClock {
+  position: relative;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 106, 106, 0.85);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 138, 138, 0.35), rgba(255, 38, 38, 0.14));
+  box-shadow: 0 0 18px rgba(255, 36, 36, 0.26);
+}
+
+.urgentClock::after {
+  content: "";
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.urgentClockHandMinute,
+.urgentClockHandSecond {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transform-origin: bottom center;
+  transform: translate(-50%, -100%) rotate(0deg);
+}
+
+.urgentClockHandMinute {
+  height: 8px;
+  opacity: 0.7;
+  animation: urgentClockMinute 6s linear infinite;
+}
+
+.urgentClockHandSecond {
+  height: 10px;
+  animation: urgentClockSecond 1.2s linear infinite;
+}
+
+@keyframes urgentClockMinute {
+  from {
+    transform: translate(-50%, -100%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -100%) rotate(360deg);
+  }
+}
+
+@keyframes urgentClockSecond {
+  from {
+    transform: translate(-50%, -100%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -100%) rotate(360deg);
+  }
+}
+
 @media (max-width: 720px) {
   .confirmedHeader {
     flex-direction: column;
