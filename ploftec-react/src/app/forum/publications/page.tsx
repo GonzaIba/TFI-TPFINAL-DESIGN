@@ -29,7 +29,7 @@ import { Colors } from '@/theme/colors'
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { publicationsKeys } from '@/lib/query/keys';
-import { useWindowWidth } from '@/hooks';
+import { useWindowWidth, useOpenForumUserDetail } from '@/hooks';
 import useAuthStore from '@/store/slices/authStore/authStore';
 import { SpotlightTour } from '@/components/onboarding/spotlight/spotlightTour';
 import { onboardingService } from '@/lib/services/auth/onboardingService';
@@ -117,6 +117,7 @@ export default function PublicationsPage() {
   const isTinyPhone = width <= 320
   const user = useAuthStore((state) => state.user);
   const setUser = useAuthStore((state) => state.setUser);
+  const openForumUserDetail = useOpenForumUserDetail();
 
   const paginatorRef = useRef<HTMLDivElement | null>(null);
   const createButtonRef = useRef<HTMLDivElement | null>(null);
@@ -386,8 +387,8 @@ export default function PublicationsPage() {
     // lógica para redirigir al perfil del usuario top
   }
 
-  const onClickUser = async () => {
-    // lógica para ver publicaciones creadas
+  const handleUserClick = (email?: string | null) => {
+    openForumUserDetail(email);
   }
 
   const onClickTitle = (codigo: number) => {
@@ -683,7 +684,7 @@ export default function PublicationsPage() {
                         <PublicationCard
                           publication={pub}
                           onClickTitle={async () => onClickTitle(pub.codePublication)}
-                          onClickUser={onClickUser}
+                          onClickUser={() => handleUserClick(pub.userCreator?.email)}
                           onToggleSave={async () =>
                             toggleSave({
                               codePub: pub.codePublication,

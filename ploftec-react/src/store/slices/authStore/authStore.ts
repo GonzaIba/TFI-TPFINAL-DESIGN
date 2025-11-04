@@ -7,20 +7,24 @@ import zustymiddleware from 'zustymiddleware';
 
 interface AuthState {
   user: UserApplication | null;
+  role: string | null;
   isAuthenticated: boolean;
   isAuthLoaded: boolean;
   setUser: (user: UserApplication) => void;
   clearUser: () => void;
   setAuthLoaded: () => void;
+  setRole: (role: string | null) => void;
 }
 
 const useAuthStore = create<AuthState>(zustymiddleware((set:any) => ({
   user: null,
+  role: null,
   isAuthenticated: false,
   isAuthLoaded: false,
-  setUser: (user:UserApplication) => set({ user, isAuthenticated: true }),
-  clearUser: () => set({ user: null, isAuthenticated: false }),
+  setUser: (user:UserApplication) => set({ user, role: user?.roleName ?? null, isAuthenticated: true }),
+  clearUser: () => set({ user: null, role: null, isAuthenticated: false }),
   setAuthLoaded: () => set({ isAuthLoaded: true }),
+  setRole: (role: string | null) => set({ role }),
 })));
 
 // Solo en cliente

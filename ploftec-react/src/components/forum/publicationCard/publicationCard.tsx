@@ -14,7 +14,7 @@ import { useWindowWidth } from '@/hooks';
 type PublicationCardProps = {
   publication: PublicationResponse
   onClickTitle: () => Promise<void>
-  onClickUser: () => Promise<void>
+  onClickUser: () => void
   onToggleSave: () => Promise<void>
 }
 
@@ -39,6 +39,7 @@ export default function PublicationCard({
       <div className={styles.questionAvatarUser} onClick={onClickUser}>
         <AvatarUser 
           tagUser={publication.userCreator?.initials ?? "AU"} 
+          onClick={onClickUser}
           imageUser={publication.userCreator?.image}
           descripcionCorta={publication.userCreator?.shortDescription ?? ''}
           descripcionLarga={publication.userCreator?.longDescription ?? ''}

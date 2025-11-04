@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect, useRef } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import styles from "./page.module.css";
 import { AvatarUser, Button, ExpiryTimer, Loading } from "@/components";
+import { useOpenForumUserDetail } from "@/hooks";
 import { Trophy } from "lucide-react";
 import ArrowBack from "@mui/icons-material/ArrowBack";
 import { parseApiUtc, formatLocalSlot } from "@/lib/utils/datetime";
@@ -20,6 +21,7 @@ type ChatMsg = { id: string; from: "me" | "other"; text: string; at: number };
 
 export default function LiveHelpDetailPage() {
   const router = useRouter();
+  const openForumUserDetail = useOpenForumUserDetail();
   const params = useParams<{ slug: string }>();
   const sp = useSearchParams();
   const idParam = sp.get("id");
@@ -117,6 +119,7 @@ export default function LiveHelpDetailPage() {
                 <div className={styles.headerLeft}>
                   <AvatarUser
                     tagUser={request.userCreator?.initials ?? "AU"}
+                    onClick={() => openForumUserDetail(request.userCreator?.email)}
                     imageUser={request.userCreator?.image}
                     descripcionCorta={request.userCreator?.shortDescription ?? ""}
                     descripcionLarga={request.userCreator?.longDescription ?? ""}

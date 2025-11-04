@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef, useLayoutEffect, useCallback } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button, SideBarFilters} from '@/components'
 import ProtectedRoute from "@/components/auth/protectedRoute";
 import { filtrosService } from "@/lib/services/forum/filtrosService";
@@ -27,6 +28,9 @@ export default function UsersPage() {
   const [usersIntroDismissed, setUsersIntroDismissed] = useState(false);
   const [usersIntroStepIndex, setUsersIntroStepIndex] = useState(-1);
   const [usersHighlightRect, setUsersHighlightRect] = useState<DOMRect | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const selectedUserEmail = searchParams.get('userEmail');
 
   const USERS_INTRO_STEPS = [
     {
@@ -69,6 +73,15 @@ export default function UsersPage() {
     actionButtonRef.current = node;
     setActionReady(!!node);
   }, []);
+
+  const handleUserDetailOpen = useCallback((email: string) => {
+    if (!email) return;
+    router.replace(`/forum/users?userEmail=${encodeURIComponent(email)}`);
+  }, [router]);
+
+  const handleUserDetailClose = useCallback(() => {
+    router.replace('/forum/users');
+  }, [router]);
 
   const getUsersIntroTarget = useCallback(
     (target: 'table' | 'details' | 'filters') => {
@@ -227,6 +240,9 @@ export default function UsersPage() {
                 onReloadCompleted={() => setShouldReloadUsers(false)}
                 tableRef={tableRef}
                 firstActionRef={handleFirstActionRef}
+                selectedUserEmail={selectedUserEmail}
+                onUserDetailOpen={handleUserDetailOpen}
+                onDetailClose={handleUserDetailClose}
               />
             </div>
           </div>

@@ -20,6 +20,8 @@ interface AvatarUserProps {
   direction?: Direction;
   /** tamaño del avatar en px (ancho/alto). Default: 40 */
   size?: number;
+  onClick?: () => void;
+  ariaLabel?: string;
 }
 
 const colors = [
@@ -51,6 +53,8 @@ export default function AvatarUser({
   showDetails = true,
   direction,
   size = 40,
+  onClick,
+  ariaLabel,
 }: AvatarUserProps) {
   const [avatarBg, setAvatarBg] = useState("#000");
 
@@ -80,6 +84,15 @@ export default function AvatarUser({
   useEffect(() => {
     setAvatarBg(getAvatarBackgroundColor(tagUser));
   }, [tagUser]);
+
+  const isInteractive = typeof onClick === 'function';
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!isInteractive || !onClick) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onClick();
+    }
+  };
 
   return (
     <>
@@ -115,7 +128,14 @@ export default function AvatarUser({
           </React.Fragment>
         }
       >
-        <div className={styles.containerAvatar}>
+        <div
+          className={styles.containerAvatar}
+          onClick={onClick}
+          onKeyDown={handleKeyDown}
+          role={isInteractive ? 'button' : undefined}
+          tabIndex={isInteractive ? 0 : undefined}
+          aria-label={isInteractive ? (ariaLabel ?? nombreCompleto ?? tagUser) : undefined}
+        >
           <div
             className={styles.profile}
             style={{
@@ -140,7 +160,14 @@ export default function AvatarUser({
         </div>
       </HtmlTooltip>
       ) : (
-        <div className={styles.containerAvatar}>
+        <div
+          className={styles.containerAvatar}
+          onClick={onClick}
+          onKeyDown={handleKeyDown}
+          role={isInteractive ? 'button' : undefined}
+          tabIndex={isInteractive ? 0 : undefined}
+          aria-label={isInteractive ? (ariaLabel ?? nombreCompleto ?? tagUser) : undefined}
+        >
           <div
             className={styles.profile}
             style={{

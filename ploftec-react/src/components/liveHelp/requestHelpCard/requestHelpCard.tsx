@@ -5,6 +5,7 @@ import { motion, useMotionValue, useSpring, useMotionTemplate } from "framer-mot
 import { useRouter, useSearchParams } from 'next/navigation';
 import styles from "./requestHelpCard.module.css";
 import { Button, ExpiryTimer, AvatarUser, Loading } from "@/components";
+import { useOpenForumUserDetail } from "@/hooks";
 import type { RequestHelpResponse } from "@/lib/types/forum";
 import { useEffect, useMemo, useState } from "react";
 import { Trophy, LogIn } from "lucide-react";
@@ -51,6 +52,7 @@ export function RequestHelpCard({ item, hideOwnerAvatar = false, badges = [] }: 
 
   const [now, setNow] = useState(() => Date.now());
   const [navLoading, setNavLoading] = useState(false);
+  const openForumUserDetail = useOpenForumUserDetail();
   const [flipped, setFlipped] = useState(false);
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 30_000);
@@ -147,18 +149,24 @@ export function RequestHelpCard({ item, hideOwnerAvatar = false, badges = [] }: 
           {/* Top row: avatar (optional) + right panel (timer, reward, button) */}
           <div className={`${styles.topRow} ${hideOwnerAvatar ? styles.noAvatar : ''}`}>
 
-        {!hideOwnerAvatar && (
-          <AvatarUser 
-            tagUser={item.userCreator?.initials ?? "AU"} 
-            imageUser={item.userCreator?.image}
-            descripcionCorta={item.userCreator?.shortDescription ?? ''}
-            descripcionLarga={item.userCreator?.longDescription ?? ''}
-            nombreCompleto={item.userCreator?.completeName ?? ''}
-            direction='right'
-          />
-        )}
+          {!hideOwnerAvatar && (
+            <div
+              onClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => event.stopPropagation()}
+            >
+              <AvatarUser 
+                tagUser={item.userCreator?.initials ?? "AU"} 
+                imageUser={item.userCreator?.image}
+                descripcionCorta={item.userCreator?.shortDescription ?? ''}
+                descripcionLarga={item.userCreator?.longDescription ?? ''}
+                nombreCompleto={item.userCreator?.completeName ?? ''}
+                direction='right'
+                onClick={() => openForumUserDetail(item.userCreator?.email)}
+              />
+            </div>
+          )}
 
-        <div className={styles.rightPanel}>
+          <div className={styles.rightPanel}>
           {visibleBadge && (
             <div
               className={styles.alertInline}

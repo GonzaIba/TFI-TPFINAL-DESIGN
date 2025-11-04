@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { motion, useMotionTemplate, useMotionValue, useSpring } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { Button, AvatarUser, Loading, ModalComponent } from "@/components";
+import { useOpenForumUserDetail } from "@/hooks";
 import type { RequestHelpConfirmedResponse, RequestHelpResponse, TermsConditionsResponse } from "@/lib/types/forum";
 import { parseApiUtc } from "@/lib/utils/datetime";
 import { Trophy, LogIn, Clock, Play } from "lucide-react";
@@ -65,6 +66,7 @@ export function RequestHelpConfirmedCard({ item }: Props) {
   const router = useRouter();
   const [now, setNow] = useState(() => Date.now());
   const [navLoading, setNavLoading] = useState(false);
+  const openForumUserDetail = useOpenForumUserDetail();
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const [termsLoading, setTermsLoading] = useState(false);
   const [termsError, setTermsError] = useState<string | null>(null);
@@ -322,14 +324,20 @@ export function RequestHelpConfirmedCard({ item }: Props) {
       )}
       <div className={styles.confirmedHeader}>
         <div className={styles.confirmedHeaderLeft}>
-          <AvatarUser
-            tagUser={item.userCreator?.initials ?? "?"}
-            imageUser={item.userCreator?.image}
-            descripcionCorta={item.userCreator?.shortDescription ?? ""}
-            descripcionLarga={item.userCreator?.longDescription ?? ""}
-            nombreCompleto={item.userCreator?.completeName ?? ""}
-            direction="right"
-          />
+          <div
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
+          >
+            <AvatarUser
+              tagUser={item.userCreator?.initials ?? "?"}
+              imageUser={item.userCreator?.image}
+              descripcionCorta={item.userCreator?.shortDescription ?? ""}
+              descripcionLarga={item.userCreator?.longDescription ?? ""}
+              nombreCompleto={item.userCreator?.completeName ?? ""}
+              direction="right"
+              onClick={() => openForumUserDetail(item.userCreator?.email)}
+            />
+          </div>
           <div className={countdownClassName}>
             {showSecondsCountdown ? (
               <motion.span

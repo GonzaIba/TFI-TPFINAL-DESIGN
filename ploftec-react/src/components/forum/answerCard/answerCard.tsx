@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { ArrowDropUp, ArrowDropDown } from '@mui/icons-material';
 import { CheckCircle } from 'lucide-react';
 import AvatarUser from '@/components/avatarUserComponent/avatarUser';
+import { useOpenForumUserDetail } from '@/hooks';
 import Button from '@/components/buttonComponent/button';
 import { AnswerResponse } from '@/lib/types/forum';
 import styles from '../publicationDetail/publicationDetail.module.css';
@@ -68,6 +69,7 @@ export default function AnswerCard({
   const [editedContent, setEditedContent] = useState<string | null>(null);
   const isVoting = loadingUpVote || loadingDownVote;
   const isPositiveVoted = answer.votedPositive;
+  const openForumUserDetail = useOpenForumUserDetail();
 
   const handleOnUpVote = async () => {
     setLoadingUpVote(true);
@@ -245,6 +247,7 @@ export default function AnswerCard({
               descripcionLarga={answer.user?.longDescription ?? ''}
               nombreCompleto={answer.user?.completeName ?? ''}
               direction='right'
+              onClick={() => openForumUserDetail(answer.user?.email)}
             />
             <p className={styles.usrName}>{answer.user?.completeName}</p>
             <p className={styles.cmntAt}>{answer.createdDate.toString()}</p>

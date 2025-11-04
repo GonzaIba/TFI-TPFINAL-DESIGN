@@ -15,7 +15,6 @@ import ProtectedRoute from "@/components/auth/protectedRoute";
 import { useNotificationSignalR } from '@/hooks';
 import {
   moveTabBar,
-  moveContentTabBar,
   enableTdTextSelection,
   preventHorizontalScrollWheel,
 } from '@/lib/utils/tabBar';
@@ -71,6 +70,46 @@ const ROUTE_INTRO_REQUIREMENTS: RouteIntroRequirement[] = [
   },
 ];
 
+type TabDescriptor = {
+  label: string;
+  route: string;
+  match: (path: string) => boolean;
+};
+
+const BASE_TAB_CONFIG: TabDescriptor[] = [
+  {
+    label: 'Publicaciones',
+    route: '/forum/publications',
+    match: startsWithRoute('/forum/publications'),
+  },
+  {
+    label: 'Usuarios',
+    route: '/forum/users',
+    match: startsWithRoute('/forum/users'),
+  },
+  {
+    label: 'Etiquetas',
+    route: '/forum/labels',
+    match: startsWithRoute('/forum/labels'),
+  },
+  {
+    label: 'Live Help',
+    route: '/forum/liveHelp',
+    match: startsWithRoute('/forum/liveHelp'),
+  },
+];
+
+const ADMIN_TAB: TabDescriptor = {
+  label: 'Administración',
+  route: '/forum/administration',
+  match: startsWithRoute('/forum/administration'),
+};
+
+const isAdminRole = (role?: string | null): boolean => {
+  if (!role) return false;
+  return role.toLowerCase().includes('admin');
+};
+
 const hasPendingIntroForRoute = (
   pathname: string,
   user: UserApplication | null,
@@ -99,7 +138,18 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
   const userEmail = user?.email ?? null;
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const setUser = useAuthStore((state) => state.setUser);
+  const roleName = useAuthStore((state) => state.role ?? state.user?.roleName ?? null);
   const setAlertsEnabled = useAlertsConfigStore((state) => state.setAlertsEnabled);
+
+  const isAdmin = useMemo(() => isAdminRole(roleName), [roleName]);
+
+  const tabConfig = useMemo(() => {
+    const items = [...BASE_TAB_CONFIG];
+    if (isAdmin) {
+      items.push(ADMIN_TAB);
+    }
+    return items;
+  }, [isAdmin]);
 
   const newNotificationAdded = useCallback((d: NewNotificationEvent) => {
     setUserNotifications(prev => [d, ...(prev ?? [])]);
@@ -152,50 +202,53 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
   }, [isAuthLoaded, isAuthenticated, userEmail]);
 
   useEffect(() => {
-    if (pathname === '/forum') {
-      router.push('/forum/publications');
+    if (!tabConfig.length || !isAuthLoaded) return;
+
+    const normalizedPath = pathname?.toLowerCase() ?? '';
+
+    if (!isAdmin && ADMIN_TAB.match(normalizedPath)) {
+      router.replace('/forum/publications');
+      return;
+    }
+
+    if (normalizedPath === '/forum') {
+      router.push(tabConfig[0].route);
       setActiveTab(0);
-      moveTabBar(0);
+      return;
     }
-    // Publicaciones (incluye query params o subrutas)
-    else if (pathname.startsWith('/forum/publications')) {
-      setActiveTab(0);
-      moveTabBar(0);
+
+    const matchedIndex = tabConfig.findIndex((tab) => tab.match(normalizedPath));
+
+    if (matchedIndex >= 0) {
+      setActiveTab(matchedIndex);
+      return;
     }
-    // Usuarios
-    else if (pathname.startsWith('/forum/users')) {
-      setActiveTab(1);
-      moveTabBar(1);
-    }
-    // Etiquetas
-    else if (pathname.startsWith('/forum/labels')) {
-      setActiveTab(2);
-      moveTabBar(2);
-    }
-    // Live Help
-    else if (pathname.startsWith('/forum/liveHelp')) {
-      setActiveTab(3);
-      moveTabBar(3);
-    }
-  }, [pathname, router]);
+
+    setActiveTab(0);
+  }, [pathname, router, tabConfig, isAdmin, isAuthLoaded]);
 
   useEffect(() => {
-    router.prefetch('/forum/publications');
-    router.prefetch('/forum/users');
-    router.prefetch('/forum/labels');
-    router.prefetch('/forum/liveHelp');
+    if (!tabConfig.length) return;
+    tabConfig.forEach((tab) => router.prefetch(tab.route));
     router.prefetch('/login');
-  }, []);
+  }, [router, tabConfig]);
 
-  const changeTab = async (index: number) => {
+  useEffect(() => {
+    if (!tabConfig.length) return;
+    if (activeTab >= tabConfig.length) {
+      setActiveTab(tabConfig.length - 1);
+      return;
+    }
+    moveTabBar(activeTab);
+  }, [activeTab, tabConfig]);
+
+  const changeTab = useCallback((index: number) => {
+    const target = tabConfig[index];
+    if (!target) return;
     setActiveTab(index);
     moveTabBar(index);
-    let route = '/forum/publications';
-    if (index === 1) route = '/forum/users';
-    else if (index === 2) route = '/forum/labels';
-    else if (index === 3) route = '/forum/liveHelp';
-    router.push(route);
-  };
+    router.push(target.route);
+  }, [router, tabConfig]);
 
   const handleLogout = async () => {
     await logout();
@@ -362,10 +415,15 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
 
       <div className="contentForum">
         <div className="tab-menu slider-nav">
-          <div className={`tab-menu-item ${activeTab === 0 ? 'active' : ''}`} onClick={() => changeTab(0)}>Publicaciones</div>
-          <div className={`tab-menu-item ${activeTab === 1 ? 'active' : ''}`} onClick={() => changeTab(1)}>Usuarios</div>
-          <div className={`tab-menu-item ${activeTab === 2 ? 'active' : ''}`} onClick={() => changeTab(2)}>Etiquetas</div>
-          <div className={`tab-menu-item ${activeTab === 3 ? 'active' : ''}`} onClick={() => changeTab(3)}>Live Help</div>
+          {tabConfig.map((tab, index) => (
+            <div
+              key={tab.route}
+              className={`tab-menu-item ${activeTab === index ? 'active' : ''}`}
+              onClick={() => changeTab(index)}
+            >
+              {tab.label}
+            </div>
+          ))}
           <div className="tab-menu-bar"></div>
         </div>
 

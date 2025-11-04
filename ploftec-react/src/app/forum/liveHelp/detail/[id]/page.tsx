@@ -22,7 +22,7 @@ import { useConfirmedHelpRequests } from "@/lib/query/hooks/forum/useRequestHelp
 import useAuthStore from "@/store/slices/authStore/authStore";
 import { liveHelpChatService } from "@/lib/services/forum/liveHelpChatService";
 import { requestHelpService } from "@/lib/services/forum/requestHelpService";
-import { useLiveHelpChatSignalR } from "@/hooks";
+import { useLiveHelpChatSignalR, useOpenForumUserDetail } from "@/hooks";
 import { SpotlightTour } from "@/components/onboarding/spotlight/spotlightTour";
 import { onboardingService } from "@/lib/services/auth/onboardingService";
 import { OnboardingUserEnum } from "@/lib/types/onboarding";
@@ -239,6 +239,7 @@ const formatTimeLabel = (value: number): string => {
 
 export default function LiveHelpDetailByIdPage() {
   const router = useRouter();
+  const openForumUserDetail = useOpenForumUserDetail();
   const params = useParams<{ id: string }>();
   const idParam = params?.id ? Number(params.id) : undefined;
 
@@ -1096,6 +1097,7 @@ export default function LiveHelpDetailByIdPage() {
                   <div className={styles.headerAvatarWrap}>
                     <AvatarUser
                       imageUser={request.userCreator.image}
+                      onClick={() => openForumUserDetail(request.userCreator.email)}
                       tagUser={request.userCreator.initials ?? "?"}
                       descripcionCorta={request.userCreator.shortDescription ?? ""}
                       descripcionLarga={request.userCreator.longDescription ?? ""}
@@ -1177,6 +1179,7 @@ export default function LiveHelpDetailByIdPage() {
                         <div className={styles.inboxAvatarWrap}>
                           <AvatarUser
                             tagUser={initials}
+                            onClick={() => openForumUserDetail(it?.other?.email)}
                             imageUser={img}
                             descripcionCorta={it?.other?.shortDescription ?? ""}
                             descripcionLarga={it?.other?.longDescription ?? ""}

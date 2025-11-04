@@ -10,7 +10,7 @@ import { getPublicationTimeAgo } from '@/lib/helpers/timeHelper'
 import styles from './publicationDetail.module.css'
 import EditorInput from '@/components/editorComponent/editor';
 import { Colors } from '@/theme/colors'
-import { usePublicationSignalR } from '@/hooks';
+import { usePublicationSignalR, useOpenForumUserDetail } from '@/hooks';
 import { VoteNumber } from '@/components/labelComponent/numberMotionComponent/numberMotion'
 import { useErrorHandler } from '@/hooks/errors/useErrorHandler'
 import { SkeletonAnswerCard, SkeletonEditorComment, ModalComponent, PanelSection, SkeletonLine } from '@/components'
@@ -57,6 +57,7 @@ function PublicationDetail({
   const [isDeleting, setIsDeleting] = useState(false);
   const [scrollToNewest, setScrollToNewest] = useState(false);
   const [showNewAnswerAlert, setShowNewAnswerAlert] = useState(false);
+  const openForumUserDetail = useOpenForumUserDetail();
   const [newAnswerId, setNewAnswerId] = useState<number | null>(null);
   const [editorKey, setEditorKey] = useState<number>(0);
   const [editedAnswerId, setEditedAnswerId] = useState<number | null>(null);
@@ -535,6 +536,7 @@ function PublicationDetail({
                     <div className={styles.cUser}>
                       <AvatarUser
                         imageUser={publication.user?.image}
+                        onClick={() => openForumUserDetail(publication.user?.email)}
                         tagUser={publication.user?.initials}
                         descripcionCorta={publication.user?.shortDescription}
                         descripcionLarga={publication.user?.longDescription}

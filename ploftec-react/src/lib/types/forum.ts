@@ -69,6 +69,7 @@
     shortDescription?: string;
     longDescription?: string;
     image?: string;
+    email?: string;
     dateFrom?: string;
     score: number;
     lastTimeOnline: string;

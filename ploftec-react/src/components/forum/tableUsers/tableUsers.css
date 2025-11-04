@@ -416,6 +416,80 @@
   .no-medals-message {
     font-size: 16px;
   }
+
+  .profile-container--loading {
+    min-height: 260px;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    font-weight: 600;
+    background: #ffffff;
+  }
+
+  .user-detail-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1400;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .user-detail-modal__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.65);
+    backdrop-filter: blur(4px);
+  }
+
+  .user-detail-modal__panel {
+    position: relative;
+    width: min(960px, 96%);
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 16px;
+    padding: 32px 28px;
+    background: #ffffff;
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+    animation: user-modal-in 160ms ease-out;
+  }
+
+  .user-detail-modal__close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    border: none;
+    background: rgba(0, 0, 0, 0.05);
+    color: #111;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 160ms ease;
+  }
+
+  .user-detail-modal__close:hover {
+    background: rgba(0, 0, 0, 0.12);
+  }
+
+  .user-detail-modal__content {
+    padding-top: 12px;
+  }
+
+  @keyframes user-modal-in {
+    from {
+      transform: translateY(16px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
   
   @media screen and (max-width: 1100px) {
     .profile-container {
