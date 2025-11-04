@@ -4,9 +4,12 @@ import { useEffect, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from 'next/image';
 import logo from "../../images/ploftec-fluid.png";
-import { authenticateExternal, login } from '@/lib/services/auth/authenticationService';
+import { authenticateExternal, login, register as registerService } from '@/lib/services/auth/authenticationService';
 import useAuthStore from "@/store/slices/authStore/authStore";
 import { ProvidersEnum } from "@/lib/types/auth";
+
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const phoneRegex = /^[0-9\s()+-]{7,20}$/;
 
 export default function LoginRegister() {
   const router = useRouter();
@@ -22,11 +25,21 @@ export default function LoginRegister() {
 
   const [confirmPassword, setConfirmPassword] = useState("");
   const [email, setEmail] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
   const [showEmailError, setShowEmailError] = useState(false);
+  const [emailErrorMessage, setEmailErrorMessage] = useState("");
   const [showConfirmPasswordError, setShowConfirmPasswordError] = useState(false);
+  const [showLastNameError, setShowLastNameError] = useState(false);
+  const [showPhoneError, setShowPhoneError] = useState(false);
+  const [phoneErrorMessage, setPhoneErrorMessage] = useState("");
 
   const [animate, setAnimate] = useState(false);
   const [loadingLogin, setLoadingLogin] = useState(false);
+  const [animateRegister, setAnimateRegister] = useState(false);
+  const [loadingRegister, setLoadingRegister] = useState(false);
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showRegisterConfirmPassword, setShowRegisterConfirmPassword] = useState(false);
   const setUser = useAuthStore((state) => state.setUser);
   const setAuthLoaded = useAuthStore((state) => state.setAuthLoaded);
 
@@ -43,6 +56,13 @@ export default function LoginRegister() {
     setTimeout(() => {
       setAnimate(false);
     }, 550); // coincide con tu animación CSS de 0.55s
+  };
+
+  const triggerRegisterAnimation = () => {
+    setAnimateRegister(true);
+    setTimeout(() => {
+      setAnimateRegister(false);
+    }, 550);
   };
 
   const toggleRegister = () => setIsRegister(!isRegister);
@@ -84,54 +104,115 @@ export default function LoginRegister() {
 
 
   const handleRegister = async () => {
-    const emailEmpty = !email.trim();
-    const usernameEmpty = !username.trim();
+    triggerRegisterAnimation();
+    setErrorVisible(false);
+
+    const trimmedEmail = email.trim();
+    const trimmedPhone = phone.trim();
+    const emailEmpty = !trimmedEmail;
+    const trimmedUsername = username.trim();
+    const trimmedLastName = lastName.trim();
+    const usernameEmpty = !trimmedUsername;
+    const lastNameEmpty = !trimmedLastName;
+    const phoneEmpty = !trimmedPhone;
     const passwordEmpty = !password.trim();
     const confirmEmpty = !confirmPassword.trim();
     const passwordsDontMatch = password !== confirmPassword;
+    const invalidEmail = !emailEmpty && !emailRegex.test(trimmedEmail);
+    const invalidPhone = !phoneEmpty && !phoneRegex.test(trimmedPhone);
 
-    setShowEmailError(emailEmpty);
+    setShowEmailError(emailEmpty || invalidEmail);
+    setEmailErrorMessage(
+      emailEmpty ? "Email requerido" : invalidEmail ? "Email inválido" : ""
+    );
     setShowUsernameError(usernameEmpty);
+    setShowLastNameError(lastNameEmpty);
+    setShowPhoneError(phoneEmpty || invalidPhone);
+    setPhoneErrorMessage(
+      phoneEmpty ? "Teléfono requerido" : invalidPhone ? "Teléfono inválido" : ""
+    );
     setShowPasswordError(passwordEmpty);
     setShowConfirmPasswordError(confirmEmpty || passwordsDontMatch);
 
-    if (emailEmpty || usernameEmpty || passwordEmpty || confirmEmpty || passwordsDontMatch) {
-      setErrorMessage(passwordsDontMatch ? "Las contraseñas no coinciden" : "Todos los campos son obligatorios");
+    const hasMissingRequired =
+      emailEmpty ||
+      usernameEmpty ||
+      lastNameEmpty ||
+      phoneEmpty ||
+      passwordEmpty ||
+      confirmEmpty;
+
+    const hasInvalidFormat = invalidEmail || invalidPhone;
+
+    if (passwordsDontMatch || hasMissingRequired || hasInvalidFormat) {
+      if (passwordsDontMatch) {
+        setErrorMessage("Las contrasenas no coinciden");
+      } else if (hasMissingRequired) {
+        setErrorMessage("Todos los campos son obligatorios");
+      } else {
+        setErrorMessage("Revise los campos marcados en el formulario");
+      }
       setErrorVisible(true);
       return;
     }
 
     try {
-      const res = await fetch("https://localhost:44352/Auth/Register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          Username: username,
-          Email: email,
-          Password: password,
-          ConfirmPassword: confirmPassword,
-        }),
+      setLoadingRegister(true);
+      const response = await registerService({
+        email: trimmedEmail,
+        firstName: trimmedUsername,
+        lastName: trimmedLastName,
+        password,
+        confirmPassword,
+        phoneNumber: trimmedPhone,
       });
 
-      if (res.ok) {
+      if (response?.data) {
         setIsRegister(false);
         setErrorVisible(false);
+        setUsername("");
+        setLastName("");
+        setPhone("");
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+        setShowUsernameError(false);
+        setShowLastNameError(false);
+        setShowPhoneError(false);
+        setShowEmailError(false);
+        setEmailErrorMessage("");
+        setPhoneErrorMessage("");
+        setShowPasswordError(false);
+        setShowConfirmPasswordError(false);
+        setShowPassword(false);
+        setShowRegisterPassword(false);
+        setShowRegisterConfirmPassword(false);
+      } else if (response?.errors?.errorsList?.length) {
+        const serverMessage = response.errors.errorsList[0]?.message;
+        setErrorMessage(serverMessage || "Ocurrio un error, contacte con un administrador");
+        setErrorVisible(true);
       } else {
-        const errorText = await res.text();
-        setErrorMessage(errorText || "Error al registrar");
+        setErrorMessage("Ocurrio un error, contacte con un administrador");
         setErrorVisible(true);
       }
     } catch (err) {
-      setErrorMessage("Error al registrar usuario");
+      setErrorMessage("Ocurrio un error, contacte con un administrador");
       setErrorVisible(true);
       console.error(err);
+    } finally {
+      setLoadingRegister(false);
     }
   };
   
   useEffect(() => {
     router.prefetch('/forum/publications');
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('mode') === 'register' || window.location.hash === '#register') {
+      setIsRegister(true);
+    }
   }, []);
 
   return (
@@ -251,6 +332,14 @@ export default function LoginRegister() {
 
         {/* Register */}
         <div className="form sign-up-form">
+          <form
+            className="form"
+            autoComplete="on"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleRegister();
+            }}
+          >
             <h2 className="title">Panel de registro</h2>
             <div className="input-container">
               <div className="input-field">
@@ -261,12 +350,34 @@ export default function LoginRegister() {
                     placeholder=" "
                     className="input-login"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    onChange={(e) => {
+                      setUsername(e.target.value);
+                      setShowUsernameError(false);
+                    }}
                   />
                   <label className="placeholder-login" placeholder="Ingrese su nombre..."></label>
                 </div>
               </div>
               {showUsernameError && <div className="error-message">Nombre requerido</div>}
+            </div>
+            <div className="input-container">
+              <div className="input-field">
+                <i className="fas fa-user"></i>
+                <div className="input-content">
+                  <input
+                    type="text"
+                    placeholder=" "
+                    className="input-login"
+                    value={lastName}
+                    onChange={(e) => {
+                      setLastName(e.target.value);
+                      setShowLastNameError(false);
+                    }}
+                  />
+                  <label className="placeholder-login" placeholder="Ingrese su apellido..."></label>
+                </div>
+              </div>
+              {showLastNameError && <div className="error-message">Apellido requerido</div>}
             </div>
             <div className="input-container">
               <div className="input-field">
@@ -277,51 +388,101 @@ export default function LoginRegister() {
                     placeholder=" "
                     className="input-login"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setEmail(value);
+                      setShowEmailError(false);
+                      setEmailErrorMessage("");
+                    }}
                   />
                   <label className="placeholder-login" placeholder="Ingrese su email..."></label>
                 </div>
               </div>
-              {showEmailError && <div className="error-message">Email requerido</div>}
+              {showEmailError && <div className="error-message">{emailErrorMessage}</div>}
             </div>
             <div className="input-container">
               <div className="input-field">
+                <i className="fas fa-phone"></i>
+                <div className="input-content">
+                  <input
+                    type="text"
+                    placeholder=" "
+                    className="input-login"
+                    value={phone}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setPhone(value);
+                      setShowPhoneError(false);
+                      setPhoneErrorMessage("");
+                    }}
+                  />
+                  <label className="placeholder-login" placeholder="Ingrese su telefono..."></label>
+                </div>
+              </div>
+              {showPhoneError && <div className="error-message">{phoneErrorMessage}</div>}
+            </div>
+            <div className="input-container">
+              <div className={`input-field ${showPasswordError ? "error" : ""}`}>
                 <i className="fas fa-lock"></i>
                 <div className="input-content">
                   <input
-                    type="password"
+                    type={showRegisterPassword ? "text" : "password"}
                     placeholder=" "
                     className="input-login"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setShowPasswordError(false);
+                    }}
                   />
-                  <label className="placeholder-login" placeholder="Ingrese una contraseña..."></label>
+                  <label className="placeholder-login" placeholder="Ingrese una contrasena..."></label>
+                  <span className="password-span" onClick={() => setShowRegisterPassword(!showRegisterPassword)}>
+                    <i className={`fas ${showRegisterPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
+                  </span>
                 </div>
               </div>
-              {showPasswordError && <div className="error-message">Contraseña requerida</div>}
+              {showPasswordError && <div className="error-message">Contrasena requerida</div>}
             </div>
             <div className="input-container">
-              <div className="input-field">
+              <div className={`input-field ${showConfirmPasswordError ? "error" : ""}`}>
                 <i className="fas fa-lock"></i>
                 <div className="input-content">
                   <input
-                    type="password"
+                    type={showRegisterConfirmPassword ? "text" : "password"}
                     placeholder=" "
                     className="input-login"
                     value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    onChange={(e) => {
+                      setConfirmPassword(e.target.value);
+                      setShowConfirmPasswordError(false);
+                    }}
                   />
-                  <label className="placeholder-login" placeholder="Repetir Contraseña"></label>
+                  <label className="placeholder-login" placeholder="Repetir Contrasena"></label>
+                  <span className="password-span" onClick={() => setShowRegisterConfirmPassword(!showRegisterConfirmPassword)}>
+                    <i className={`fas ${showRegisterConfirmPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
+                  </span>
                 </div>
               </div>
-              {showConfirmPasswordError && <div className="error-message">{password !== confirmPassword ? "Las contraseñas no coinciden" : "Confirmación requerida"}</div>}
+              {showConfirmPasswordError && <div className="error-message">{password !== confirmPassword ? "Las contrasenas no coinciden" : "Confirmacion requerida"}</div>}
             </div>
-            <button className="button-login" onClick={handleRegister}>Registrarse</button>
+            <div className="button-login-container">
+              <button
+                type="submit"
+                className={`button-login ${animateRegister ? "animate" : ""} ${loadingRegister ? "loading" : ""}`}
+                disabled={loadingRegister}
+              >
+                {loadingRegister ? (
+                  <span className="spinner"></span>
+                ) : (
+                  "Registrarse"
+                )}
+              </button>
+            </div>
             {errorVisible && isRegister && <div className="login-error">{errorMessage}</div>}
-            <p className="account-text">Ya tienes una cuenta? <a onClick={() => setIsRegister(false)}>Iniciar Sesión</a></p>
-          </div>
+            <p className="account-text">Ya tienes una cuenta? <a onClick={() => setIsRegister(false)}>Iniciar Sesion</a></p>
+          </form>
         </div>
-
+        </div>
         {/* Panels */}
         <div className="panels-container">
           <div className="panel left-panel">
@@ -353,3 +514,6 @@ export default function LoginRegister() {
     </div>
   );
 }
+
+
+

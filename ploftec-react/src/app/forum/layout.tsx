@@ -395,7 +395,19 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
             </ul>
           ) : (
             <ul className="buttonsList">
-              <li><a className="buttonNav">Registrarse</a></li>
+              <li>
+                <a
+                  className="buttonNav"
+                  onClick={async () => {
+                    setIsLoading(true);
+                    await new Promise(r => setTimeout(r, 700)); // Simular un retraso de 500ms
+                    setIsLoading(false);
+                    router.push('/login?mode=register');
+                  }}
+                >
+                  Registrarse
+                </a>
+              </li>
               <li>
                 <a
                   className="buttonNav"
