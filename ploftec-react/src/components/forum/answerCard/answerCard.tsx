@@ -38,6 +38,7 @@ const EditorInput = dynamic(
 interface Props {
   answer: AnswerResponse;
   canDelete: boolean;
+  deleteAsAdmin?: boolean;
   canEdit: boolean;
   isNew?: boolean;
   isEdited?: boolean;
@@ -50,6 +51,7 @@ interface Props {
 export default function AnswerCard({ 
   answer,
   canDelete,
+  deleteAsAdmin = false,
   canEdit,
   isNew = false,
   isEdited = false,
@@ -231,10 +233,11 @@ export default function AnswerCard({
             {canDelete && (
               <Button
                 onClick={onDelete}
-                icon={<DeleteIcon />}
+                icon={<DeleteIcon sx={{ color: deleteAsAdmin ? Colors.white : undefined }} />}
                 circular={false}
                 width="45px"
-                transparent
+                backgroundColor={deleteAsAdmin ? Colors.danger : undefined}
+                transparent={!deleteAsAdmin}
               />
             )}
           </div>

@@ -137,6 +137,16 @@
     display: inline;
 }
 
+.publicationTitle {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: var(--White);
+    line-height: 1.2;
+    word-break: break-word;
+}
+
 .modalWrp {
     position: fixed;
     top: 0;
@@ -218,6 +228,77 @@
     align-items: center;
 }
 
+.deletePublicationModal{
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+}
+
+.deletePublicationModal > *:not(.deletePublicationModalActions){
+    width: 100%;
+}
+
+.deletePublicationModal p{
+    color: #f5f5f5;
+    line-height: 1.4;
+    width: 100%;
+}
+
+.deletePublicationModalField{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.deletePublicationModalField label{
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #ffffff;
+}
+
+.deletePublicationModalField textarea,
+.deletePublicationModalField input{
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    background: #1f1f1f;
+    color: #ffffff;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: border-color 0.2s ease;
+}
+
+.deletePublicationModalField textarea{
+    min-height: 110px;
+    resize: vertical;
+}
+
+.deletePublicationModalField textarea:focus,
+.deletePublicationModalField input:focus{
+    outline: none;
+    border-color: rgba(100, 75, 255, 0.85);
+}
+
+.deletePublicationModalField textarea:disabled,
+.deletePublicationModalField input:disabled{
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.deletePublicationModalError{
+    font-size: 0.85rem;
+    color: #ff6b6b;
+}
+
+.deletePublicationModalActions{
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
 .buttonBack{
     width: 100%;
     margin-bottom: 1rem;
@@ -257,10 +338,6 @@
     overflow: hidden;
 }
 
-.editSwap{
-    min-height: 180px;
-}
-
 .answerCardAnimated{
     position: relative; /* para ubicar la insignia de 'Editado' */
 }
@@ -276,4 +353,32 @@
     font-size: 11px;
     font-weight: 700;
     opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+    .comment {
+        grid-template-areas:
+            "score user"
+            "score comment"
+            "controls controls";
+        grid-template-columns: auto 1fr;
+        column-gap: 1rem;
+    }
+
+    .cControls {
+        grid-area: controls;
+        justify-self: stretch;
+        align-self: flex-start;
+        justify-content: flex-start;
+        width: 100%;
+        margin-top: 0.5rem;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .cControls :global(button),
+    .cControls > button {
+        flex: 1 1 140px;
+        max-width: 100%;
+    }
 }

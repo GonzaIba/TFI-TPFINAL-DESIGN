@@ -1,10 +1,10 @@
-'use client'
+﻿'use client'
 
 import React, { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import Button from '@/components/buttonComponent/button'
 import AvatarUser from '@/components/avatarUserComponent/avatarUser'
 import AnswerCard from '@/components/forum/answerCard/answerCard'
-import { ArrowDropUp, ArrowDropDown, ArrowBack } from '@mui/icons-material';
+import { ArrowDropUp, ArrowDropDown, ArrowBack, DeleteOutline, ReportProblemOutlined } from '@mui/icons-material';
 import { publicationsService } from '@/lib/services/forum/publicationsService'
 import { getPublicationTimeAgo } from '@/lib/helpers/timeHelper'
 import styles from './publicationDetail.module.css'
@@ -29,6 +29,7 @@ import { isWithinLastHour } from '@/lib/helpers/timeHelper';
 import useSnackBarStore from '@/store/slices/snackBarStore/snackbarStore';
 import { AddAnswerEvent } from '@/lib/types/events'
 import { AnimatePresence, motion } from 'framer-motion';
+import useAuthStore from '@/store/slices/authStore/authStore';
 
 interface PublicationDetailProps {
   publication?: PublicationDetailResponse;
@@ -47,8 +48,8 @@ function PublicationDetail({
 }: PublicationDetailProps) {
 
   /*
-   * Copia local de la publicación para poder mutarla sin tocar la prop.
-   * Si el padre cambia de publicación (nuevo id), reemplazamos el estado.
+   * Copia local de la publicaciÃ³n para poder mutarla sin tocar la prop.
+   * Si el padre cambia de publicaciÃ³n (nuevo id), reemplazamos el estado.
   */
   const [publication, setPublication] = useState<PublicationDetailResponse | undefined>(publicationProp);
   const [loadingUpVote, setLoadingUpVote] = useState(false);
@@ -66,6 +67,25 @@ function PublicationDetail({
   const isPositiveVoted = publication?.votedPositive;
 
   const [selectedAnswerToDelete, setSelectedAnswerToDelete] = useState<AnswerResponse | null>(null);
+  const [isAdminDeletingAnswer, setIsAdminDeletingAnswer] = useState(false);
+  const [deleteAnswerReason, setDeleteAnswerReason] = useState('');
+  const [deleteAnswerPassword, setDeleteAnswerPassword] = useState('');
+  const [deleteAnswerError, setDeleteAnswerError] = useState<string | null>(null);
+  const roleName = useAuthStore((state) => state.role ?? state.user?.roleName ?? null);
+  const isAdmin = useMemo(() => {
+    if (!roleName) return false;
+    return roleName.toLowerCase().includes('admin');
+  }, [roleName]);
+  const [showDeletePublicationModal, setShowDeletePublicationModal] = useState(false);
+  const [deletePublicationReason, setDeletePublicationReason] = useState('');
+  const [deletePublicationPassword, setDeletePublicationPassword] = useState('');
+  const [deletePublicationError, setDeletePublicationError] = useState<string | null>(null);
+  const [isDeletingPublication, setIsDeletingPublication] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDetail, setReportDetail] = useState('');
+  const [reportError, setReportError] = useState<string | null>(null);
+  const [isReportingPublication, setIsReportingPublication] = useState(false);
 
   const handleError = useErrorHandler();
   const handleVotePublicationChanged = useCallback((newVotes: number) => {
@@ -101,7 +121,7 @@ function PublicationDetail({
                 textResponse: newComment.textResponse,
                 createdDate: newComment.createdDate,
                 correctAnswer: newComment.correctAnswer,
-                isAuthor: false, //Es false, porque esto se le notifica a los demás usuarios NO al que los generó
+                isAuthor: false, //Es false, porque esto se le notifica a los demÃ¡s usuarios NO al que los generÃ³
                 votedPositive: newComment.votedPositive,
                 files: newComment.files ?? [],
               }
@@ -181,7 +201,7 @@ function PublicationDetail({
 
       console.log('Respuesta agregada:', result)
       if (result.data) {
-        // Actualizar la publicación actual con la nueva respuesta
+        // Actualizar la publicaciÃ³n actual con la nueva respuesta
         console.log('Respuesta agregada, enter iffff', result.data)
         setPublication(p =>
           p
@@ -311,6 +331,13 @@ function PublicationDetail({
   };
 
   const handleOnClicDeleteAnswer = async () => {
+    if (isAdminDeletingAnswer) {
+      if (!deleteAnswerReason.trim() || !deleteAnswerPassword.trim()) {
+        setDeleteAnswerError('CompletÃ¡ el motivo y tu contraseÃ±a de administrador para continuar.');
+        return;
+      }
+    }
+
     try {
       setIsDeleting(true);
       let response = await deleteAnswer();
@@ -322,7 +349,7 @@ function PublicationDetail({
       if(response?.data?.success) {
 
         useSnackBarStore.getState().showToast({
-          message: 'Se eliminó la respuesta correctamente.',
+          message: 'Se eliminÃ³ la respuesta correctamente.',
           variant: 'success',
         });
 
@@ -339,8 +366,7 @@ function PublicationDetail({
       console.error('Error al votar la respuesta:', error);
     } finally {
       setIsDeleting(false);
-      setShowModalDelete(false);
-      setSelectedAnswerToDelete(null);
+      handleOnCancelDelete();
     }
   };
 
@@ -371,7 +397,135 @@ function PublicationDetail({
   const handleOnCancelDelete = () => {
     setShowModalDelete(false);
     setSelectedAnswerToDelete(null);
+    setIsAdminDeletingAnswer(false);
+    setDeleteAnswerReason('');
+    setDeleteAnswerPassword('');
+    setDeleteAnswerError(null);
   }
+
+  const handleOpenDeletePublicationModal = useCallback(() => {
+    setDeletePublicationReason('');
+    setDeletePublicationPassword('');
+    setDeletePublicationError(null);
+    setShowDeletePublicationModal(true);
+  }, []);
+
+  const handleCloseDeletePublicationModal = useCallback(() => {
+    if (isDeletingPublication) return;
+    setShowDeletePublicationModal(false);
+    setDeletePublicationReason('');
+    setDeletePublicationPassword('');
+    setDeletePublicationError(null);
+  }, [isDeletingPublication]);
+
+  const handleConfirmDeletePublication = useCallback(async () => {
+    if (!publication) return;
+    const reason = deletePublicationReason.trim();
+    const password = deletePublicationPassword.trim();
+
+    if (!reason || !password) {
+      setDeletePublicationError('CompletÃ¡ el motivo y tu contraseÃ±a de administrador para continuar.');
+      return;
+    }
+
+    setDeletePublicationError(null);
+    setIsDeletingPublication(true);
+    try {
+      const response = await publicationsService.deletePublication({
+        codePublication: publication.codePublication,
+        reason,
+        password,
+      });
+
+      if (response?.errors?.errorsList?.length) {
+        setDeletePublicationError(response.errors.errorsList[0]?.message ?? 'No se pudo eliminar la publicaciÃ³n.');
+        return;
+      }
+
+      if (!response?.data?.success) {
+        setDeletePublicationError('No se pudo eliminar la publicaciÃ³n.');
+        return;
+      }
+
+      useSnackBarStore.getState().showToast({
+        message: 'La publicaciÃ³n se eliminÃ³ correctamente.',
+        variant: 'success',
+      });
+
+      setShowDeletePublicationModal(false);
+      setDeletePublicationReason('');
+      setDeletePublicationPassword('');
+      setPublication(undefined);
+      await onBack();
+    } catch (error) {
+      console.error('Error al eliminar la publicaciÃ³n', error);
+      setDeletePublicationError('OcurriÃ³ un error al intentar eliminar la publicaciÃ³n. ContactÃ¡ con un administrador.');
+    } finally {
+      setIsDeletingPublication(false);
+    }
+  }, [publication, deletePublicationReason, deletePublicationPassword, onBack]);
+
+  const handleOpenReportModal = useCallback(() => {
+    setReportReason('');
+    setReportDetail('');
+    setReportError(null);
+    setShowReportModal(true);
+  }, []);
+
+  const handleCloseReportModal = useCallback(() => {
+    if (isReportingPublication) return;
+    setShowReportModal(false);
+    setReportReason('');
+    setReportDetail('');
+    setReportError(null);
+  }, [isReportingPublication]);
+
+  const handleConfirmReportPublication = useCallback(async () => {
+    if (!publication) return;
+    const reason = reportReason.trim();
+    const detail = reportDetail.trim();
+
+    if (reason.length < 3 || detail.length < 10) {
+      setReportError('Contanos el motivo y brindanos al menos 10 caracteres de detalle para continuar.');
+      return;
+    }
+
+    setIsReportingPublication(true);
+    setReportError(null);
+
+    try {
+      const response = await publicationsService.reportPublication({
+        codePublication: publication.codePublication,
+        reason,
+        detail,
+      });
+
+      if (response?.errors?.errorsList?.length) {
+        handleError(response.errors.errorsList);
+        setReportError(response.errors.errorsList[0]?.message ?? 'No pudimos enviar la denuncia.');
+        return;
+      }
+
+      if (!response?.data?.success) {
+        setReportError('No pudimos enviar la denuncia.');
+        return;
+      }
+
+      useSnackBarStore.getState().showToast({
+        message: 'Recibimos tu denuncia. Gracias por ayudarnos a moderar.',
+        variant: 'success',
+      });
+
+      setShowReportModal(false);
+      setReportReason('');
+      setReportDetail('');
+    } catch (error) {
+      console.error('Error al denunciar la publicaciÃ³n:', error);
+      setReportError('No pudimos enviar la denuncia. Intentalo nuevamente en unos minutos.');
+    } finally {
+      setIsReportingPublication(false);
+    }
+  }, [publication, reportReason, reportDetail, handleError]);
 
   const votePublication = async (isPositive : boolean) => {
     if (!publication) {
@@ -423,7 +577,7 @@ function PublicationDetail({
 
     if (document.body.contains(el)) {
       scrollToEl();
-      setScrollToNewest(false);          // ✅ resetea el flag
+      setScrollToNewest(false);          // âœ… resetea el flag
     } else {
       const obs = new MutationObserver(() => {
         if (document.body.contains(el)) {
@@ -438,7 +592,7 @@ function PublicationDetail({
   }, [newAnswerId, publication?.answers?.length, scrollToNewest]);
 
   useEffect(() => {
-    // Si cambió de publicación (nuevo código) refrescamos el estado interno.
+    // Si cambiÃ³ de publicaciÃ³n (nuevo cÃ³digo) refrescamos el estado interno.
     if (publicationProp?.codePublication !== publication?.codePublication) {
       setPublication(publicationProp);
       setEditorKey(prev => prev + 1);
@@ -457,7 +611,7 @@ function PublicationDetail({
       if (!showNewAnswerAlert || !scrollRef?.current) return;
 
       const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-      // a 50 px del fondo es “suficiente”
+      // a 50 px del fondo es â€œsuficienteâ€
       if (scrollHeight - scrollTop - clientHeight < 50) {
         setShowNewAnswerAlert(false);
       }
@@ -488,13 +642,13 @@ function PublicationDetail({
 
   const renderRef = useRef(0);
   renderRef.current++;
-  console.log(`🔁 Render PublicationDetailCard #${renderRef.current}`);
+  console.log(`ðŸ” Render PublicationDetailCard #${renderRef.current}`);
 
   return (
     <>
     {showNewAnswerAlert && newAnswerId && (
       <div className="new-answer-alert">
-        <p>¡Hay nuevas respuestas!</p>
+        <p>Â¡Hay nuevas respuestas!</p>
         <Button onClick={handleOnClickScrollDown} icon={<ArrowBack />} circular />
       </div>
     )}
@@ -533,6 +687,32 @@ function PublicationDetail({
                         transparent
                       />
                     </div>
+                    <div className={styles.cControls}>
+                      <Button
+                        onClick={handleOpenReportModal}
+                        icon={<ReportProblemOutlined sx={{ color: Colors.white }} />}
+                        circular
+                        width="45px"
+                        backgroundColor={Colors.primary}
+                        ariaLabel="Denunciar publicación"
+                        title="Denunciar publicación"
+                        loading={isReportingPublication}
+                        disabled={isReportingPublication}
+                      />
+                      {isAdmin && (
+                        <Button
+                          onClick={handleOpenDeletePublicationModal}
+                          icon={<DeleteOutline sx={{ color: Colors.white }} />}
+                          circular
+                          width="45px"
+                          backgroundColor={Colors.danger}
+                          ariaLabel="Eliminar publicación"
+                          title="Eliminar publicación"
+                          loading={isDeletingPublication}
+                          disabled={isDeletingPublication}
+                        />
+                      )}
+                    </div>
                     <div className={styles.cUser}>
                       <AvatarUser
                         imageUser={publication.user?.image}
@@ -546,7 +726,12 @@ function PublicationDetail({
                       <p className={styles.usrName}>{publication.user?.completeName}</p>
                       <p className={styles.cmntAt}>{getPublicationTimeAgo('Respondido', new Date(publication.createdDate))}</p>
                     </div>
-                    <p className={styles.cText}><span className={styles.cBody}>{publication.content}</span></p>
+                    <div className={styles.cText}>
+                      {publication?.title && (
+                        <span className={styles.publicationTitle}>{publication.title}</span>
+                      )}
+                      <span className={styles.cBody}>{publication.content}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -576,41 +761,50 @@ function PublicationDetail({
                   {publication?.answers?.length > 0 ? (
                     <h3 className={styles.answersTitle}>{publication?.answers?.length} Respuesta{publication?.answers?.length > 1 ? 's' : ''}</h3>
                   ) : (
-                    <h3>¡Sé el primero en responder!</h3>
+                    <h3>Â¡SÃ© el primero en responder!</h3>
                   )}
                   <AnimatePresence initial={false}>
-                    {(publication?.answers ?? []).map(answer => (
-                      <motion.div
-                        key={answer.codeAnswer}
-                        layout
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.3 }}
-                        className={styles.answerWrapper}
-                        ref={node => {
-                          if (answer.codeAnswer === newAnswerId && node) {
-                            scrollRef!.current = node;
-                            newAnswerElRef.current = node;
-                          }
-                        }}
-                      >
+                    {(publication?.answers ?? []).map(answer => {
+                      const canEditAnswer = isWithinLastHour(answer.createdDate) && answer.isAuthor;
+                      const canDeleteAnswer = isAdmin || canEditAnswer;
+                      return (
+                        <motion.div
+                          key={answer.codeAnswer}
+                          layout
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.3 }}
+                          className={styles.answerWrapper}
+                          ref={node => {
+                            if (answer.codeAnswer === newAnswerId && node) {
+                              scrollRef!.current = node;
+                              newAnswerElRef.current = node;
+                            }
+                          }}
+                        >
                         <AnswerCard
                           answer={answer}
-                          canDelete={isWithinLastHour(answer.createdDate) && answer.isAuthor}
-                          canEdit={isWithinLastHour(answer.createdDate) && answer.isAuthor}
+                          canDelete={canDeleteAnswer}
+                          deleteAsAdmin={isAdmin && !canEditAnswer}
+                          canEdit={canEditAnswer}
                           isNew={answer.codeAnswer === newAnswerId}
                           isEdited={answer.codeAnswer === editedAnswerId}
                           onUpvote={async () => await handleOnClicUpVoteAnswer(answer.codeAnswer)}
                           onDownvote={async () => await handleOnClicDownVoteAnswer(answer.codeAnswer)}
                           onDelete={async () => {
                             setSelectedAnswerToDelete(answer);
+                            setIsAdminDeletingAnswer(isAdmin && !canEditAnswer);
+                            setDeleteAnswerReason('');
+                            setDeleteAnswerPassword('');
+                            setDeleteAnswerError(null);
                             setShowModalDelete(true);
                           }}
                           onSaveEdit={async (newText, answerCode) => { await handleSaveEdit(newText, answerCode)}}
                         />
-                      </motion.div>
-                    ))}
+                        </motion.div>
+                      );
+                    })}
                   </AnimatePresence>
                 </>
               )}
@@ -647,19 +841,189 @@ function PublicationDetail({
         />
       </div>
 
-      <ModalComponent open={showModalDelete} onClose={() => setShowModalDelete(false)} styles={{width: '500px'}}>
+      <ModalComponent
+        open={showModalDelete}
+        onClose={handleOnCancelDelete}
+        closeIcon
+        title="Eliminar respuesta"
+        styles={{width: '560px'}}
+      >
         <div className={styles.forumDeleteAnswer}>
-          <h2>¿Estás seguro de eliminar esta respuesta?</h2>
+          <h2>Â¿EstÃ¡s seguro de eliminar esta respuesta?</h2>
           <p>Ten en cuenta que esta accion es irreversible.</p>
-          <div className='buttonList'>
+          {isAdminDeletingAnswer && (
+            <>
+              <div className={styles.deletePublicationModalField}>
+                <label htmlFor="delete-answer-reason">Motivo de la eliminaciÃ³n</label>
+                <textarea
+                  id="delete-answer-reason"
+                  value={deleteAnswerReason}
+                  onChange={(event) => {
+                    setDeleteAnswerReason(event.target.value);
+                    setDeleteAnswerError(null);
+                  }}
+                  placeholder="DetallÃ¡ por quÃ© necesitÃ¡s eliminar esta respuesta"
+                  disabled={isDeleting}
+                />
+              </div>
+              <div className={styles.deletePublicationModalField}>
+                <label htmlFor="delete-answer-password">ContraseÃ±a de administrador</label>
+                <input
+                  id="delete-answer-password"
+                  type="password"
+                  value={deleteAnswerPassword}
+                  onChange={(event) => {
+                    setDeleteAnswerPassword(event.target.value);
+                    setDeleteAnswerError(null);
+                  }}
+                  placeholder="IngresÃ¡ tu contraseÃ±a para confirmar"
+                  disabled={isDeleting}
+                />
+              </div>
+              {deleteAnswerError && (
+                <div className={styles.deletePublicationModalError}>{deleteAnswerError}</div>
+              )}
+            </>
+          )}
+          <div className={styles.deletePublicationModalActions}>
             <Button
-              onClick={async () => await handleOnClicDeleteAnswer()}
-              text="Eliminar"
-              loading={isDeleting}
+              text="Cancelar"
+              onClick={handleOnCancelDelete}
+              transparent
+              backgroundColor={Colors.primary}
+              disabled={isDeleting}
             />
             <Button
-              onClick={handleOnCancelDelete}
+              text="Eliminar respuesta"
+              onClick={async () => await handleOnClicDeleteAnswer()}
+              backgroundColor={Colors.danger}
+              loading={isDeleting}
+              disabled={isDeleting}
+            />
+          </div>
+        </div>
+      </ModalComponent>
+
+      <ModalComponent
+        open={showDeletePublicationModal}
+        onClose={handleCloseDeletePublicationModal}
+        closeIcon
+        title="Eliminar publicaciÃ³n"
+        styles={{ width: '560px' }}
+      >
+        <div className={styles.deletePublicationModal}>
+          <p>
+            {publication
+              ? `EstÃ¡s por eliminar la publicaciÃ³n "${publication.title}". Esta acciÃ³n es permanente y no se puede deshacer.`
+              : 'EstÃ¡s por eliminar una publicaciÃ³n. Esta acciÃ³n es permanente y no se puede deshacer.'}
+          </p>
+
+          <div className={styles.deletePublicationModalField}>
+            <label htmlFor="delete-publication-reason">Motivo de la eliminaciÃ³n</label>
+            <textarea
+              id="delete-publication-reason"
+              value={deletePublicationReason}
+              onChange={(event) => {
+                setDeletePublicationReason(event.target.value);
+                setDeletePublicationError(null);
+              }}
+              placeholder="DetallÃ¡ por quÃ© necesitÃ¡s eliminar esta publicaciÃ³n"
+              disabled={isDeletingPublication}
+            />
+          </div>
+
+          <div className={styles.deletePublicationModalField}>
+            <label htmlFor="delete-publication-password">ContraseÃ±a de administrador</label>
+            <input
+              id="delete-publication-password"
+              type="password"
+              value={deletePublicationPassword}
+              onChange={(event) => {
+                setDeletePublicationPassword(event.target.value);
+                setDeletePublicationError(null);
+              }}
+              placeholder="IngresÃ¡ tu contraseÃ±a para confirmar"
+              disabled={isDeletingPublication}
+            />
+          </div>
+
+          {deletePublicationError && (
+            <div className={styles.deletePublicationModalError}>{deletePublicationError}</div>
+          )}
+
+          <div className={styles.deletePublicationModalActions}>
+            <Button
               text="Cancelar"
+              onClick={handleCloseDeletePublicationModal}
+              transparent
+              backgroundColor={Colors.primary}
+              disabled={isDeletingPublication}
+            />
+            <Button
+              text="Eliminar publicaciÃ³n"
+              onClick={handleConfirmDeletePublication}
+              backgroundColor={Colors.danger}
+              loading={isDeletingPublication}
+              disabled={isDeletingPublication}
+            />
+          </div>
+        </div>
+      </ModalComponent>
+      <ModalComponent
+        open={showReportModal}
+        onClose={handleCloseReportModal}
+        closeIcon
+        title="Denunciar publicación"
+        styles={{ width: '560px' }}
+      >
+        <div className={styles.deletePublicationModal}>
+          <p>
+            Contanos por qué creés que esta publicación incumple las reglas. Nuestro equipo la revisará a la brevedad.
+          </p>
+          <div className={styles.deletePublicationModalField}>
+            <label htmlFor="report-publication-reason">Motivo</label>
+            <input
+              id="report-publication-reason"
+              type="text"
+              value={reportReason}
+              onChange={(event) => {
+                setReportReason(event.target.value);
+                setReportError(null);
+              }}
+              placeholder="Ej. Contenido ofensivo, spam, información falsa..."
+              disabled={isReportingPublication}
+            />
+          </div>
+          <div className={styles.deletePublicationModalField}>
+            <label htmlFor="report-publication-detail">Detalle</label>
+            <textarea
+              id="report-publication-detail"
+              value={reportDetail}
+              onChange={(event) => {
+                setReportDetail(event.target.value);
+                setReportError(null);
+              }}
+              placeholder="Brindanos más contexto para que podamos revisar el caso."
+              disabled={isReportingPublication}
+            />
+          </div>
+          {reportError && (
+            <div className={styles.deletePublicationModalError}>{reportError}</div>
+          )}
+          <div className={styles.deletePublicationModalActions}>
+            <Button
+              text="Cancelar"
+              onClick={handleCloseReportModal}
+              transparent
+              backgroundColor={Colors.primary}
+              disabled={isReportingPublication}
+            />
+            <Button
+              text="Enviar denuncia"
+              onClick={handleConfirmReportPublication}
+              backgroundColor={Colors.primary}
+              loading={isReportingPublication}
+              disabled={isReportingPublication}
             />
           </div>
         </div>

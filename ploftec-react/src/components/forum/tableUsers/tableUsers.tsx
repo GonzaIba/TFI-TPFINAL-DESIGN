@@ -1,16 +1,19 @@
 'use client'
 
-import { useEffect, useState, useCallback, Ref, MutableRefObject, useRef } from 'react'
+import { useEffect, useState, useCallback, Ref, MutableRefObject, useRef, useMemo } from 'react'
 import { usuariosForoService } from '@/lib/services/forum/usuariosForoService'
 import { UsersForumResponse, DetailsUserForumResponse } from '@/lib/types/forum'
 import { getPublicationTimeAgo } from '@/lib/helpers/timeHelper'
 import DraggableBottomSheet from '@/components/draggableBottomSheet/draggableBottomSheet'
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import CloseIcon from '@mui/icons-material/Close';
 import Button from '@/components/buttonComponent/button';
 import { useErrorHandler } from '@/hooks/errors/useErrorHandler'
 import { useWindowWidth } from '@/hooks'
 import { Colors } from '@/theme/colors'
+import { ModalComponent } from '@/components/modalComponent/modalComponent';
+import useAuthStore from '@/store/slices/authStore/authStore';
 import './tableUsers.css'
 
 type TableUsersProps = {
@@ -44,6 +47,17 @@ export default function TableUsers({
   const currentEmailRef = useRef<string | null>(null);
   const width = useWindowWidth();
   const isMobile = width <= 768;
+  const roleName = useAuthStore((state) => state.role ?? state.user?.roleName ?? null);
+  const isAdmin = useMemo(() => {
+    if (!roleName) return false;
+    return roleName.toLowerCase().includes('admin');
+  }, [roleName]);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [userPendingDeletion, setUserPendingDeletion] = useState<UsersForumResponse | null>(null);
+  const [deleteReason, setDeleteReason] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchUsers = useCallback(async () => {
     setIsLoading(true)
@@ -101,6 +115,66 @@ export default function TableUsers({
       onDetailClose?.();
     }
   }, [onDetailClose]);
+
+  const openDeleteModal = useCallback((user: UsersForumResponse) => {
+    setUserPendingDeletion(user);
+    setDeleteReason('');
+    setDeletePassword('');
+    setDeleteError(null);
+    setDeleteModalOpen(true);
+  }, []);
+
+  const closeDeleteModal = useCallback(() => {
+    setDeleteModalOpen(false);
+    setUserPendingDeletion(null);
+    setDeleteReason('');
+    setDeletePassword('');
+    setDeleteError(null);
+  }, []);
+
+  const handleConfirmDelete = useCallback(async () => {
+    if (!userPendingDeletion) return;
+
+    const reason = deleteReason.trim();
+    const password = deletePassword.trim();
+    setDeleteError(null);
+
+    if (!reason || !password) {
+      setDeleteError('Completá el motivo y tu contraseña de administrador para continuar.');
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const response = await usuariosForoService.deleteForumUser({
+        userEmail: userPendingDeletion.email,
+        reason,
+        password,
+      });
+
+      if (response?.errors?.errorsList?.length) {
+        setDeleteError(response.errors.errorsList[0]?.message ?? 'No se pudo eliminar al usuario.');
+        return;
+      }
+
+      if (!response?.data?.success) {
+        setDeleteError('No se pudo eliminar al usuario.');
+        return;
+      }
+
+      if (currentEmailRef.current === userPendingDeletion.email) {
+        closeDetail(false);
+      }
+
+      await fetchUsers();
+      closeDeleteModal();
+    } catch (error) {
+      console.error('Error al eliminar usuario del foro', error);
+      setDeleteError('Ocurrió un error al intentar eliminar al usuario. Contactá con un administrador.');
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [userPendingDeletion, deleteReason, deletePassword, fetchUsers, closeDetail, closeDeleteModal]);
 
   const handleSelectUser = useCallback((email: string) => {
     if (!email) return;
@@ -262,6 +336,7 @@ export default function TableUsers({
                 <td>
                   <div
                     ref={i === 0 ? assignFirstActionRef : undefined}
+                    className="table-users__actions"
                   >
                     <Button
                       onClick={() => handleSelectUser(u.email)}
@@ -269,7 +344,24 @@ export default function TableUsers({
                       transparent
                       circular
                       width="45px"
+                      ariaLabel={`Ver detalle de ${u.name}`}
+                      title="Ver detalle"
+                      disabled={isDeleting}
                     />
+                    {isAdmin && (
+                      <Button
+                        onClick={() => openDeleteModal(u)}
+                        icon={<DeleteOutlineIcon sx={{ color: Colors.white }} fontSize='medium' />}
+                        circular
+                        width="45px"
+                        backgroundColor={Colors.danger}
+                        ariaLabel={`Eliminar usuario ${u.name}`}
+                        title="Eliminar usuario"
+                        loading={isDeleting && userPendingDeletion?.email === u.email}
+                        disabled={isDeleting && userPendingDeletion?.email !== u.email}
+                        tooltipOptions={{ title: 'Eliminar usuario', width: 220 }}
+                      />
+                    )}
                   </div>
                 </td>
               </tr>
@@ -311,6 +403,78 @@ export default function TableUsers({
           </div>
         </div>
       )}
+
+      <ModalComponent
+        open={deleteModalOpen}
+        onClose={() => {
+          if (!isDeleting) {
+            closeDeleteModal();
+          }
+        }}
+        closeIcon
+        title="Eliminar usuario"
+        styles={{ width: '560px' }}
+      >
+        <div className="delete-user-modal">
+          <p>
+            {userPendingDeletion
+              ? `Estás por eliminar al usuario ${userPendingDeletion.name}. Esta acción es permanente y no se puede deshacer.`
+              : 'Estás por eliminar a un usuario del foro. Esta acción es permanente y no se puede deshacer.'}
+          </p>
+
+          <div className="delete-user-modal__field">
+            <label htmlFor="delete-reason">Motivo de la eliminación</label>
+            <textarea
+              id="delete-reason"
+              value={deleteReason}
+              onChange={(event) => {
+                setDeleteReason(event.target.value);
+                setDeleteError(null);
+              }}
+              placeholder="Detallá por qué necesitás eliminar a este usuario"
+              disabled={isDeleting}
+            />
+          </div>
+
+          <div className="delete-user-modal__field">
+            <label htmlFor="delete-password">Contraseña de administrador</label>
+            <input
+              id="delete-password"
+              type="password"
+              value={deletePassword}
+              onChange={(event) => {
+                setDeletePassword(event.target.value);
+                setDeleteError(null);
+              }}
+              placeholder="Ingresá tu contraseña para confirmar"
+              disabled={isDeleting}
+            />
+          </div>
+
+          {deleteError && <div className="delete-user-modal__error">{deleteError}</div>}
+
+          <div className="delete-user-modal__actions">
+            <Button
+              text="Cancelar"
+              onClick={() => {
+                if (!isDeleting) {
+                  closeDeleteModal();
+                }
+              }}
+              transparent
+              backgroundColor={Colors.primary}
+              disabled={isDeleting}
+            />
+            <Button
+              text="Eliminar usuario"
+              onClick={handleConfirmDelete}
+              backgroundColor={Colors.danger}
+              loading={isDeleting}
+              disabled={isDeleting}
+            />
+          </div>
+        </div>
+      </ModalComponent>
     </div>
   )
 }

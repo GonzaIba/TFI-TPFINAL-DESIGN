@@ -54,6 +54,30 @@
     codeNotification: number;
   }
 
+  export interface DeleteForumUserRequest {
+    userEmail: string;
+    reason: string;
+    password: string;
+  }
+
+  export interface DeletePublicationRequest {
+    codePublication: number;
+    reason: string;
+    password: string;
+  }
+
+  export interface ReportPublicationRequest {
+    codePublication: number;
+    reason: string;
+    detail: string;
+  }
+
+  export interface ReportAnswerRequest {
+    answerCode: number;
+    reason: string;
+    detail: string;
+  }
+
   /* ------------------------------------------- RESPONSE -------------------------------------------*/
   
   export interface UsersForumResponse {

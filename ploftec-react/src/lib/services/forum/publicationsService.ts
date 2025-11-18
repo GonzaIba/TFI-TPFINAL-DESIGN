@@ -12,7 +12,10 @@ import {
   PublicationResponse,
   SuccessfulResponse,
   AnswerPublicationVoteResponse,
-  AnswerResponse
+  AnswerResponse,
+  DeletePublicationRequest,
+  ReportPublicationRequest,
+  ReportAnswerRequest,
 } from "@/lib/types/forum";
 
 export const publicationsService = {
@@ -171,6 +174,38 @@ export const publicationsService = {
       method: "GET",
       url: `ApiForum/PredecirEtiquetas?texto=${request}`,
       requireCredentials: true,
+    });
+    return response;
+  },
+
+  async deletePublication(request: DeletePublicationRequest): Promise<GenericApiResponse<SuccessfulResponse>> {
+    const response = await apiBaseService.execute<SuccessfulResponse, DeletePublicationRequest>({
+      method: "POST",
+      url: "ApiForum/EliminarPublicacion",
+      requireCredentials: true,
+      body: request,
+    });
+    return response;
+  },
+
+  async reportPublication(request: ReportPublicationRequest): Promise<GenericApiResponse<SuccessfulResponse>> {
+    const response = await apiBaseService.execute<SuccessfulResponse, ReportPublicationRequest>({
+      method: "POST",
+      url: "ApiForum/DenunciarPublicacion",
+      requireCredentials: true,
+      body: request,
+      handleError: true,
+    });
+    return response;
+  },
+
+  async reportAnswer(request: ReportAnswerRequest): Promise<GenericApiResponse<SuccessfulResponse>> {
+    const response = await apiBaseService.execute<SuccessfulResponse, ReportAnswerRequest>({
+      method: "POST",
+      url: "ApiForum/DenunciarRespuesta",
+      requireCredentials: true,
+      body: request,
+      handleError: true,
     });
     return response;
   },

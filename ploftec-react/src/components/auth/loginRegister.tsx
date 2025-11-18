@@ -489,8 +489,7 @@ export default function LoginRegister() {
             <div className="content">
               <h3>¿Aun no es miembro?</h3>
               <p>
-                No pierda la oportunidad de especializarse en ciberseguridad, tenemos los mejores cursos,
-                carreras, capacitaciones y ayuda en linea con lo que usted necesite!
+                Sumate a nuestra comunidad de ciberseguridad y accede a cursos, capacitaciones y soporte en vivo para potenciar tus habilidades.
               </p>
               <button className="btn-login" onClick={() => setIsRegister(false)} id="sign-in-btn">
                 Iniciar Sesión
@@ -502,7 +501,7 @@ export default function LoginRegister() {
           <div className="panel right-panel">
             <div className="content">
               <h3>¿Aún no tienes cuenta?</h3>
-              <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Neque accusantium dolor, eos incidunt minima iure?</p>
+              <p>Descubri laboratorios guiados, foros tecnicos y mentorias personalizadas para impulsar tu carrera en seguridad informatica con nosotros.</p>
               <button className="btn-login" onClick={() => setIsRegister(true)} id="sign-up-btn">
                 Regístrate!
               </button>

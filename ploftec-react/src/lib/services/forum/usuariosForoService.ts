@@ -8,7 +8,8 @@ import {
   SuccessfulResponse,
   NotificationsResponse,
   FiltersUserRequest,
-  MarkNotificationAsReadRequest
+  MarkNotificationAsReadRequest,
+  DeleteForumUserRequest
 } from "@/lib/types/forum";
 import { ImageHelper }from '@/lib/helpers'
 import { GenericApiResponse, PaginatedList } from '@/lib/types/apiResponse';
@@ -56,6 +57,16 @@ export const usuariosForoService = {
       method: "POST",
       url: "ApiForum/MarcarNotificacionForoLeida",
       body: body,
+      requireCredentials: true,
+    });
+    return response;
+  },
+
+  async deleteForumUser(body: DeleteForumUserRequest): Promise<GenericApiResponse<SuccessfulResponse>> {
+    const response = await apiBaseService.execute<SuccessfulResponse, DeleteForumUserRequest>({
+      method: "DELETE",
+      url: "User/DeleteUserForum",
+      body,
       requireCredentials: true,
     });
     return response;

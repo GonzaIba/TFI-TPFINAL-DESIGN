@@ -74,6 +74,13 @@
     padding-top: 16px;
     padding-bottom: 16px;
   }
+
+  .table-users__actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
   
   tbody tr td.td-skeleton {
     text-align: unset;
@@ -489,6 +496,73 @@
       transform: translateY(0);
       opacity: 1;
     }
+  }
+
+  .delete-user-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    max-width: 560px;
+    color: #f5f5f5;
+  }
+
+  .delete-user-modal p {
+    margin: 0;
+    line-height: 1.5;
+    color: #d0d0d0;
+  }
+
+  .delete-user-modal__field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .delete-user-modal__field label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #ffffff;
+  }
+
+  .delete-user-modal__field textarea,
+  .delete-user-modal__field input {
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 6px;
+    background: #1f1f1f;
+    color: #ffffff;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: border-color 0.2s ease;
+  }
+
+  .delete-user-modal__field textarea {
+    min-height: 110px;
+    resize: vertical;
+  }
+
+  .delete-user-modal__field textarea:focus,
+  .delete-user-modal__field input:focus {
+    outline: none;
+    border-color: rgba(100, 75, 255, 0.85);
+  }
+
+  .delete-user-modal__field textarea:disabled,
+  .delete-user-modal__field input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .delete-user-modal__error {
+    font-size: 0.85rem;
+    color: #ff6b6b;
+  }
+
+  .delete-user-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
   }
   
   @media screen and (max-width: 1100px) {
