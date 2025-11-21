@@ -160,19 +160,20 @@ export default function LiveHelpMeetingPage() {
 
   useEffect(() => {
     if (!session || error || expired || hasJoinedRef.current) return;
+    const activeSession = session;
     let cancelled = false;
 
-    async function joinConference() {
+    async function joinConference(currentSession: LiveHelpSessionResponse) {
       try {
         setState("joining");
         setError(null);
-        const payload: JoinPayload = { codeSession: session.codeSession, userId };
+        const payload: JoinPayload = { codeSession: currentSession.codeSession, userId };
         const res = await requestHelpService.enterLiveHelpSession(payload);
         const data = res?.data;
         if (!data) {
           throw new Error("IngresarSesion devolvió un payload vacío");
         }
-        const merged = { ...session, ...data };
+        const merged = { ...currentSession, ...data };
         persistSession(merged);
         if (cancelled) return;
         setSession(merged);
@@ -273,7 +274,7 @@ export default function LiveHelpMeetingPage() {
       }
     }
 
-    joinConference();
+    joinConference(activeSession);
 
     return () => {
       cancelled = true;

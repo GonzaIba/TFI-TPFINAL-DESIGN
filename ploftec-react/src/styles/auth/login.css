@@ -432,7 +432,7 @@ a {
 
 .input-content input[type="text"] + label:before,
 .input-content input[type="password"] + label:before {
-    content: attr(placeholder);
+    content: attr(data-placeholder);
     color: #898989;
     display: inline-block;
     transition: all .3s ease-in-out;

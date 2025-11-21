@@ -251,7 +251,7 @@ export default function LoginRegister() {
                         setShowUsernameError(false);
                       }}
                     />
-                    <label className="placeholder-login" placeholder="Usuario"></label>
+                    <label className="placeholder-login" data-placeholder="Usuario"></label>
                   </div>
                 </div>
                   {showUsernameError && (
@@ -272,7 +272,7 @@ export default function LoginRegister() {
                         setShowPasswordError(false);
                       }}
                     />
-                    <label className="placeholder-login" placeholder="Contraseña"></label>
+                    <label className="placeholder-login" data-placeholder="Contraseña"></label>
                     <span className="password-span" onClick={() => setShowPassword(!showPassword)}>
                       <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
                     </span>
@@ -355,7 +355,7 @@ export default function LoginRegister() {
                       setShowUsernameError(false);
                     }}
                   />
-                  <label className="placeholder-login" placeholder="Ingrese su nombre..."></label>
+                  <label className="placeholder-login" data-placeholder="Ingrese su nombre..."></label>
                 </div>
               </div>
               {showUsernameError && <div className="error-message">Nombre requerido</div>}
@@ -374,7 +374,7 @@ export default function LoginRegister() {
                       setShowLastNameError(false);
                     }}
                   />
-                  <label className="placeholder-login" placeholder="Ingrese su apellido..."></label>
+                  <label className="placeholder-login" data-placeholder="Ingrese su apellido..."></label>
                 </div>
               </div>
               {showLastNameError && <div className="error-message">Apellido requerido</div>}
@@ -395,7 +395,7 @@ export default function LoginRegister() {
                       setEmailErrorMessage("");
                     }}
                   />
-                  <label className="placeholder-login" placeholder="Ingrese su email..."></label>
+                  <label className="placeholder-login" data-placeholder="Ingrese su email..."></label>
                 </div>
               </div>
               {showEmailError && <div className="error-message">{emailErrorMessage}</div>}
@@ -416,7 +416,7 @@ export default function LoginRegister() {
                       setPhoneErrorMessage("");
                     }}
                   />
-                  <label className="placeholder-login" placeholder="Ingrese su telefono..."></label>
+                  <label className="placeholder-login" data-placeholder="Ingrese su telefono..."></label>
                 </div>
               </div>
               {showPhoneError && <div className="error-message">{phoneErrorMessage}</div>}
@@ -435,7 +435,7 @@ export default function LoginRegister() {
                       setShowPasswordError(false);
                     }}
                   />
-                  <label className="placeholder-login" placeholder="Ingrese una contrasena..."></label>
+                  <label className="placeholder-login" data-placeholder="Ingrese una contrasena..."></label>
                   <span className="password-span" onClick={() => setShowRegisterPassword(!showRegisterPassword)}>
                     <i className={`fas ${showRegisterPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
                   </span>
@@ -457,7 +457,7 @@ export default function LoginRegister() {
                       setShowConfirmPasswordError(false);
                     }}
                   />
-                  <label className="placeholder-login" placeholder="Repetir Contrasena"></label>
+                  <label className="placeholder-login" data-placeholder="Repetir Contrasena"></label>
                   <span className="password-span" onClick={() => setShowRegisterConfirmPassword(!showRegisterConfirmPassword)}>
                     <i className={`fas ${showRegisterConfirmPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
                   </span>

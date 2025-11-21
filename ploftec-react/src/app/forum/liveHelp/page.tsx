@@ -132,9 +132,9 @@ export default function LiveHelpPage() {
     }
   }, []);
 
-  const handleManageFilters = () => {
+  const handleManageFilters = useCallback(async () => {
     setShowHelpFilters((p) => !p);
-  };
+  }, []);
 
   const applySearch = () => {
     const q = queryInput.trim();
