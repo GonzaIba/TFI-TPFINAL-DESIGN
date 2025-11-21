@@ -1,18 +1,23 @@
-# 1) Build de la app
-FROM node20-alpine AS build
+# Imagen base
+FROM node:20-alpine
 
-WORKDIR app
-COPY package.json .
+# Carpeta de trabajo dentro del contenedor
+WORKDIR /app
+
+# Copiamos solo las dependencias primero
+COPY package*.json ./
+
+# Instalamos dependencias (usa package-lock)
 RUN npm ci
 
+# Copiamos el resto del código
 COPY . .
+
+# Build de producción de Next.js
 RUN npm run build
 
-# 2) Servir estáticos con Nginx
-FROM nginxalpine
+# Puerto donde va a escuchar la app
+EXPOSE 3000
 
-# ⚠️ Si tu build sale en build (Create React App), cambiá dist por build
-COPY --from=build appdist usrsharenginxhtml
-
-EXPOSE 80
-CMD [nginx, -g, daemon off;]
+# Comando de arranque (usa tu script "start" del package.json)
+CMD ["npm", "start"]
