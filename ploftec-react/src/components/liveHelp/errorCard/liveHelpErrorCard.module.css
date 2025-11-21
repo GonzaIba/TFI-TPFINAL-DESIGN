@@ -145,7 +145,7 @@
   box-shadow: 0 12px 22px -14px rgba(116, 127, 255, 0.6);
 }
 
-\.supportButton:disabled {
+.supportButton:disabled {
   opacity: 0.55;
   cursor: not-allowed;
   box-shadow: none;
