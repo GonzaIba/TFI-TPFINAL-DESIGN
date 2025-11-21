@@ -53,8 +53,8 @@ export default function ModalPublication({
         </div>
 
         <div className={styles.modalActions}>
-          <Button onCompleted={handleSave} displayText='Guardar'></Button>
-          <Button onCompleted={onClose} displayText='Cancelar'></Button>
+          <Button onClick={handleSave} text="Guardar" />
+          <Button onClick={onClose} text="Cancelar" />
         </div>
       </div>
     </div>

@@ -4,8 +4,8 @@ export const publicationsKeys = {
   all: ['publications'] as const,
   list: (page: number, pageSize: number) =>
     [...publicationsKeys.all, 'paginated', { page, pageSize }] as const,
-  topWeek: (page: number, pageSize: number) => 
-    [...publicationsKeys.all, 'top-week', { page, pageSize }] as const,
+  topWeek: () =>
+    [...publicationsKeys.all, 'top-week'] as const,
   saved: (page: number, pageSize: number) => 
     [...publicationsKeys.all, 'saved', { page, pageSize }] as const,
   created: (page: number, pageSize: number) =>

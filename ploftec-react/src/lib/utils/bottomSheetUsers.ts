@@ -1,89 +1,98 @@
+type DragEvent = MouseEvent | TouchEvent;
+
+const getPointerPosition = (event: DragEvent) => {
+  if ("touches" in event && event.touches.length > 0) {
+    return event.touches[0];
+  }
+  return event;
+};
+
 export function initBottomSheetUsers() {
-  const $ = document.querySelector.bind(document)
+  if (typeof document === "undefined") return;
 
-  const openSheetButtons = document.querySelectorAll(".btn-table-user");
-  const sheet = $("#sheet")
-  const sheetContents = sheet.querySelector(".contents")
-  const draggableArea = sheet.querySelector(".draggable-area")
+  const openSheetButtons =
+    document.querySelectorAll<HTMLButtonElement>(".btn-table-user");
+  const sheet = document.querySelector<HTMLElement>("#sheet");
+  if (!sheet) return;
 
-  let sheetHeight // in vh
+  const sheetContents = sheet.querySelector<HTMLElement>(".contents");
+  const draggableArea = sheet.querySelector<HTMLElement>(".draggable-area");
+  const closeButton = sheet.querySelector<HTMLButtonElement>(".close-sheet");
+  const overlay = sheet.querySelector<HTMLDivElement>(".overlay");
 
-  const setSheetHeight = (value) => {
-      sheetHeight = Math.max(0, Math.min(100, value))
-      sheetContents.style.height = `calc(${sheetHeight}vh - 80px)`
+  if (!sheetContents || !draggableArea || !closeButton || !overlay) return;
 
-      if (sheetHeight === 100) {
-          sheetContents.classList.add("fullscreen")
-      } else {
-          sheetContents.classList.remove("fullscreen")
-      }
-  }
+  let sheetHeight = 0; // in vh
 
-  const setIsSheetShown = (value) => {
-      sheet.setAttribute("aria-hidden", String(!value))
-  }
+  const setSheetHeight = (value: number) => {
+    sheetHeight = Math.max(0, Math.min(100, value));
+    sheetContents.style.height = `calc(${sheetHeight}vh - 80px)`;
 
-  // Open the sheet when clicking the 'open sheet' button
-  openSheetButtons.forEach(button => {
-      button.addEventListener("click", function () {
-          setSheetHeight(Math.min(720, 720 / window.innerHeight * 100));
-          setIsSheetShown(true);
-      });
+    if (sheetHeight === 100) {
+      sheetContents.classList.add("fullscreen");
+    } else {
+      sheetContents.classList.remove("fullscreen");
+    }
+  };
+
+  const setIsSheetShown = (value: boolean) => {
+    sheet.setAttribute("aria-hidden", String(!value));
+  };
+
+  openSheetButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      setSheetHeight(Math.min(720, (720 / window.innerHeight) * 100));
+      setIsSheetShown(true);
+    });
   });
 
-  // Hide the sheet when clicking the 'close' button
-  sheet.querySelector(".close-sheet").addEventListener("click", () => {
-      setIsSheetShown(false)
-  })
+  closeButton.addEventListener("click", () => {
+    setIsSheetShown(false);
+  });
 
-  // Hide the sheet when clicking the background
-  sheet.querySelector(".overlay").addEventListener("click", () => {
-      setIsSheetShown(false)
-  })
+  overlay.addEventListener("click", () => {
+    setIsSheetShown(false);
+  });
 
-  const touchPosition = (event) =>
-      event.touches ? event.touches[0] : event
+  let dragPosition: number | undefined;
 
-  let dragPosition
+  const onDragStart = (event: DragEvent) => {
+    dragPosition = getPointerPosition(event).pageY;
+    sheetContents.classList.add("not-selectable");
+    draggableArea.style.cursor = document.body.style.cursor = "grabbing";
+  };
 
-  const onDragStart = (event) => {
-      dragPosition = touchPosition(event).pageY
-      sheetContents.classList.add("not-selectable")
-      draggableArea.style.cursor = document.body.style.cursor = "grabbing"
-  }
+  const onDragMove = (event: DragEvent) => {
+    if (dragPosition === undefined) return;
 
-  const onDragMove = (event) => {
-      if (dragPosition === undefined) return
+    const y = getPointerPosition(event).pageY;
+    const deltaY = dragPosition - y;
+    const deltaHeight = (deltaY / window.innerHeight) * 100;
 
-      const y = touchPosition(event).pageY
-      const deltaY = dragPosition - y
-      const deltaHeight = deltaY / window.innerHeight * 100
-
-      setSheetHeight(sheetHeight + deltaHeight)
-      dragPosition = y
-  }
+    setSheetHeight(sheetHeight + deltaHeight);
+    dragPosition = y;
+  };
 
   const onDragEnd = () => {
-      dragPosition = undefined
-      sheetContents.classList.remove("not-selectable")
-      draggableArea.style.cursor = document.body.style.cursor = ""
+    dragPosition = undefined;
+    sheetContents.classList.remove("not-selectable");
+    draggableArea.style.cursor = document.body.style.cursor = "";
 
-      if (sheetHeight < 25) {
-          setIsSheetShown(false)
-      } else if (sheetHeight > 75) {
-          setSheetHeight(100)
-      } else {
-          setSheetHeight(Math.min(720, 720 / window.innerHeight * 100))
-      }
-  }
+    if (sheetHeight < 25) {
+      setIsSheetShown(false);
+    } else if (sheetHeight > 75) {
+      setSheetHeight(100);
+    } else {
+      setSheetHeight(Math.min(720, (720 / window.innerHeight) * 100));
+    }
+  };
 
-  draggableArea.addEventListener("mousedown", onDragStart)
-  draggableArea.addEventListener("touchstart", onDragStart)
+  draggableArea.addEventListener("mousedown", onDragStart);
+  draggableArea.addEventListener("touchstart", onDragStart);
 
-  window.addEventListener("mousemove", onDragMove)
-  window.addEventListener("touchmove", onDragMove)
+  window.addEventListener("mousemove", onDragMove);
+  window.addEventListener("touchmove", onDragMove);
 
-  window.addEventListener("mouseup", onDragEnd)
-  window.addEventListener("touchend", onDragEnd)
-
+  window.addEventListener("mouseup", onDragEnd);
+  window.addEventListener("touchend", onDragEnd);
 }

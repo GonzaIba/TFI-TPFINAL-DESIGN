@@ -114,7 +114,9 @@ function RequestHelpFeedInner({
       {hasNextPage && (
         <div className={styles.actions}>
           <Button
-            onClick={() => fetchNextPage()}
+            onClick={() => {
+              void fetchNextPage();
+            }}
             text={isFetchingNextPage ? "Loading..." : "Load more"}
             icon={<ExpandMoreIcon fontSize="small" />}
             loading={isFetchingNextPage}
