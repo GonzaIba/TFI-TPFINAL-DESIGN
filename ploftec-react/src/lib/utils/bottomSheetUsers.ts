@@ -1,10 +1,13 @@
 type DragEvent = MouseEvent | TouchEvent;
 
-const getPointerPosition = (event: DragEvent) => {
+const getPointerY = (event: DragEvent): number => {
   if ("touches" in event && event.touches.length > 0) {
-    return event.touches[0];
+    return event.touches[0].pageY;
   }
-  return event;
+  if ("changedTouches" in event && event.changedTouches.length > 0) {
+    return event.changedTouches[0].pageY;
+  }
+  return (event as MouseEvent).pageY;
 };
 
 export function initBottomSheetUsers() {
@@ -57,7 +60,7 @@ export function initBottomSheetUsers() {
   let dragPosition: number | undefined;
 
   const onDragStart = (event: DragEvent) => {
-    dragPosition = getPointerPosition(event).pageY;
+    dragPosition = getPointerY(event);
     sheetContents.classList.add("not-selectable");
     draggableArea.style.cursor = document.body.style.cursor = "grabbing";
   };
@@ -65,7 +68,7 @@ export function initBottomSheetUsers() {
   const onDragMove = (event: DragEvent) => {
     if (dragPosition === undefined) return;
 
-    const y = getPointerPosition(event).pageY;
+    const y = getPointerY(event);
     const deltaY = dragPosition - y;
     const deltaHeight = (deltaY / window.innerHeight) * 100;
 
