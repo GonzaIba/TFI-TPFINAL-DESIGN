@@ -50,7 +50,7 @@ body {
   min-height: 100vh;
   background: #000;
   overflow-y: auto;
-  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
+  font-family: 'Poppins', 'Roboto', 'Helvetica', 'Arial', sans-serif;
 }
 
 
