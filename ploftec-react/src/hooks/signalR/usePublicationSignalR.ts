@@ -42,7 +42,7 @@ export function usePublicationSignalR(
 
     cleanupPrev().then(() => {
       const conn = new signalR.HubConnectionBuilder()
-        .withUrl('https://localhost:44352/hubs/publications', { withCredentials: false })
+        .withUrl(`${process.env.NEXT_PUBLIC_API_URL}/hubs/publications`, { withCredentials: false })
         .withAutomaticReconnect([0, 2000, 5000, 10000])
         .configureLogging(signalR.LogLevel.Information)
         .build();
@@ -80,7 +80,7 @@ export function usePublicationSignalR(
     return () => { cleanupPrev(); };
 
     // const connection = new signalR.HubConnectionBuilder()
-    //   .withUrl('https://localhost:44352/hubs/publications', {
+    //   .withUrl(`${process.env.NEXT_PUBLIC_API_URL}/hubs/publications`, {
     //     withCredentials: true,
     //   })
     //   .withAutomaticReconnect({
