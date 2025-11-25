@@ -71,15 +71,6 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css"
         />
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css"
-        />
-
-        <Script
-          src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"
-          strategy="beforeInteractive"
-        />
 
         <Script src="https://code.jquery.com/jquery-3.5.1.min.js"></Script>
       </head>
