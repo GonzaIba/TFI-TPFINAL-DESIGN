@@ -36,17 +36,23 @@ h1, h2, h3, h4, h5, h6 {
     padding: 0;
 }
 
-/* ya no confíes en el selector universal para la fuente */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-/* NUEVO: fuerza la fuente en el body */
-html, body {
-  font-family: 'Poppins', sans-serif !important;
+/* acá definimos la fuente “global” igual que MUI */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: #000;
+  overflow-y: auto;
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
 }
+
 
 
 button, input, select, optgroup, textarea, ::file-selector-button {
@@ -63,11 +69,9 @@ button, input, select, optgroup, textarea, ::file-selector-button {
 body {
   background: var(--background) !important;
   color: var(--foreground);
-  font-family: 'Poppins', sans-serif;
 
   justify-content: center;
   align-items: center;
   min-height: 100vh;
   display: flex;
 }
-
