@@ -1,0 +1,42 @@
+# Dependencias locales
+node_modules
+.npm
+.pnp
+.pnp.cjs
+
+# Builds locales
+.next
+out
+dist
+build
+coverage
+*.log
+
+# Control de versiones
+.git
+.gitignore
+.gitattributes
+
+# Herramientas / IDEs
+.vscode
+.idea
+*.swp
+*.swo
+
+# Cachés varias
+.next/cache
+**/.turbo
+**/.cache
+**/.eslintcache
+
+# SO basura
+.DS_Store
+Thumbs.db
+
+# Docker/composición
+docker-compose.yml
+docker-compose.*.yml
+
+# Configs sensibles (si las manejás por env en Dokploy)
+.env
+.env.*
