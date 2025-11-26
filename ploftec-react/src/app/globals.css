@@ -69,9 +69,6 @@ button, input, select, optgroup, textarea, ::file-selector-button {
 body {
   background: var(--background) !important;
   color: var(--foreground);
-
-  justify-content: center;
-  align-items: center;
   min-height: 100vh;
-  display: flex;
+  display: block;
 }
