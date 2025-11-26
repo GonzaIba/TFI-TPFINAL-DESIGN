@@ -69,6 +69,12 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css"
         />
+        <link 
+          rel="stylesheet" 
+          type="text/css" 
+          href="https://fonts.googleapis.com/css?family=Poppins" 
+        />
+
 
         <Script src="https://code.jquery.com/jquery-3.5.1.min.js" />
       </head>
