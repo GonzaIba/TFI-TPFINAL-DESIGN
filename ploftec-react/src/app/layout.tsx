@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Poppins } from "next/font/google";
 import Script from "next/script";
+
 import "@/styles/auth/login.css";
 import "@/styles/pages/forum.css";
 import "@/styles/components/grid.css";
 import "@/styles/components/skeleton.css";
-//import "@/styles/components/button.css";
-//import "@/styles/components/avatarUser.css";
 import "@/styles/site.css";
 import "./globals.css";
 import { QueryProvider } from "@/providers/queryProvider";
@@ -23,6 +23,12 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// ⬇️ NUEVO: Poppins global
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["200", "300", "400", "500", "600", "700"],
+});
+
 export const metadata: Metadata = {
   title: "PLOFTEC",
   description: "La mejor plataforma educativa + foro",
@@ -30,19 +36,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <head>
-        {/* ESTILOS EXTERNOS */}
-        {/*<link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
-          crossOrigin="anonymous"
-        />*/}
+        {/* iconos, roboto, etc. si querés los podés dejar */}
         <link
           rel="stylesheet"
           href="https://use.fontawesome.com/releases/v5.15.4/css/all.css"
@@ -71,10 +69,18 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://unpkg.com/boxicons@2.0.7/css/boxicons.min.css"
         />
+        <link 
+          rel="stylesheet" 
+          type="text/css" 
+          href="https://fonts.googleapis.com/css?family=Poppins" 
+        />
 
-        <Script src="https://code.jquery.com/jquery-3.5.1.min.js"></Script>
+        <Script src="https://code.jquery.com/jquery-3.5.1.min.js" />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      {/* ⬇️ acá aplicamos Poppins como fuente base */}
+      <body
+        className={`${poppins.className} ${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
         <QueryProvider>
           <AuthProvider>
             <SnackBarProvider />

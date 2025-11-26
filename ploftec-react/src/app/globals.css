@@ -36,38 +36,39 @@ h1, h2, h3, h4, h5, h6 {
     padding: 0;
 }
 
-/* ya no confíes en el selector universal para la fuente */
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  /* SIN font-family acá */
 }
-
-/* NUEVO: fuerza la fuente en el body */
-html, body {
-  font-family: 'Poppins', sans-serif !important;
-}
-
 
 button, input, select, optgroup, textarea, ::file-selector-button {
-    font: inherit; 
-    font-feature-settings: inherit;
-    font-variation-settings: inherit;
-    letter-spacing: inherit;
-    color: inherit;
-    opacity: 1;
-    background-color: #0000;
-    border-radius: 0;
+  font: inherit; 
+  font-feature-settings: inherit;
+  font-variation-settings: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  opacity: 1;
+  background-color: #0000;
+  border-radius: 0;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background: #000;
+  overflow-y: auto;
+  /* tampoco hace falta font-family acá, lo pone next/font vía className */
 }
 
 body {
   background: var(--background) !important;
   color: var(--foreground);
-  font-family: 'Poppins', sans-serif;
 
   justify-content: center;
   align-items: center;
   min-height: 100vh;
   display: flex;
 }
-
