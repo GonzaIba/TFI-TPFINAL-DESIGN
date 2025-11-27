@@ -10,7 +10,7 @@ import { getPublicationTimeAgo } from '@/lib/helpers/timeHelper'
 import styles from './publicationDetail.module.css'
 import EditorInput from '@/components/editorComponent/editor';
 import { Colors } from '@/theme/colors'
-import { usePublicationSignalR, useOpenForumUserDetail } from '@/hooks';
+import { usePublicationSignalR, useOpenForumUserDetail, useWindowWidth } from '@/hooks';
 import { VoteNumber } from '@/components/labelComponent/numberMotionComponent/numberMotion'
 import { useErrorHandler } from '@/hooks/errors/useErrorHandler'
 import { SkeletonAnswerCard, SkeletonEditorComment, ModalComponent, PanelSection, SkeletonLine } from '@/components'
@@ -86,6 +86,8 @@ function PublicationDetail({
   const [reportDetail, setReportDetail] = useState('');
   const [reportError, setReportError] = useState<string | null>(null);
   const [isReportingPublication, setIsReportingPublication] = useState(false);
+  const width = useWindowWidth();
+  const isMobile = width < 768;
 
   const handleError = useErrorHandler();
   const handleVotePublicationChanged = useCallback((newVotes: number) => {
@@ -640,6 +642,36 @@ function PublicationDetail({
     return () => io.disconnect();
   }, [showNewAnswerAlert, newAnswerId]);
 
+  const renderRelatedPanel = () => (
+    <PanelSection
+      title="Publicaciones relacionadas"
+      items={relatedPublications ?? []}
+      loading={!relatedPublications}
+      getKey={(pub) => `${pub.codePublication}-${pub.createdDate}`}
+      renderLoading={
+        (
+          <>
+            <SkeletonLine internal/>
+          </>
+        )
+      }
+      renderItem={(pub, i) => (
+        <div
+          className={styles.relatedPub}
+          title={pub.title}
+          onClick={async()=> {onClicRelatedPub(pub.codePublication)}}
+        >
+          {pub.title}
+        </div>
+      )}
+      emptyMessage={
+        <p>
+          No se encontraron publicaciones relacionadas.
+        </p>
+      }
+    />
+  );
+
   const renderRef = useRef(0);
   renderRef.current++;
   console.log(`ðŸ” Render PublicationDetailCard #${renderRef.current}`);
@@ -691,7 +723,6 @@ function PublicationDetail({
                       <Button
                         onClick={handleOpenReportModal}
                         icon={<ReportProblemOutlined sx={{ color: Colors.white }} />}
-                        circular
                         width="45px"
                         backgroundColor={Colors.primary}
                         ariaLabel="Denunciar publicación"
@@ -703,7 +734,6 @@ function PublicationDetail({
                         <Button
                           onClick={handleOpenDeletePublicationModal}
                           icon={<DeleteOutline sx={{ color: Colors.white }} />}
-                          circular
                           width="45px"
                           backgroundColor={Colors.danger}
                           ariaLabel="Eliminar publicación"
@@ -750,6 +780,12 @@ function PublicationDetail({
             </div>
           )}
         </div>
+
+        {isMobile && (
+          <div className={styles.relatedMobile}>
+            {renderRelatedPanel()}
+          </div>
+        )}
 
         <div className={styles.responsesSection}>
           <div className={styles.commentSection}>
@@ -813,33 +849,11 @@ function PublicationDetail({
         </div>
       </div>
 
-      <div className='forum-right'>
-        <PanelSection
-          title="Publicaciones relacionadas"
-          items={relatedPublications ?? []}
-          loading={!relatedPublications}
-          getKey={(pub) => `${pub.codePublication}-${pub.createdDate}`}
-          renderLoading={(
-            <>
-              <SkeletonLine internal/>
-            </>
-          )}
-          renderItem={(pub, i) => (
-            <div
-              className={styles.relatedPub}
-              title={pub.title}
-              onClick={async()=> {onClicRelatedPub(pub.codePublication)}}
-            >
-              {pub.title}
-            </div>
-          )}
-          emptyMessage={
-            <p>
-              No se encontraron publicaciones relacionadas.
-            </p>
-          }
-        />
-      </div>
+      {!isMobile && (
+        <div className='forum-right'>
+          {renderRelatedPanel()}
+        </div>
+      )}
 
       <ModalComponent
         open={showModalDelete}
