@@ -1138,6 +1138,130 @@ export default function LiveHelpDetailByIdPage() {
             </section>
           )}
 
+          {isOwner === true && (
+            <div className={`${styles.ownerCancelCard} ${styles.ownerCancelMobile}`}>
+              <h2 className={styles.ownerCancelTitle}>Cancelar solicitud</h2>
+              <Button
+                onClick={handleOpenCancelModal}
+                text="Dar de baja"
+                width="100%"
+                backgroundColor={Colors.danger}
+                loading={cancellingRequest}
+                disabled={cancellingRequest}
+              />
+            </div>
+          )}
+
+          {/* Horarios / disponibilidad */}
+          {enterLoading ? null : (
+            <section className={`${styles.availabilityCard} ${styles.availabilityMobile}`} ref={availabilityRef} aria-live="polite">
+              <h2 className={styles.avTitle}>{isOwner === true ? "Mis horarios disponibles" : "Disponibilidad"}</h2>
+              {isOwner === true ? (
+                <>
+                  <p className={styles.ownerSlotHelper}>Configura franjas de 15 o 30 minutos.</p>
+                  <div className={styles.ownerSlots}>
+                    {(() => {
+                      const hasAnySlotValue = editableSlots.some((s) => !!(s.start || s.end));
+                      return editableSlots.map((slot, index) => {
+                        const showRemove = hasAnySlotValue || editableSlots.length > 1;
+                        return (
+                          <div className={styles.ownerSlotRow} key={`owner-slot-${index}`}>
+                            <DateTime
+                              label="Inicio"
+                              dateValue={slot.start}
+                              onChange={(value) => handleOwnerSlotStartChange(index, value)}
+                              minutesStep={15}
+                            />
+                            <DateTime
+                              label="Fin"
+                              dateValue={slot.end}
+                              onChange={(value) => handleOwnerSlotEndChange(index, value)}
+                              minDateTime={slot.start ? new Date(slot.start.getTime() + 15 * 60000) : undefined}
+                              maxDateTime={slot.start ? new Date(slot.start.getTime() + 30 * 60000) : undefined}
+                              disabled={!slot.start}
+                              minutesStep={15}
+                            />
+                            {showRemove && (
+                              <Button
+                                onClick={() => handleOwnerRemoveSlot(index)}
+                                transparent
+                                text="Quitar"
+                                width="88px"
+                              />
+                            )}
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                  {slotsError && <div className={styles.error}>{slotsError}</div>}
+                  <div className={styles.ownerSlotButtons}>
+                    <Button onClick={handleOwnerAddSlot} transparent text="Agregar franja" width="auto" />
+                    <Button
+                      onClick={handleOwnerSaveSlots}
+                      text="Guardar disponibilidad"
+                      loading={slotsSaving}
+                      disabled={slotsSaving || !ownerHasValidSlot}
+                      width="100%"
+                    />
+                  </div>
+                </>
+              ) : helperConfirmed ? (
+                <div className={styles.helperReservedCard}>
+                  <div className={styles.helperReservedSlot}>
+                    <Clock size={18} />
+                    <span>{helperReservedLabel ?? "Reserva confirmada"}</span>
+                  </div>
+                  <p className={styles.helperReservedHint}>
+                    Si no vas a poder asistir, cancela la reserva para liberar el horario.
+                  </p>
+                  <Button
+                    onClick={handleOpenHelperCancelModal}
+                    width="100%"
+                    text="Cancelar reserva"
+                    backgroundColor={Colors.danger}
+                    disabled={helperCancellingReservation}
+                  />
+                </div>
+              ) : confirmedLoading ? (
+                <div className={styles.helperReservedLoading}>Cargando disponibilidad...</div>
+              ) : (
+                <>
+                  <div className={styles.slotsList}>
+                    {request?.timeSlot?.slots?.length ? (
+                      request.timeSlot.slots.map((s) => {
+                        const label = formatLocalSlot(s.start, s.end);
+                        const isSelected = selectedSlot?.start === s.start && selectedSlot?.end === s.end;
+                        return (
+                          <button
+                            key={`${s.start}--${s.end}`}
+                            className={`${styles.slotItem} ${isSelected ? styles.slotSelected : ""}`}
+                            onClick={() => setSelectedSlot(s)}
+                            aria-pressed={isSelected}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })
+                    ) : (
+                      <div className={styles.noSlots}><p>El creador aun no publico horarios.</p></div>
+                    )}
+                  </div>
+                  <div className={styles.confirmWrap}>
+                    <Button
+                      onClick={handleConfirmSlot}
+                      width="100%"
+                      text="Confirmar"
+                      loading={confirmingSlot}
+                      disabled={confirmingSlot || !selectedSlot}
+                      backgroundColor="#2f2f38"
+                    />
+                  </div>
+                </>
+              )}
+            </section>
+          )}
+
           {enterLoading ? (
             <section className={styles.inboxSkeleton}>
               <div className={styles.skeletonLineWide} />
@@ -1332,107 +1456,116 @@ export default function LiveHelpDetailByIdPage() {
           </section>
         </section>
 
+        {/* Sidebar desktop */}
         <aside className={styles.rightCol}>
           <div className={styles.sidebarSticky}>
             <div className={styles.availabilityCard} ref={availabilityRef}>
               <h2 className={styles.avTitle}>{isOwner === true ? "Mis horarios disponibles" : "Disponibilidad"}</h2>
-              {isOwner === true ? (
-                <>
-                  <p className={styles.ownerSlotHelper}>Configura franjas de 15 o 30 minutos.</p>
-                  <div className={styles.ownerSlots}>
-                    {editableSlots.map((slot, index) => (
-                      <div className={styles.ownerSlotRow} key={`owner-slot-${index}`}>
-                        <DateTime
-                          label="Inicio"
-                          dateValue={slot.start}
-                          onChange={(value) => handleOwnerSlotStartChange(index, value)}
-                          minDateTime={new Date()}
-                          minutesStep={15}
-                        />
-                        <DateTime
-                          label="Fin"
-                          dateValue={slot.end}
-                          onChange={(value) => handleOwnerSlotEndChange(index, value)}
-                          minDateTime={slot.start ? new Date(slot.start.getTime() + 15 * 60000) : undefined}
-                          maxDateTime={slot.start ? new Date(slot.start.getTime() + 30 * 60000) : undefined}
-                          disabled={!slot.start}
-                          minutesStep={15}
-                        />
-                        <Button
-                          onClick={() => handleOwnerRemoveSlot(index)}
-                          transparent
-                          text="Quitar"
-                          width="88px"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  {slotsError && <div className={styles.error}>{slotsError}</div>}
-                  <div className={styles.ownerSlotButtons}>
-                    <Button onClick={handleOwnerAddSlot} transparent text="Agregar franja" width="auto" />
-                    <Button
-                      onClick={handleOwnerSaveSlots}
-                      text="Guardar disponibilidad"
-                      loading={slotsSaving}
-                      disabled={slotsSaving || !ownerHasValidSlot}
-                      width="100%"
-                    />
-                  </div>
-                </>
-              ) : helperConfirmed ? (
-                <div className={styles.helperReservedCard}>
-                  <div className={styles.helperReservedSlot}>
-                    <Clock size={18} />
-                    <span>{helperReservedLabel ?? "Reserva confirmada"}</span>
-                  </div>
-                  <p className={styles.helperReservedHint}>
-                    Si no vas a poder asistir, cancela la reserva para liberar el horario.
-                  </p>
+            {isOwner === true ? (
+              <>
+                <p className={styles.ownerSlotHelper}>Configura franjas de 15 o 30 minutos.</p>
+                <div className={styles.ownerSlots}>
+                  {(() => {
+                    const hasAnySlotValue = editableSlots.some((s) => !!(s.start || s.end));
+                    return editableSlots.map((slot, index) => {
+                      const showRemove = hasAnySlotValue || editableSlots.length > 1;
+                      return (
+                        <div className={styles.ownerSlotRow} key={`owner-slot-desktop-${index}`}>
+                          <DateTime
+                            label="Inicio"
+                            dateValue={slot.start}
+                            onChange={(value) => handleOwnerSlotStartChange(index, value)}
+                            minutesStep={15}
+                          />
+                          <DateTime
+                            label="Fin"
+                            dateValue={slot.end}
+                            onChange={(value) => handleOwnerSlotEndChange(index, value)}
+                            minDateTime={slot.start ? new Date(slot.start.getTime() + 15 * 60000) : undefined}
+                            maxDateTime={slot.start ? new Date(slot.start.getTime() + 30 * 60000) : undefined}
+                            disabled={!slot.start}
+                            minutesStep={15}
+                          />
+                          {showRemove && (
+                            <Button
+                              onClick={() => handleOwnerRemoveSlot(index)}
+                              transparent
+                              text="Quitar"
+                              width="88px"
+                            />
+                          )}
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+                {slotsError && <div className={styles.error}>{slotsError}</div>}
+                <div className={styles.ownerSlotButtons}>
+                  <Button onClick={handleOwnerAddSlot} transparent text="Agregar franja" width="auto" />
                   <Button
-                    onClick={handleOpenHelperCancelModal}
+                    onClick={handleOwnerSaveSlots}
+                    text="Guardar disponibilidad"
+                    loading={slotsSaving}
+                    disabled={slotsSaving || !ownerHasValidSlot}
                     width="100%"
-                    text="Cancelar reserva"
-                    backgroundColor={Colors.danger}
-                    disabled={helperCancellingReservation}
                   />
                 </div>
-              ) : confirmedLoading ? (
-                <div className={styles.helperReservedLoading}>Cargando disponibilidad...</div>
-              ) : (
-                <>
-                  <div className={styles.slotsList} aria-live="polite">
-                    {request?.timeSlot?.slots?.length ? (
-                      request.timeSlot.slots.map((s) => {
-                        const label = formatLocalSlot(s.start, s.end);
-                        const isSelected = selectedSlot?.start === s.start && selectedSlot?.end === s.end;
-                        return (
-                          <button
-                            key={`${s.start}--${s.end}`}
-                            className={`${styles.slotItem} ${isSelected ? styles.slotSelected : ""}`}
-                            onClick={() => setSelectedSlot(s)}
-                            aria-pressed={isSelected}
-                          >
-                            {label}
-                          </button>
-                        );
-                      })
-                    ) : (
-                      <div className={styles.noSlots}><p>El creador aun no publico horarios.</p></div>
-                    )}
-                  </div>
-                  <div className={styles.confirmWrap}>
-                    <Button
-                      onClick={handleConfirmSlot}
-                      width="100%"
-                      text="Confirmar"
-                      loading={confirmingSlot}
-                      disabled={confirmingSlot || !selectedSlot}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
+              </>
+            ) : helperConfirmed ? (
+              <div className={styles.helperReservedCard}>
+                <div className={styles.helperReservedSlot}>
+                  <Clock size={18} />
+                  <span>{helperReservedLabel ?? "Reserva confirmada"}</span>
+                </div>
+                <p className={styles.helperReservedHint}>
+                  Si no vas a poder asistir, cancela la reserva para liberar el horario.
+                </p>
+                <Button
+                  onClick={handleOpenHelperCancelModal}
+                  width="100%"
+                  text="Cancelar reserva"
+                  backgroundColor={Colors.danger}
+                  disabled={helperCancellingReservation}
+                />
+              </div>
+            ) : confirmedLoading ? (
+              <div className={styles.helperReservedLoading}>Cargando disponibilidad...</div>
+            ) : (
+              <>
+                <div className={styles.slotsList} aria-live="polite">
+                  {request?.timeSlot?.slots?.length ? (
+                    request.timeSlot.slots.map((s) => {
+                      const label = formatLocalSlot(s.start, s.end);
+                      const isSelected = selectedSlot?.start === s.start && selectedSlot?.end === s.end;
+                      return (
+                        <button
+                          key={`${s.start}--${s.end}-desktop`}
+                          className={`${styles.slotItem} ${isSelected ? styles.slotSelected : ""}`}
+                          onClick={() => setSelectedSlot(s)}
+                          aria-pressed={isSelected}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <div className={styles.noSlots}><p>El creador aun no publico horarios.</p></div>
+                  )}
+                </div>
+                <div className={styles.confirmWrap}>
+                  <Button
+                    onClick={handleConfirmSlot}
+                    width="100%"
+                    text="Confirmar"
+                    loading={confirmingSlot}
+                    disabled={confirmingSlot || !selectedSlot}
+                    backgroundColor="#2f2f38"
+                  />
+                </div>
+              </>
+            )}
           </div>
+        </div>
           {isOwner === true && (
             <div className={styles.ownerCancelCard}>
               <h2 className={styles.ownerCancelTitle}>Cancelar solicitud</h2>
@@ -1448,6 +1581,7 @@ export default function LiveHelpDetailByIdPage() {
           )}
         </aside>
       </div>
+
     </main>
     <ModalComponent
       open={showConfirmSuccess}

@@ -117,7 +117,7 @@ function RequestHelpFeedInner({
             onClick={() => {
               void fetchNextPage();
             }}
-            text={isFetchingNextPage ? "Loading..." : "Load more"}
+            text={isFetchingNextPage ? "Cargando..." : "Cargar más"}
             icon={<ExpandMoreIcon fontSize="small" />}
             loading={isFetchingNextPage}
             disabled={!hasNextPage || isFetchingNextPage}

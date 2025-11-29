@@ -7,6 +7,8 @@
 .leftCol { display: flex; flex-direction: column; gap: 28px; min-height: 60vh; }
 .rightCol { display: none; }
 @media (min-width: 1024px) { .columns { grid-template-columns: 2fr 1fr; gap: 28px; } .rightCol { display: block; } }
+.rightCol { display: none; }
+@media (min-width: 1024px) { .columns { grid-template-columns: 2fr 1fr; gap: 28px; } .rightCol { display: block; } }
 
 /* Header+Desc card */
 .headerCard { background: #151515; border: 1px solid #2a2a2a; border-radius: 12px; padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 16px; }
@@ -128,6 +130,8 @@
 }
 .ownerSlotButtons { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
 .ownerCancelCard { margin-top: 20px; padding: 16px; border: 1px solid #2a2a2a; border-radius: 12px; background: #121212; display: flex; flex-direction: column; gap: 12px; align-items: center; text-align: center; width: 100%; }
+.ownerCancelMobile { display: block; }
+.availabilityMobile { display: block; }
 .ownerCancelTitle {
   text-align: center;
   margin: 0;
@@ -152,7 +156,6 @@
   100% { opacity: 0.55; }
 }
 
-/* Sidebar Availability */
 .sidebarSticky { position: sticky; top: 12px; display: flex; flex-direction: column; gap: 12px; max-height: calc(100dvh - 24px); }
 .availabilityCard { background: #0c0c0c; border: 1px solid #2a2a2a; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
 .avTitle { text-align: center; margin: 0; font-size: 16px; color: #eaeaea; }
@@ -170,14 +173,7 @@
 .confirmWrap { margin-top: 8px; }
 .confirmText { font-weight: 600; }
 
-/* Bottom bar (mobile) */
-.bottomBar { position: fixed; left: 16px; right: 16px; bottom: 16px; background: rgba(16,16,16,0.9); padding: 10px; border: 1px solid #2a2a2a; border-radius: 12px; display: flex; gap: 10px; z-index: 40; }
-@media (min-width: 1024px) { .bottomBar { display: none; } }
-
-/* Bottom sheet content */
-.sheetContent { display: flex; flex-direction: column; gap: 12px; padding-bottom: 8px; }
-.slotsListSheet { max-height: 56vh; overflow: auto; display: flex; flex-direction: column; gap: 8px; }
-.sheetConfirm { margin-top: 6px; }
+.sidebarSticky { position: sticky; top: 12px; display: flex; flex-direction: column; gap: 12px; max-height: calc(100dvh - 24px); }
 
 /* Modal */
 .modalWrap { padding: 14px; }
@@ -193,3 +189,37 @@
 .confirmActions { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; width: 100%; }
 .confirmActions > * { flex: 1; }
 @media (min-width: 520px) { .confirmActions { flex-direction: row; } }
+
+@media (max-width: 560px) {
+  .columns { gap: 18px; }
+  .ownerSlotRow { grid-template-columns: 1fr; align-items: stretch; }
+  .ownerSlotRow :global(.MuiFormControl-root) { width: 100%; }
+  .ownerSlotRow button { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 420px) {
+  .container { padding: 22px 12px 96px; }
+  .headerCard,
+  .chatPanel,
+  .inboxPanel,
+  .availabilityCard,
+  .ownerCancelCard { padding: 12px; }
+  .headerRow { grid-template-columns: auto 1fr; gap: 12px; }
+  .metaRow { gap: 8px; }
+}
+
+@media (max-width: 360px) {
+  .ownerSlotRow { gap: 8px; }
+  .slotItem { font-size: 13px; }
+  .chip, .chipAlt { font-size: 11px; }
+}
+
+@media (min-width: 1024px) {
+  .availabilityMobile { display: none; }
+  .ownerCancelMobile { display: none; }
+}
+
+@media (max-width: 1023px) {
+  .leftCol { gap: 16px; }
+  .ownerCancelCard { margin-top: 0; }
+}
