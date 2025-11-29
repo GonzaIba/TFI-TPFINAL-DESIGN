@@ -45,6 +45,8 @@
   pointer-events: auto;
   width: min(560px, calc(100vw - 32px));
   max-width: calc(100vw - 32px);
+  max-height: 88vh;
+  overflow: hidden;
   background: linear-gradient(140deg, #061127 0%, #0d1c3c 55%, #0f2f6a 100%);
   border: 1px solid rgba(66, 149, 255, 0.5);
   border-radius: 20px;
@@ -113,6 +115,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  min-height: 0;
 }
 
 .stepBadge {
@@ -195,15 +198,37 @@
 @media (max-width: 720px) {
   .panel {
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
     text-align: center;
-    padding: 20px;
+    padding: 16px 14px 14px;
+    gap: 12px;
+    width: calc(100vw - 18px);
+    max-width: calc(100vw - 18px);
+    max-height: 86vh;
   }
 
   .robot {
     order: -1;
+    padding: 0;
+    margin-bottom: 6px;
   }
 
   .actions {
     justify-content: center;
+    position: sticky;
+    bottom: 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(6, 17, 39, 0.92) 60%);
+    padding-top: 8px;
+    padding-bottom: 6px;
+  }
+
+  .content {
+    gap: 10px;
+    overflow-y: auto;
+    padding: 0 2px 4px;
+  }
+
+  .button {
+    width: 100%;
   }
 }

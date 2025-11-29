@@ -182,7 +182,7 @@ const CreatePublicationComponent: React.FC<CreatePublicationProps> = ({
           <label htmlFor="title" className={styles.label}>
             Título
               <span className={styles.required}>*</span>
-              <Tooltip title="Imagina que estas haciendo una publicacion de hacking ético.">
+              <Tooltip enterTouchDelay={0} leaveTouchDelay={3500} arrow disableInteractive title="Imagina que estas haciendo una publicacion de hacking ético.">
                 <InfoOutlineIcon/>
               </Tooltip>
           </label>
@@ -229,7 +229,7 @@ const CreatePublicationComponent: React.FC<CreatePublicationProps> = ({
           <label htmlFor="tags" className={styles.label}>
             Etiquetas
               <span className={styles.required}>*</span>
-              <Tooltip title="Añade hasta 5 etiquetas para describir sobre qué trata tu publicación">
+              <Tooltip enterTouchDelay={0} leaveTouchDelay={3500} arrow disableInteractive title="Añade hasta 5 etiquetas para describir sobre qué trata tu publicación">
                 <InfoOutlineIcon/>
               </Tooltip>
           </label>
@@ -289,7 +289,7 @@ const CreatePublicationComponent: React.FC<CreatePublicationProps> = ({
           <label htmlFor="body" className={styles.label}>
             Cuerpo
               <span className={styles.required}>*</span>
-              <Tooltip title="Incluye toda la información que alguien necesitaría para responder tu publicación">
+              <Tooltip enterTouchDelay={0} leaveTouchDelay={3500} arrow disableInteractive title="Incluye toda la información que alguien necesitaría para responder tu publicación">
                 <InfoOutlineIcon/>
               </Tooltip>
           </label>

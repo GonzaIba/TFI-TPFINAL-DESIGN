@@ -3,6 +3,7 @@ import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { RobotAnimated } from '@/components/chatbotComponent/robotIcon/robotIcon';
 import styles from './spotlightTour.module.css';
+import { useWindowWidth } from '@/hooks';
 
 type PointerDirection = 'left' | 'right' | 'top' | 'bottom';
 
@@ -28,6 +29,7 @@ type PanelLayoutResult = {
   rect: DOMRect | null;
   resolvedPlacement: PointerDirection | null;
 };
+type PanelDimensions = { width: number; height: number; gap: number; maxHeight: string };
 
 const HIGHLIGHT_PADDING = 18;
 const PANEL_WIDTH = 560;
@@ -52,6 +54,8 @@ export function SpotlightTour({
   const isLastStep = stepIndex + 1 === totalSteps;
   const panelRef = useRef<HTMLDivElement | null>(null);
   const [panelRect, setPanelRect] = useState<DOMRect | null>(null);
+  const viewportWidth = useWindowWidth();
+  const robotSize = viewportWidth > 0 && viewportWidth < 720 ? 160 : 220;
 
   useLayoutEffect(() => {
     if (typeof window === 'undefined') return;
@@ -127,26 +131,31 @@ export function SpotlightTour({
     return ordered.filter((placement, index) => ordered.indexOf(placement) === index);
   }, [panelPlacement]);
 
-  const getPanelDimensions = () => {
+  const getPanelDimensions = (): PanelDimensions => {
+    const defaultGap = panelGap ?? DEFAULT_GAP;
     if (typeof window === 'undefined') {
       return {
         width: PANEL_WIDTH,
         height: PANEL_HEIGHT,
-        gap: panelGap ?? DEFAULT_GAP,
+        gap: defaultGap,
+        maxHeight: '88vh',
       };
     }
 
     const vw = window.innerWidth;
+    const vh = window.innerHeight;
     const width = Math.max(280, Math.min(560, vw - 32));
-    const height = vw < 720 ? 320 : PANEL_HEIGHT;
-    const adaptiveGap = Math.max(16, panelGap ?? (vw < 720 ? 24 : DEFAULT_GAP));
+    const baseHeight = vw < 720 ? 280 : PANEL_HEIGHT;
+    const height = Math.max(240, Math.min(baseHeight, vh - 120));
+    const adaptiveGap = Math.max(12, panelGap ?? (vw < 720 ? 20 : DEFAULT_GAP));
+    const maxHeight = vw < 720 ? '86vh' : '88vh';
 
-    return { width, height, gap: adaptiveGap };
+    return { width, height, gap: adaptiveGap, maxHeight };
   };
 
   const computeLayoutForPlacement = (
     placement: PointerDirection,
-    dimensions: { width: number; height: number; gap: number },
+    dimensions: PanelDimensions,
     highlight: DOMRect,
   ): PanelLayoutResult => {
     if (typeof window === 'undefined') {
@@ -173,6 +182,7 @@ export function SpotlightTour({
           transform: 'translateY(-50%)',
           width: `${width}px`,
           minHeight: `${height}px`,
+          maxHeight: dimensions.maxHeight,
         },
         rect: new DOMRect(left, top - height / 2, width, height),
         resolvedPlacement: placement,
@@ -192,6 +202,7 @@ export function SpotlightTour({
         transform: 'translate(-50%, 0)',
         width: `${width}px`,
         minHeight: `${height}px`,
+        maxHeight: dimensions.maxHeight,
       },
       rect: new DOMRect(left - width / 2, top, width, height),
       resolvedPlacement: placement,
@@ -331,16 +342,16 @@ export function SpotlightTour({
           <div className={styles.panelWrapper} style={panelLayout.style}>
             <motion.div
               ref={panelRef}
-              className={panelClassName}
-              style={panelStyleVars}
-              initial={{ y: 80, opacity: 0, scale: 0.94 }}
-              animate={{ y: 0, opacity: 1, scale: 1 }}
-              exit={{ y: 80, opacity: 0, scale: 0.94 }}
-              transition={{ type: 'spring', stiffness: 160, damping: 20 }}
-            >
-              <div className={styles.robot}>
-                <RobotAnimated showImage animated size={220} />
-              </div>
+          className={panelClassName}
+          style={panelStyleVars}
+          initial={{ y: 80, opacity: 0, scale: 0.94 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          exit={{ y: 80, opacity: 0, scale: 0.94 }}
+          transition={{ type: 'spring', stiffness: 160, damping: 20 }}
+        >
+          <div className={styles.robot}>
+            <RobotAnimated showImage animated size={robotSize} />
+          </div>
               <div className={styles.content}>
                 <span className={styles.stepBadge}>
                   Paso {stepIndex + 1} de {totalSteps}

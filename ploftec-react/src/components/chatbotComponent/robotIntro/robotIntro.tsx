@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Lottie from 'lottie-react';
 import animationData from './robotIntro.json';
 import rocketAnimation from './rocketAnimated.json';
+import { useWindowWidth } from '@/hooks';
 
 export function RobotIntro({ onComplete }: { onComplete: () => void }) {
   const lottieRef = useRef(null);
@@ -14,27 +15,25 @@ export function RobotIntro({ onComplete }: { onComplete: () => void }) {
   const [showRobot, setShowRobot] = useState(false);
   const [chatStep, setChatStep] = useState<1 | 2>(1);
 
+  const viewportWidth = useWindowWidth();
+  const isMobile = viewportWidth > 0 && viewportWidth < 720;
+
   const handleShowBubble = () => {
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       setShowBubble(true);
-      new Audio('/sounds/robot-pop.mp3').play(); ///////////////////////////////////////////
-    }, 2000)
-    return clearTimeout(timer)
-  }
+      new Audio('/sounds/robot-pop.mp3').play();
+    }, 2000);
+  };
 
   const handleAccept = () => {
     setHideBubble(true);
 
     if (chatStep === 1) {
-      // Mostrar segundo mensaje
       setTimeout(() => {
         setChatStep(2);
         setHideBubble(false);
       }, 600);
-    }
-
-    if (chatStep === 2) {
-      // Animación final
+    } else {
       setTimeout(() => {
         setStartRobotExit(true);
       }, 1500);
@@ -44,11 +43,66 @@ export function RobotIntro({ onComplete }: { onComplete: () => void }) {
     }
   };
 
+  const bubbleStyle = {
+    ...styles.bubble,
+    ...(isMobile
+      ? {
+          left: '50%',
+          top: '105%',
+          marginLeft: 0,
+          transform: 'translateX(-50%)',
+          width: 'min(92vw, 360px)',
+          minWidth: '0',
+          fontSize: '17px',
+          lineHeight: 1.5,
+          padding: '16px 18px',
+          textAlign: 'center' as const,
+          alignItems: 'center',
+          gap: 12,
+        }
+      : {}),
+  };
+
+  const triangleStyle = {
+    ...styles.triangle,
+    ...(isMobile
+      ? {
+          left: '50%',
+          top: -12,
+          transform: 'translateX(-50%)',
+          borderTop: '0 solid transparent',
+          borderBottom: '12px solid white',
+          borderLeft: '10px solid transparent',
+          borderRight: '10px solid transparent',
+        }
+      : {}),
+  };
+
+  const buttonStyle = {
+    ...styles.button,
+    ...(isMobile
+      ? {
+          alignSelf: 'center',
+          width: '100%',
+          fontSize: '17px',
+          padding: '13px 18px',
+        }
+      : {}),
+  };
+
+  const robotAnimationStyle = isMobile
+    ? { width: 240, height: 240 }
+    : styles.animation;
+
+  const rocketSize = isMobile ? { width: 260, height: 260 } : { width: 320, height: 320 };
+  const centerX = typeof window !== 'undefined' ? window.innerWidth / 2 - 60 : 0;
+  const centerY = typeof window !== 'undefined' ? window.innerHeight / 2 - 60 : 0;
+
   return (
     <div style={styles.overlay}>
       {showRocket && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.6, x:-100 ,y: -100 }}
+          initial={{ opacity: 0, scale: 0.6, x: -100, y: -100 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 1 }}
@@ -63,9 +117,9 @@ export function RobotIntro({ onComplete }: { onComplete: () => void }) {
                 handleShowBubble();
                 new Audio('/sounds/robot-pop.mp3').play();
                 setTimeout(() => setShowBubble(true), 1000);
-              }, 400); // una leve pausa después del aterrizaje
+              }, 400);
             }}
-            style={{ width: 300, height: 300 }}
+            style={rocketSize}
           />
         </motion.div>
       )}
@@ -74,13 +128,13 @@ export function RobotIntro({ onComplete }: { onComplete: () => void }) {
         <motion.div
           initial={{ scale: 1, x: 100, y: -100 }}
           animate={
-          startRobotExit
-            ? {
-              scale: 0.18,
-              x: window.innerWidth / 2 - 60,
-              y: window.innerHeight / 2 - 60,
-            }
-            : { scale: 0.5, x: -100, y: 0 }
+            startRobotExit
+              ? {
+                  scale: 0.18,
+                  x: centerX,
+                  y: centerY,
+                }
+              : { scale: isMobile ? 0.52 : 0.58, x: isMobile ? -32 : -72, y: isMobile ? 12 : 0 }
           }
           transition={{ duration: 1.2, ease: 'easeInOut' }}
           style={styles.robotContainer}
@@ -88,8 +142,8 @@ export function RobotIntro({ onComplete }: { onComplete: () => void }) {
           <Lottie
             lottieRef={lottieRef}
             animationData={animationData}
-            loop={true}
-            style={styles.animation}
+            loop
+            style={robotAnimationStyle}
           />
 
           <AnimatePresence>
@@ -100,17 +154,17 @@ export function RobotIntro({ onComplete }: { onComplete: () => void }) {
                 animate={{ opacity: 1, x: 0, scale: 1 }}
                 exit={{ opacity: 0, x: -60, scale: 0.95 }}
                 transition={{ duration: 0.5 }}
-                style={styles.bubble}
+                style={bubbleStyle}
               >
-                <p style={{ color: 'black' }}>
+                <p style={{ color: 'black', margin: 0 }}>
                   {chatStep === 1
-                  ? '¡Hola! Soy el robot Ploftec, un placer conocerte!'
-                  : 'Estaré aquí para ayudarte con lo que necesites!'}
+                    ? '\u00a1Hola! Soy el robot Ploftec, un placer conocerte!'
+                    : 'Estar\u00e9 aqu\u00ed para ayudarte con lo que necesites!'}
                 </p>
-                <button onClick={handleAccept} style={styles.button}>
+                <button onClick={handleAccept} style={buttonStyle}>
                   Aceptar
                 </button>
-                <div style={styles.triangle}></div>
+                <div style={triangleStyle}></div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -120,12 +174,9 @@ export function RobotIntro({ onComplete }: { onComplete: () => void }) {
   );
 }
 
-
-
-
 const styles = {
   overlay: {
-    position: 'fixed' as 'fixed',
+    position: 'fixed' as const,
     top: 0,
     left: 0,
     width: '100%',
@@ -137,37 +188,38 @@ const styles = {
     justifyContent: 'center',
   },
   robotContainer: {
-    position: 'relative' as 'relative',
+    position: 'relative' as const,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
   },
   animation: {
-    width: 300,
-    height: 300,
+    width: 320,
+    height: 320,
   },
   bubble: {
-    position: 'absolute' as 'absolute',
+    position: 'absolute' as const,
     left: '100%',
     top: '25%',
     marginLeft: 24,
     backgroundColor: '#fff',
-    padding: '20px 24px',
+    padding: '22px 26px',
     borderRadius: 12,
-    textAlign: 'left' as 'left',
+    textAlign: 'left' as const,
     boxShadow: '0 6px 24px rgba(0,0,0,0.25)',
-    width: 600,
+    width: 420,
+    maxWidth: 540,
     minWidth: 260,
-    fontSize: '32px',
-    lineHeight: 1.5,
+    fontSize: '19px',
+    lineHeight: 1.55,
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: 12,
+    gap: 14,
     willChange: 'transform, opacity',
   },
   triangle: {
     content: '""',
-    position: 'absolute' as 'absolute',
+    position: 'absolute' as const,
     left: -12,
     top: '30%',
     width: 0,
@@ -177,14 +229,15 @@ const styles = {
     borderRight: '12px solid white',
   },
   button: {
-    alignSelf: 'flex-end',
-    padding: '10px 18px',
+    alignSelf: 'flex-end' as const,
+    padding: '12px 20px',
     borderRadius: 6,
     border: 'none',
     backgroundColor: '#3f51b5',
     color: '#fff',
-    fontWeight: 500,
+    fontWeight: 600,
     cursor: 'pointer',
-    fontSize: '24px',
+    fontSize: '19px',
+    boxShadow: '0 6px 18px rgba(0,0,0,0.18)',
   },
 };
