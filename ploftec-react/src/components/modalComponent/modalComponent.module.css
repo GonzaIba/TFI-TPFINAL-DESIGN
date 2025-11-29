@@ -5,18 +5,19 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(0, 0, 0, 0.6);   /* opacidad regulable */
+  background: radial-gradient(circle at 20% 20%, rgba(127, 90, 240, 0.12), transparent 32%), rgba(0, 0, 0, 0.75);
   z-index: 1000;
 }
 
 /* Caja */
 .modal {
-  background: #121212;
-  border-radius: 4px;
-  padding: 24px;
+  background: linear-gradient(140deg, #0c101c 0%, #101728 55%, #0b1322 100%);
+  border-radius: 14px;
+  padding: 26px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(127, 90, 240, 0.32);
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .closeModalButton {
@@ -43,10 +44,11 @@
 
 .modal::-webkit-scrollbar {
   width: 10px;
-  background: #1B1B1B;
+  background: #0f1424;
 }
 
 .modal::-webkit-scrollbar-thumb {
-  background: #2e3033;
-  border-radius: 5px;
+  background: linear-gradient(180deg, #7f5af0 0%, #2cb67d 100%);
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.35);
 }
