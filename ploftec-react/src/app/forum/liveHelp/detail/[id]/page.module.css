@@ -1,14 +1,15 @@
 ﻿/* Container */
-.container { min-height: 100dvh; padding: 32px 18px 92px; max-width: 520px; margin: 0 auto; }
+.container { min-height: 100dvh; padding: 32px 18px 92px; margin: 0 auto; }
 .headerBar { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
 
 /* Columns */
-/* .columns { display: grid; grid-template-columns: 1fr; gap: 24px; } */
+.columns { display: flex; flex-direction: column; gap: 24px; }
 .leftCol { display: flex; flex-direction: column; gap: 28px; min-height: 60vh; }
 .rightCol { display: none; }
-@media (min-width: 1024px) { .columns { grid-template-columns: 2fr 1fr; gap: 28px; } .rightCol { display: block; } }
-.rightCol { display: none; }
-@media (min-width: 1024px) { .columns { grid-template-columns: 2fr 1fr; gap: 28px; } .rightCol { display: block; } }
+@media (min-width: 1024px) {
+  .columns { display: grid; grid-template-columns: 2fr 1fr; gap: 28px; }
+  .rightCol { display: block; }
+}
 
 /* Header+Desc card */
 .headerCard { background: #151515; border: 1px solid #2a2a2a; border-radius: 12px; padding: 16px 16px 18px; display: flex; flex-direction: column; gap: 16px; }
