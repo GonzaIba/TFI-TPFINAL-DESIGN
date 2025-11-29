@@ -206,6 +206,17 @@
   .ownerCancelCard { padding: 12px; }
   .headerRow { grid-template-columns: auto 1fr; gap: 12px; }
   .metaRow { gap: 8px; }
+  .status,
+  .reward { font-size: 11px; padding: 4px 8px; }
+  .timerWrap { gap: 6px; }
+  .timerText { font-size: 11px; }
+  .title { font-size: clamp(17px, 5vw, 20px); }
+  .descText { font-size: 13px; }
+  .chip, .chipAlt { font-size: 11px; padding: 4px 9px; }
+  .inboxName { font-size: 13px; }
+  .inboxPreview { font-size: 11px; }
+  .msgBubble { font-size: 13px; }
+  .msgMeta { font-size: 10px; }
 }
 
 @media (max-width: 360px) {
@@ -218,7 +229,11 @@
   .ownerCancelCard { padding: 10px; }
   .headerRow { grid-template-columns: auto 1fr; gap: 10px; }
   .title { font-size: clamp(15px, 5.2vw, 18px); white-space: normal; }
-  .metaRow { gap: 8px; }
+  .metaRow { gap: 6px; }
+  .metaRow > * { min-width: 0; }
+  .status,
+  .reward { font-size: 11px; padding: 3px 8px; }
+  .timerWrap { gap: 6px; }
   .descText { font-size: 13px; }
   .chipsRow { gap: 6px; }
   .chip, .chipAlt { font-size: 10px; padding: 4px 8px; }
@@ -228,9 +243,9 @@
   .composerInput { height: 38px; }
   .inboxItem { grid-template-columns: 32px 1fr auto; gap: 6px; padding: 6px; }
   .inboxAvatarWrap { width: 32px; height: 32px; }
-  .inboxName { font-size: 13px; }
-  .inboxPreview { font-size: 11px; }
-  .slotItem { font-size: 12px; padding: 8px 10px; }
+  .inboxName { font-size: 12px; }
+  .inboxPreview { font-size: 10px; }
+  .slotItem { font-size: 11px; padding: 8px 10px; }
   .ownerSlotRow { gap: 8px; }
 }
 
@@ -250,6 +265,9 @@
   .headerRow { grid-template-columns: 1fr; gap: 8px; }
   .title { font-size: clamp(14px, 5vw, 18px); }
   .metaRow { gap: 6px; }
+  .metaRow > * { min-width: 0; }
+  .status,
+  .reward { font-size: 10px; padding: 3px 7px; }
   .chipsRow { gap: 5px; }
   .chip, .chipAlt { font-size: 10px; padding: 3px 7px; }
   .chatPanel { min-height: 320px; }
