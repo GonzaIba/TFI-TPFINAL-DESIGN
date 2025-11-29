@@ -1254,7 +1254,7 @@ export default function LiveHelpDetailByIdPage() {
                       text="Confirmar"
                       loading={confirmingSlot}
                       disabled={confirmingSlot || !selectedSlot}
-                      backgroundColor="#2f2f38"
+                      backgroundColor={selectedSlot ? Colors.primary : "#2f2f38"}
                     />
                   </div>
                 </>
@@ -1559,7 +1559,7 @@ export default function LiveHelpDetailByIdPage() {
                     text="Confirmar"
                     loading={confirmingSlot}
                     disabled={confirmingSlot || !selectedSlot}
-                    backgroundColor="#2f2f38"
+                    backgroundColor={selectedSlot ? Colors.primary : "#2f2f38"}
                   />
                 </div>
               </>
