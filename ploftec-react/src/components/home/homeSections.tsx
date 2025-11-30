@@ -198,6 +198,10 @@ function useTypingEffect(text: string, enabled: boolean, prefersReducedMotion: b
       return;
     }
 
+    setDisplay('');
+    setDone(false);
+    setTyping(true);
+
     let cancelled = false;
     let idx = 0;
     const pauses = new Set([text.indexOf('ciberseguridad') + 'ciberseguridad'.length, text.lastIndexOf('haciendo')]);
@@ -346,6 +350,7 @@ export function HeroSection() {
     prefersReducedMotion
   );
   const heroReady = typingDone || !shouldType;
+  const showRest = prefersReducedMotion || heroReady;
 
   useEffect(() => {
     if (prefersReducedMotion) {
@@ -421,16 +426,21 @@ export function HeroSection() {
         <div className={styles.heroGrid}>
           <motion.div
             className={styles.heroContent}
-            variants={variants.slideLeft}
-            transition={baseTransition}
-            animate={heroReady ? 'animate' : 'initial'}
+            initial={{ opacity: 1, x: 0, filter: 'none' }}
+            animate={{ opacity: 1, x: 0, filter: 'none' }}
+            transition={{ duration: 0 }}
           >
             <div className={styles.heroBadgeRow}>
               <span className={styles.heroBadge}>PLOFTEC · Seguridad 24/7</span>
               <span className={styles.heroBadgeGhost}>Aprender haciendo, sin humo</span>
             </div>
 
-            <motion.h1 className={styles.heroTitle} variants={variants.slideLeft}>
+            <motion.h1
+              className={styles.heroTitle}
+              initial={{ opacity: 1, x: 0 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0 }}
+            >
               {shouldType ? (
                 <>
                   <span>
@@ -448,167 +458,157 @@ export function HeroSection() {
                 </>
               )}
             </motion.h1>
-            <motion.p
-              className={styles.heroSubtitle}
-              variants={variants.slideLeft}
-              transition={{ ...baseTransition, delay: heroReady ? 0.12 : 0 }}
-              style={
-                heroReady
-                  ? undefined
-                  : { opacity: 0, pointerEvents: 'none', transform: 'translateY(12px) scale(0.98)' }
-              }
-            >
-              Comunidad técnica, ayuda en vivo y una academia que nace desde el mundo real. Uní
-              foros, sesiones 1:1 y rutas guiadas para crecer en Blue/Red Team sin perder tiempo.
-            </motion.p>
+            {showRest && (
+              <>
+                <motion.p
+                  className={styles.heroSubtitle}
+                  initial={{ opacity: 0, y: 14, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ ...baseTransition, delay: 0.12 }}
+                >
+                  Comunidad técnica, ayuda en vivo y una academia que nace desde el mundo real. Uní
+                  foros, sesiones 1:1 y rutas guiadas para crecer en Blue/Red Team sin perder tiempo.
+                </motion.p>
 
-            <motion.div
-              className={styles.heroCtas}
-              variants={variants.scalePop}
-              transition={{ ...baseTransition, delay: heroReady ? 0.22 : 0 }}
-              animate={heroReady ? 'animate' : 'initial'}
-              style={
-                heroReady
-                  ? undefined
-                  : { opacity: 0, pointerEvents: 'none', transform: 'translateY(12px) scale(0.98)' }
-              }
-            >
-              <motion.div animate={ctaControls}>
-                <Link href="/forum" className={`${styles.button} ${styles.primaryButton}`}>
-                  Entrar al foro
-                  <ArrowUpRight size={16} />
-                </Link>
-              </motion.div>
-              <motion.div animate={ctaControls}>
-                <a href="#roadmap" className={`${styles.button} ${styles.secondaryButton}`}>
-                  Ver roadmap educativo
-                </a>
-              </motion.div>
-            </motion.div>
-
-            <p
-              className={styles.trustNote}
-              style={
-                heroReady
-                  ? undefined
-                  : { opacity: 0, pointerEvents: 'none', transform: 'translateY(10px) scale(0.98)' }
-              }
-            >
-              Proyecto de tesis · Plataforma real en construcción 2026–2028 · Comunidad abierta
-            </p>
-
-            <motion.div
-              className={styles.heroHighlights}
-              variants={staggerContainer}
-              transition={{ ...baseTransition, delay: heroReady ? 0.3 : 0 }}
-              animate={heroReady ? 'animate' : 'initial'}
-              style={
-                heroReady
-                  ? undefined
-                  : { opacity: 0, pointerEvents: 'none', transform: 'translateY(14px) scale(0.98)' }
-              }
-            >
-              {highlights.map((item, index) => (
                 <motion.div
-                  key={item.title}
-                  className={styles.highlightCard}
-                  variants={index % 2 === 0 ? variants.slideLeft : variants.slideRight}
-                  transition={{ ...baseTransition, delay: index * 0.04 }}
-                  whileHover={{ y: -6, scale: prefersReducedMotion ? 1 : 1.01 }}
+                  className={styles.heroCtas}
+                  initial={{ opacity: 0, y: 16, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ ...baseTransition, delay: 0.24 }}
                 >
-                  <div className={styles.iconCircle}>{item.icon}</div>
-                  <div>
-                    <p className={styles.highlightTitle}>{item.title}</p>
-                    <p className={styles.highlightDescription}>{item.description}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </motion.div>
-          </motion.div>
-
-          <motion.div
-            className={styles.heroVisual}
-            variants={variants.slideRight}
-            transition={{ ...baseTransition, delay: heroReady ? 0.18 : 0 }}
-            animate={heroReady ? 'animate' : 'initial'}
-            style={
-              heroReady
-                ? undefined
-                : { opacity: 0, pointerEvents: 'none', transform: 'translateY(16px) scale(0.98)' }
-            }
-          >
-            <motion.div className={styles.glassCard} whileHover={{ y: -6, scale: 1.01 }}>
-              <div className={styles.glassHeader}>
-                <span className={styles.glassLabel}>Radar en vivo</span>
-                <span className={styles.tag}>Beta</span>
-              </div>
-              <p className={styles.glassTitle}>
-                LiveHelp + Foro + Academia en un ǧnico panel, pensado para equipos y autodidactas.
-              </p>
-              <motion.div className={styles.miniStats} variants={staggerContainer}>
-                {miniStats.map((stat, i) => (
-                  <motion.div
-                    key={stat.label}
-                    className={styles.miniStat}
-                    variants={variants.scalePop}
-                    transition={{ ...baseTransition, delay: i * 0.05 }}
-                  >
-                    <span className={styles.miniLabel}>{stat.label}</span>
-                    <span className={styles.miniValue}>{stat.value}</span>
-                    <span className={styles.miniAccent}>{stat.accent}</span>
+                  <motion.div animate={ctaControls}>
+                    <Link href="/forum" className={`${styles.button} ${styles.primaryButton}`}>
+                      Entrar al foro
+                      <ArrowUpRight size={16} />
+                    </Link>
                   </motion.div>
-                ))}
-              </motion.div>
-              <div className={styles.heroPills}>
-                <span className={styles.heroTag}>Blue Team</span>
-                <span className={styles.heroTag}>Red Team</span>
-                <span className={styles.heroTag}>SecOps</span>
-                <span className={styles.heroTag}>DevSecOps</span>
-                <span className={styles.heroTag}>Cloud Security</span>
-              </div>
-            </motion.div>
+                  <motion.div animate={ctaControls}>
+                    <a href="#roadmap" className={`${styles.button} ${styles.secondaryButton}`}>
+                      Ver roadmap educativo
+                    </a>
+                  </motion.div>
+                </motion.div>
 
-            <motion.div
-              className={styles.glassCardSecondary}
-              whileHover={{ y: -6, scale: 1.01 }}
-            >
-              <div className={styles.glassHeader}>
-                <span className={styles.glassLabel}>LiveHelp</span>
-                <span className={`${styles.tag} ${styles.tagOutline}`}>En curso</span>
-              </div>
-              <p className={styles.glassTitle}>
-                Combina Jitsi seguro, pairing guiado, templates de diagnóstico y checklists.
-              </p>
-              <div className={styles.miniStats}>
-                <IlluminatedBlock
-                  className={styles.miniStat}
-                  variant={variants.slideLeft}
-                  transition={baseTransition}
-                  prefersReducedMotion={prefersReducedMotion}
-                  viewportAmount={0.55}
+                <motion.p
+                  className={styles.trustNote}
+                  initial={{ opacity: 0, y: 10, scale: 0.99 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ ...baseTransition, delay: 0.32 }}
                 >
-                  <span className={styles.miniLabel}>Acompañamientos</span>
-                  <span className={styles.miniValue}>
-                    <AnimatedNumber value={280} start={heroReady} prefix="+" />
-                  </span>
-                  <span className={styles.miniAccent}>Pruebas con analistas</span>
-                </IlluminatedBlock>
-                <IlluminatedBlock
-                  className={styles.miniStat}
-                  variant={variants.slideRight}
-                  transition={baseTransition}
-                  prefersReducedMotion={prefersReducedMotion}
-                  viewportAmount={0.55}
+                  Proyecto de tesis · Plataforma real en construcción 2026–2028 · Comunidad abierta
+                </motion.p>
+
+                <motion.div
+                  className={styles.heroHighlights}
+                  variants={staggerContainer}
+                  initial="initial"
+                  animate="animate"
+                  transition={{ ...baseTransition, delay: 0.4 }}
                 >
-                  <span className={styles.miniLabel}>Playbooks</span>
-                  <span className={styles.miniValue}>
-                    <AnimatedNumber value={18} start={heroReady} />
-                  </span>
-                  <span className={styles.miniAccent}>IR, hardening, appsec</span>
-                </IlluminatedBlock>
-              </div>
-            </motion.div>
+                  {highlights.map((item, index) => (
+                    <motion.div
+                      key={item.title}
+                      className={styles.highlightCard}
+                      variants={index % 2 === 0 ? variants.slideLeft : variants.slideRight}
+                      transition={{ ...baseTransition, delay: index * 0.04 }}
+                      whileHover={{ y: -6, scale: prefersReducedMotion ? 1 : 1.01 }}
+                    >
+                      <div className={styles.iconCircle}>{item.icon}</div>
+                      <div>
+                        <p className={styles.highlightTitle}>{item.title}</p>
+                        <p className={styles.highlightDescription}>{item.description}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </>
+            )}
           </motion.div>
+
+          {showRest && (
+            <motion.div
+              className={styles.heroVisual}
+              variants={variants.slideRight}
+              initial="initial"
+              animate="animate"
+              transition={{ ...baseTransition, delay: 0.3 }}
+            >
+              <motion.div className={styles.glassCard} whileHover={{ y: -6, scale: 1.01 }}>
+                <div className={styles.glassHeader}>
+                  <span className={styles.glassLabel}>Radar en vivo</span>
+                  <span className={styles.tag}>Beta</span>
+                </div>
+                <p className={styles.glassTitle}>
+                  LiveHelp + Foro + Academia en un ǧnico panel, pensado para equipos y autodidactas.
+                </p>
+                <motion.div className={styles.miniStats} variants={staggerContainer}>
+                  {miniStats.map((stat, i) => (
+                    <motion.div
+                      key={stat.label}
+                      className={styles.miniStat}
+                      variants={variants.scalePop}
+                      transition={{ ...baseTransition, delay: i * 0.05 }}
+                    >
+                      <span className={styles.miniLabel}>{stat.label}</span>
+                      <span className={styles.miniValue}>{stat.value}</span>
+                      <span className={styles.miniAccent}>{stat.accent}</span>
+                    </motion.div>
+                  ))}
+                </motion.div>
+                <div className={styles.heroPills}>
+                  <span className={styles.heroTag}>Blue Team</span>
+                  <span className={styles.heroTag}>Red Team</span>
+                  <span className={styles.heroTag}>SecOps</span>
+                  <span className={styles.heroTag}>DevSecOps</span>
+                  <span className={styles.heroTag}>Cloud Security</span>
+                </div>
+              </motion.div>
+
+              <motion.div
+                className={styles.glassCardSecondary}
+                whileHover={{ y: -6, scale: 1.01 }}
+                initial={{ opacity: 0, y: 16, scale: 0.99 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ ...baseTransition, delay: 0.38 }}
+              >
+                <div className={styles.glassHeader}>
+                  <span className={styles.glassLabel}>LiveHelp</span>
+                  <span className={`${styles.tag} ${styles.tagOutline}`}>En curso</span>
+                </div>
+                <p className={styles.glassTitle}>
+                  Combina Jitsi seguro, pairing guiado, templates de diagnóstico y checklists.
+                </p>
+                <div className={styles.miniStats}>
+                  <IlluminatedBlock
+                    className={styles.miniStat}
+                    variant={variants.slideLeft}
+                    transition={baseTransition}
+                    prefersReducedMotion={prefersReducedMotion}
+                    viewportAmount={0.55}
+                  >
+                    <span className={styles.miniLabel}>Acompañamientos</span>
+                    <span className={styles.miniValue}>
+                      <AnimatedNumber value={280} start={showRest} prefix="+" />
+                    </span>
+                    <span className={styles.miniAccent}>Pruebas con analistas</span>
+                  </IlluminatedBlock>
+                  <IlluminatedBlock
+                    className={styles.miniStat}
+                    variant={variants.slideRight}
+                    transition={baseTransition}
+                    prefersReducedMotion={prefersReducedMotion}
+                    viewportAmount={0.55}
+                  >
+                    <span className={styles.miniLabel}>Playbooks</span>
+                    <span className={styles.miniValue}>
+                      <AnimatedNumber value={18} start={showRest} />
+                    </span>
+                    <span className={styles.miniAccent}>IR, hardening, appsec</span>
+                  </IlluminatedBlock>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
         </div>
       </div>
 
