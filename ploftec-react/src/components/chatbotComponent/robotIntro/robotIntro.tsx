@@ -48,14 +48,14 @@ export function RobotIntro({ onComplete }: { onComplete: () => void }) {
     ...(isMobile
       ? {
           left: '50%',
-          top: '105%',
+          top: '112%',
           marginLeft: 0,
           transform: 'translateX(-50%)',
-          width: 'min(92vw, 360px)',
+          width: 'min(92vw, 380px)',
           minWidth: '0',
-          fontSize: '17px',
-          lineHeight: 1.5,
-          padding: '16px 18px',
+          fontSize: '19.5px',
+          lineHeight: 1.6,
+          padding: '18px 22px',
           textAlign: 'center' as const,
           alignItems: 'center',
           gap: 12,
@@ -84,17 +84,17 @@ export function RobotIntro({ onComplete }: { onComplete: () => void }) {
       ? {
           alignSelf: 'center',
           width: '100%',
-          fontSize: '17px',
-          padding: '13px 18px',
+          fontSize: '19px',
+          padding: '14px 21px',
         }
       : {}),
   };
 
   const robotAnimationStyle = isMobile
-    ? { width: 240, height: 240 }
+    ? { width: 250, height: 250 }
     : styles.animation;
 
-  const rocketSize = isMobile ? { width: 260, height: 260 } : { width: 320, height: 320 };
+  const rocketSize = isMobile ? { width: 260, height: 260 } : { width: 300, height: 300 };
   const centerX = typeof window !== 'undefined' ? window.innerWidth / 2 - 60 : 0;
   const centerY = typeof window !== 'undefined' ? window.innerHeight / 2 - 60 : 0;
 
@@ -134,7 +134,7 @@ export function RobotIntro({ onComplete }: { onComplete: () => void }) {
                   x: centerX,
                   y: centerY,
                 }
-              : { scale: isMobile ? 0.52 : 0.58, x: isMobile ? -32 : -72, y: isMobile ? 12 : 0 }
+              : { scale: isMobile ? 0.52 : 0.5, x: isMobile ? -32 : -100, y: isMobile ? 12 : 0 }
           }
           transition={{ duration: 1.2, ease: 'easeInOut' }}
           style={styles.robotContainer}
@@ -203,15 +203,15 @@ const styles = {
     top: '25%',
     marginLeft: 24,
     backgroundColor: '#fff',
-    padding: '22px 26px',
+    padding: '24px 30px',
     borderRadius: 12,
     textAlign: 'left' as const,
     boxShadow: '0 6px 24px rgba(0,0,0,0.25)',
-    width: 420,
-    maxWidth: 540,
+    width: 480,
+    maxWidth: 620,
     minWidth: 260,
-    fontSize: '19px',
-    lineHeight: 1.55,
+    fontSize: '24px',
+    lineHeight: 1.64,
     display: 'flex',
     flexDirection: 'column' as const,
     gap: 14,
@@ -230,7 +230,7 @@ const styles = {
   },
   button: {
     alignSelf: 'flex-end' as const,
-    padding: '12px 20px',
+    padding: '13px 22px',
     borderRadius: 6,
     border: 'none',
     backgroundColor: '#3f51b5',
