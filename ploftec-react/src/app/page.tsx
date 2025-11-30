@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import styles from '@/components/home/homeLanding.module.css';
 import {
   HeaderNav,
@@ -18,7 +18,12 @@ import {
 } from '@/components/home/homeSections';
 
 export default function Home() {
+  const sections = useMemo(
+    () => ['foro', 'educacion', 'roadmap', 'comunidad', 'empresas', 'faq'],
+    []
+  );
   const [isScrolled, setIsScrolled] = useState(false);
+  const [activeSection, setActiveSection] = useState<string>('foro');
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 12);
@@ -27,9 +32,40 @@ export default function Home() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+    const options = { root: null, threshold: 0.35 };
+
+    sections.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const obs = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) setActiveSection(id);
+        });
+      }, options);
+      obs.observe(el);
+      observers.push(obs);
+    });
+
+    return () => observers.forEach((obs) => obs.disconnect());
+  }, [sections]);
+
+  const handleNavClick = (id: string) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const yOffset = -12;
+    const top = el.getBoundingClientRect().top + window.scrollY + yOffset;
+    window.scrollTo({ top, behavior: 'smooth' });
+  };
+
   return (
     <div className={styles.page}>
-      <HeaderNav isScrolled={isScrolled} />
+      <HeaderNav
+        isScrolled={isScrolled}
+        activeSection={activeSection}
+        onNavClick={handleNavClick}
+      />
       <main className={styles.main}>
         <HeroSection />
         <SplitSection />

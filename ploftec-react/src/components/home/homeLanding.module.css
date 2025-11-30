@@ -42,6 +42,16 @@
   padding: 12px 0;
 }
 
+.section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(70% 70% at 30% 20%, rgba(100, 75, 255, 0.07), transparent 60%);
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .header {
   position: sticky;
   top: 0;
@@ -98,18 +108,37 @@
 }
 
 .navLink {
+  position: relative;
   padding: 10px 12px;
   color: var(--muted);
   text-decoration: none;
   border-radius: 12px;
-  transition: color 0.2s ease, background 0.2s ease, border 0.2s ease;
+  transition: color 0.2s ease, background 0.2s ease, border 0.2s ease, box-shadow 0.2s ease;
   border: 1px solid transparent;
+  background: transparent;
 }
 
-.navLink:hover {
+.navLink:hover,
+.navLink:focus-visible {
   color: #fff;
   background: rgba(255, 255, 255, 0.06);
   border-color: var(--stroke);
+  outline: none;
+}
+
+.navLinkActive {
+  color: #fff;
+  border-color: rgba(100, 75, 255, 0.35);
+}
+
+.navActivePill {
+  position: absolute;
+  inset: 6px;
+  border-radius: 999px;
+  background: linear-gradient(120deg, var(--primary), var(--secondary));
+  opacity: 0;
+  z-index: -1;
+  filter: drop-shadow(0 10px 30px rgba(100, 75, 255, 0.3));
 }
 
 .navCta {
@@ -119,10 +148,12 @@
   box-shadow: 0 12px 30px rgba(100, 75, 255, 0.25);
 }
 
-.navCta:hover {
+.navCta:hover,
+.navCta:focus-visible {
   color: #fff;
   box-shadow: 0 16px 40px rgba(100, 75, 255, 0.35);
   transform: translateY(-1px);
+  outline: none;
 }
 
 .mobileToggle {
@@ -146,6 +177,10 @@
   height: 2px;
   background: #fff;
   transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.mobileToggle:focus-visible {
+  outline: 2px solid var(--primary);
 }
 
 .toggleOpen span:first-child {
@@ -237,6 +272,11 @@
   text-decoration: none;
   color: #fff;
   transition: transform 0.2s ease, box-shadow 0.25s ease, background 0.25s ease, border 0.25s ease;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 .primaryButton {
@@ -447,6 +487,8 @@
 .sectionHeader {
   margin-bottom: 28px;
   max-width: 860px;
+  position: relative;
+  z-index: 1;
 }
 
 .eyebrow {
@@ -477,6 +519,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 18px;
+  position: relative;
+  z-index: 1;
 }
 
 .splitCard {
@@ -577,6 +621,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
+  position: relative;
+  z-index: 1;
 }
 
 .card {
@@ -650,21 +696,26 @@
   gap: 16px;
 }
 
+.roadmapShell {
+  position: relative;
+}
+
+.roadmapLine {
+  position: absolute;
+  left: 18px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  transform-origin: top;
+  background: linear-gradient(180deg, rgba(100, 75, 255, 0.6), rgba(218, 0, 99, 0.6));
+  opacity: 0.7;
+}
+
 .roadmapList {
   position: relative;
   display: grid;
   gap: 14px;
-}
-
-.roadmapList::before {
-  content: '';
-  position: absolute;
-  left: 12px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: linear-gradient(180deg, rgba(100, 75, 255, 0.6), rgba(218, 0, 99, 0.6));
-  opacity: 0.7;
+  z-index: 1;
 }
 
 .roadmapItem {
@@ -729,6 +780,13 @@
   padding: 16px;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.32);
   text-align: left;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border 0.2s ease;
+}
+
+.metricCard:hover {
+  transform: translateY(-6px);
+  border-color: rgba(100, 75, 255, 0.5);
+  box-shadow: 0 16px 46px rgba(100, 75, 255, 0.2);
 }
 
 .metricValue {
@@ -795,6 +853,12 @@
   border-radius: 16px;
   padding: 16px;
   box-shadow: 0 14px 38px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.testimonialCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 48px rgba(100, 75, 255, 0.22);
 }
 
 .quote {
@@ -836,8 +900,10 @@
   cursor: pointer;
 }
 
-.faqQuestion:hover {
+.faqQuestion:hover,
+.faqQuestion:focus-visible {
   color: #f3f1ff;
+  outline: none;
 }
 
 .faqIcon {
@@ -880,8 +946,10 @@
   font-size: 14px;
 }
 
-.footerLinks a:hover {
+.footerLinks a:hover,
+.footerLinks a:focus-visible {
   color: #fff;
+  outline: none;
 }
 
 .footerNote {

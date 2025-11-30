@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useRef } from 'react';
+import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import {
   ArrowUpRight,
   Lock,
@@ -19,38 +19,43 @@ import {
 } from 'lucide-react';
 import styles from './homeLanding.module.css';
 
-const fadeInUp = {
-  initial: { opacity: 0, y: 22 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, amount: 0.2 },
-  transition: { duration: 0.65, ease: 'easeOut' },
+const viewportConfig = { once: true, amount: 0.28 };
+const baseTransition = { duration: 0.7, ease: 'easeOut' };
+
+const variants = {
+  fadeInUp: { initial: { opacity: 0, y: 30 }, animate: { opacity: 1, y: 0 } },
+  slideLeft: { initial: { opacity: 0, x: -40 }, animate: { opacity: 1, x: 0 } },
+  slideRight: { initial: { opacity: 0, x: 40 }, animate: { opacity: 1, x: 0 } },
+  scalePop: { initial: { opacity: 0, scale: 0.9 }, animate: { opacity: 1, scale: 1 } },
+  rotateInLeft: { initial: { opacity: 0, y: 26, rotate: -2 }, animate: { opacity: 1, y: 0, rotate: 0 } },
+  rotateInRight: { initial: { opacity: 0, y: 26, rotate: 2 }, animate: { opacity: 1, y: 0, rotate: 0 } },
+  skewUp: { initial: { opacity: 0, y: 28, skewY: -1.5 }, animate: { opacity: 1, y: 0, skewY: 0 } },
 };
 
-const scaleIn = {
-  initial: { opacity: 0, scale: 0.96 },
-  whileInView: { opacity: 1, scale: 1 },
-  viewport: { once: true, amount: 0.2 },
-  transition: { duration: 0.55, ease: 'easeOut' },
+const staggerContainer = {
+  initial: {},
+  animate: { transition: { staggerChildren: 0.12 } },
 };
 
-const hoverLift = {
-  whileHover: { y: -6, scale: 1.01 },
-  transition: { duration: 0.22, ease: 'easeOut' },
-};
+type NavProps = { isScrolled: boolean; activeSection: string; onNavClick: (id: string) => void };
 
-type NavProps = { isScrolled: boolean };
-
-export function HeaderNav({ isScrolled }: NavProps) {
+export function HeaderNav({ isScrolled, activeSection, onNavClick }: NavProps) {
   const [open, setOpen] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
 
   const links = [
-    { label: 'Foro', href: '#foro' },
-    { label: 'Educación', href: '#educacion' },
-    { label: 'Roadmap', href: '#roadmap' },
-    { label: 'Comunidad', href: '#comunidad' },
-    { label: 'Empresas', href: '#empresas' },
-    { label: 'FAQ', href: '#faq' },
+    { label: 'Foro', href: 'foro' },
+    { label: 'Educación', href: 'educacion' },
+    { label: 'Roadmap', href: 'roadmap' },
+    { label: 'Comunidad', href: 'comunidad' },
+    { label: 'Empresas', href: 'empresas' },
+    { label: 'FAQ', href: 'faq' },
   ];
+
+  const handleClick = (id: string) => {
+    setOpen(false);
+    onNavClick(id);
+  };
 
   return (
     <header className={`${styles.header} ${isScrolled ? styles.headerScrolled : ''}`}>
@@ -62,14 +67,29 @@ export function HeaderNav({ isScrolled }: NavProps) {
 
         <nav className={`${styles.nav} ${open ? styles.navOpen : ''}`}>
           {links.map((link) => (
-            <a
+            <button
               key={link.href}
-              className={styles.navLink}
-              href={link.href}
-              onClick={() => setOpen(false)}
+              className={`${styles.navLink} ${
+                activeSection === link.href ? styles.navLinkActive : ''
+              }`}
+              onClick={() => handleClick(link.href)}
+              aria-current={activeSection === link.href ? 'page' : undefined}
             >
               {link.label}
-            </a>
+              <motion.span
+                className={styles.navActivePill}
+                layout
+                transition={
+                  prefersReducedMotion
+                    ? { duration: 0 }
+                    : { type: 'spring', stiffness: 280, damping: 26 }
+                }
+                style={{
+                  opacity: activeSection === link.href ? 1 : 0,
+                  scale: activeSection === link.href ? 1 : 0.8,
+                }}
+              />
+            </button>
           ))}
           <Link
             href="/forum"
@@ -94,6 +114,12 @@ export function HeaderNav({ isScrolled }: NavProps) {
 }
 
 export function HeroSection() {
+  const prefersReducedMotion = useReducedMotion();
+  const heroRef = useRef<HTMLDivElement | null>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
+  const orbY = useTransform(scrollYProgress, [0, 1], [0, prefersReducedMotion ? 0 : -30]);
+  const orbX = useTransform(scrollYProgress, [0, 1], [0, prefersReducedMotion ? 0 : 20]);
+
   const highlights = [
     {
       title: 'Foro técnico',
@@ -119,25 +145,41 @@ export function HeroSection() {
   ];
 
   return (
-    <motion.section id="top" className={`${styles.section} ${styles.hero}`} {...fadeInUp}>
+    <motion.section
+      id="top"
+      className={`${styles.section} ${styles.hero}`}
+      variants={staggerContainer}
+      initial="initial"
+      whileInView="animate"
+      viewport={viewportConfig}
+      ref={heroRef}
+    >
       <div className={styles.container}>
         <div className={styles.heroGrid}>
-          <motion.div className={styles.heroContent} {...fadeInUp} transition={{ duration: 0.8 }}>
+          <motion.div
+            className={styles.heroContent}
+            variants={variants.slideLeft}
+            transition={baseTransition}
+          >
             <div className={styles.heroBadgeRow}>
               <span className={styles.heroBadge}>PLOFTEC · Seguridad 24/7</span>
               <span className={styles.heroBadgeGhost}>Aprender haciendo, sin humo</span>
             </div>
 
-            <h1 className={styles.heroTitle}>
+            <motion.h1 className={styles.heroTitle} variants={variants.slideLeft}>
               La plataforma donde la ciberseguridad{' '}
               <span className={styles.gradientText}>se aprende haciendo.</span>
-            </h1>
-            <p className={styles.heroSubtitle}>
+            </motion.h1>
+            <motion.p className={styles.heroSubtitle} variants={variants.slideLeft}>
               Comunidad técnica, ayuda en vivo y una academia que nace desde el mundo real. Uní
               foros, sesiones 1:1 y rutas guiadas para crecer en Blue/Red Team sin perder tiempo.
-            </p>
+            </motion.p>
 
-            <div className={styles.heroCtas}>
+            <motion.div
+              className={styles.heroCtas}
+              variants={variants.scalePop}
+              transition={{ ...baseTransition, delay: 0.08 }}
+            >
               <Link href="/forum" className={`${styles.button} ${styles.primaryButton}`}>
                 Entrar al foro
                 <ArrowUpRight size={16} />
@@ -145,20 +187,24 @@ export function HeroSection() {
               <a href="#roadmap" className={`${styles.button} ${styles.secondaryButton}`}>
                 Ver roadmap educativo
               </a>
-            </div>
+            </motion.div>
 
             <p className={styles.trustNote}>
               Proyecto de tesis · Plataforma real en construcción 2026–2028 · Comunidad abierta
             </p>
 
-            <div className={styles.heroHighlights}>
-              {highlights.map((item) => (
+            <motion.div
+              className={styles.heroHighlights}
+              variants={staggerContainer}
+              transition={baseTransition}
+            >
+              {highlights.map((item, index) => (
                 <motion.div
                   key={item.title}
                   className={styles.highlightCard}
-                  {...hoverLift}
-                  {...fadeInUp}
-                  transition={{ duration: 0.5 }}
+                  variants={index % 2 === 0 ? variants.slideLeft : variants.slideRight}
+                  transition={{ ...baseTransition, delay: index * 0.04 }}
+                  whileHover={{ y: -6, scale: prefersReducedMotion ? 1 : 1.01 }}
                 >
                   <div className={styles.iconCircle}>{item.icon}</div>
                   <div>
@@ -167,11 +213,15 @@ export function HeroSection() {
                   </div>
                 </motion.div>
               ))}
-            </div>
+            </motion.div>
           </motion.div>
 
-          <motion.div className={styles.heroVisual} {...scaleIn}>
-            <motion.div className={styles.glassCard} {...hoverLift}>
+          <motion.div
+            className={styles.heroVisual}
+            variants={variants.slideRight}
+            transition={baseTransition}
+          >
+            <motion.div className={styles.glassCard} whileHover={{ y: -6, scale: 1.01 }}>
               <div className={styles.glassHeader}>
                 <span className={styles.glassLabel}>Radar en vivo</span>
                 <span className={styles.tag}>Beta</span>
@@ -179,15 +229,20 @@ export function HeroSection() {
               <p className={styles.glassTitle}>
                 LiveHelp + Foro + Academia en un único panel, pensado para equipos y autodidactas.
               </p>
-              <div className={styles.miniStats}>
-                {miniStats.map((stat) => (
-                  <div key={stat.label} className={styles.miniStat}>
+              <motion.div className={styles.miniStats} variants={staggerContainer}>
+                {miniStats.map((stat, i) => (
+                  <motion.div
+                    key={stat.label}
+                    className={styles.miniStat}
+                    variants={variants.scalePop}
+                    transition={{ ...baseTransition, delay: i * 0.05 }}
+                  >
                     <span className={styles.miniLabel}>{stat.label}</span>
                     <span className={styles.miniValue}>{stat.value}</span>
                     <span className={styles.miniAccent}>{stat.accent}</span>
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
               <div className={styles.heroPills}>
                 <span className={styles.heroTag}>Blue Team</span>
                 <span className={styles.heroTag}>Red Team</span>
@@ -197,7 +252,10 @@ export function HeroSection() {
               </div>
             </motion.div>
 
-            <motion.div className={styles.glassCardSecondary} {...hoverLift}>
+            <motion.div
+              className={styles.glassCardSecondary}
+              whileHover={{ y: -6, scale: 1.01 }}
+            >
               <div className={styles.glassHeader}>
                 <span className={styles.glassLabel}>LiveHelp</span>
                 <span className={`${styles.tag} ${styles.tagOutline}`}>En curso</span>
@@ -206,16 +264,24 @@ export function HeroSection() {
                 Combina Jitsi seguro, pairing guiado, templates de diagnóstico y checklists.
               </p>
               <div className={styles.miniStats}>
-                <div className={styles.miniStat}>
+                <motion.div
+                  className={styles.miniStat}
+                  variants={variants.slideLeft}
+                  transition={baseTransition}
+                >
                   <span className={styles.miniLabel}>Acompañamientos</span>
                   <span className={styles.miniValue}>+280</span>
                   <span className={styles.miniAccent}>Pruebas con analistas</span>
-                </div>
-                <div className={styles.miniStat}>
+                </motion.div>
+                <motion.div
+                  className={styles.miniStat}
+                  variants={variants.slideRight}
+                  transition={baseTransition}
+                >
                   <span className={styles.miniLabel}>Playbooks</span>
                   <span className={styles.miniValue}>18</span>
                   <span className={styles.miniAccent}>IR, hardening, appsec</span>
-                </div>
+                </motion.div>
               </div>
             </motion.div>
           </motion.div>
@@ -224,19 +290,18 @@ export function HeroSection() {
 
       <motion.div
         className={`${styles.floatingOrb} ${styles.orbPrimary}`}
-        animate={{ y: [0, -16, 0] }}
-        transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
+        style={{ y: orbY, x: orbX }}
       />
       <motion.div
         className={`${styles.floatingOrb} ${styles.orbSecondary}`}
-        animate={{ y: [0, 14, 0] }}
-        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+        style={{ y: orbY, x: orbX }}
       />
     </motion.section>
   );
 }
 
 export function SplitSection() {
+  const prefersReducedMotion = useReducedMotion();
   const forumPoints = [
     'Respuestas expertas y reputación visible.',
     'Etiquetas, filtros y LiveHelp directo desde cada post.',
@@ -249,7 +314,14 @@ export function SplitSection() {
   ];
 
   return (
-    <section id="foro" className={styles.section}>
+    <motion.section
+      id="foro"
+      className={styles.section}
+      variants={staggerContainer}
+      initial="initial"
+      whileInView="animate"
+      viewport={viewportConfig}
+    >
       <div className={styles.container}>
         <div className={styles.sectionHeader}>
           <span className={styles.eyebrow}>Foro activo · Academia en camino</span>
@@ -261,7 +333,12 @@ export function SplitSection() {
         </div>
 
         <div className={styles.splitGrid}>
-          <motion.div className={`${styles.splitCard} ${styles.lockedCard}`} {...scaleIn}>
+          <motion.div
+            className={`${styles.splitCard} ${styles.lockedCard}`}
+            variants={variants.slideLeft}
+            transition={prefersReducedMotion ? { duration: 0 } : { ...baseTransition, stiffness: 120 }}
+            id="educacion"
+          >
             <span className={`${styles.chip} ${styles.comingSoon}`}>
               <Lock size={14} />
               Coming soon
@@ -279,7 +356,11 @@ export function SplitSection() {
             <div className={styles.timelineNote}>2026–2028 · lanzamientos escalonados</div>
           </motion.div>
 
-          <motion.div className={`${styles.splitCard} ${styles.activeCard}`} {...scaleIn}>
+          <motion.div
+            className={`${styles.splitCard} ${styles.activeCard}`}
+            variants={variants.slideRight}
+            transition={prefersReducedMotion ? { duration: 0 } : { ...baseTransition, delay: 0.08 }}
+          >
             <span className={styles.chip}>Activo</span>
             <h3 className={styles.splitTitle}>Foro PLOFTEC</h3>
             <p className={styles.splitDescription}>
@@ -302,11 +383,12 @@ export function SplitSection() {
           </motion.div>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
 export function AudienceSection() {
+  const prefersReducedMotion = useReducedMotion();
   const audience = [
     {
       title: 'Estudiantes y juniors',
@@ -335,7 +417,13 @@ export function AudienceSection() {
   ];
 
   return (
-    <section className={styles.section}>
+    <motion.section
+      className={styles.section}
+      variants={staggerContainer}
+      initial="initial"
+      whileInView="animate"
+      viewport={viewportConfig}
+    >
       <div className={styles.container}>
         <div className={styles.sectionHeader}>
           <span className={styles.eyebrow}>Para quién es PLOFTEC</span>
@@ -345,24 +433,48 @@ export function AudienceSection() {
           </p>
         </div>
 
-        <div className={styles.cardsGrid}>
-          {audience.map((item) => (
-            <motion.div key={item.title} className={styles.card} {...hoverLift} {...fadeInUp}>
-              <div className={styles.cardHeader}>
-                <div className={styles.cardIcon}>{item.icon}</div>
-                <h3 className={styles.cardTitle}>{item.title}</h3>
-              </div>
-              <p className={styles.cardDescription}>{item.description}</p>
-              <ul className={styles.bulletList}>
-                {item.bullets.map((bullet) => (
-                  <li key={bullet}>{bullet}</li>
-                ))}
-              </ul>
-            </motion.div>
-          ))}
-        </div>
+        <motion.div
+          className={styles.cardsGrid}
+          variants={staggerContainer}
+          transition={baseTransition}
+        >
+          {audience.map((item, index) => {
+            const variant =
+              index === 0
+                ? variants.slideLeft
+                : index === audience.length - 1
+                ? variants.slideRight
+                : variants.skewUp;
+            return (
+              <motion.div
+                key={item.title}
+                className={styles.card}
+                variants={variant}
+                transition={{
+                  ...baseTransition,
+                  delay: prefersReducedMotion ? 0 : index * 0.05,
+                  type: 'spring',
+                  stiffness: 140,
+                  damping: 18,
+                }}
+                whileHover={{ y: -6, scale: prefersReducedMotion ? 1 : 1.02, rotate: 0.2 }}
+              >
+                <div className={styles.cardHeader}>
+                  <div className={styles.cardIcon}>{item.icon}</div>
+                  <h3 className={styles.cardTitle}>{item.title}</h3>
+                </div>
+                <p className={styles.cardDescription}>{item.description}</p>
+                <ul className={styles.bulletList}>
+                  {item.bullets.map((bullet) => (
+                    <li key={bullet}>{bullet}</li>
+                  ))}
+                </ul>
+              </motion.div>
+            );
+          })}
+        </motion.div>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
@@ -389,35 +501,53 @@ export function PillarsSection() {
   ];
 
   return (
-    <section className={styles.section} id="educacion">
+    <motion.section
+      className={styles.section}
+      id="educacion"
+      variants={staggerContainer}
+      initial="initial"
+      whileInView="animate"
+      viewport={viewportConfig}
+    >
       <div className={styles.container}>
         <div className={styles.sectionHeader}>
           <span className={styles.eyebrow}>Qué vas a encontrar</span>
           <h2 className={styles.sectionTitle}>Tres pilares, una sola experiencia</h2>
         </div>
 
-        <div className={styles.pillarsGrid}>
-          {pillars.map((pillar) => (
-            <motion.div key={pillar.title} className={styles.card} {...hoverLift} {...fadeInUp}>
-              <div className={styles.cardHeader}>
-                <div className={styles.cardIcon}>{pillar.icon}</div>
-                <h3 className={styles.cardTitle}>{pillar.title}</h3>
-              </div>
-              <p className={styles.cardDescription}>{pillar.description}</p>
-              <ul className={styles.bulletList}>
-                {pillar.bullets.map((bullet) => (
-                  <li key={bullet}>{bullet}</li>
-                ))}
-              </ul>
-            </motion.div>
-          ))}
-        </div>
+        <motion.div className={styles.pillarsGrid} variants={staggerContainer}>
+          {pillars.map((pillar, index) => {
+            const variant =
+              index === 0 ? variants.slideLeft : index === 2 ? variants.slideRight : variants.scalePop;
+            return (
+              <motion.div
+                key={pillar.title}
+                className={styles.card}
+                variants={variant}
+                transition={{ ...baseTransition, delay: index * 0.05 }}
+                whileHover={{ y: -6, rotate: (index - 1) * 0.5, scale: 1.02 }}
+              >
+                <div className={styles.cardHeader}>
+                  <div className={styles.cardIcon}>{pillar.icon}</div>
+                  <h3 className={styles.cardTitle}>{pillar.title}</h3>
+                </div>
+                <p className={styles.cardDescription}>{pillar.description}</p>
+                <ul className={styles.bulletList}>
+                  {pillar.bullets.map((bullet) => (
+                    <li key={bullet}>{bullet}</li>
+                  ))}
+                </ul>
+              </motion.div>
+            );
+          })}
+        </motion.div>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
 export function RoadmapSection() {
+  const prefersReducedMotion = useReducedMotion();
   const items = [
     {
       year: '2025',
@@ -458,7 +588,14 @@ export function RoadmapSection() {
   ];
 
   return (
-    <section id="roadmap" className={styles.section}>
+    <motion.section
+      id="roadmap"
+      className={styles.section}
+      variants={staggerContainer}
+      initial="initial"
+      whileInView="animate"
+      viewport={viewportConfig}
+    >
       <div className={styles.container}>
         <div className={styles.sectionHeader}>
           <span className={styles.eyebrow}>Roadmap 2025–2028</span>
@@ -468,20 +605,42 @@ export function RoadmapSection() {
           </p>
         </div>
 
-        <div className={styles.roadmapList}>
-          {items.map((item) => (
-            <motion.div key={item.title} className={styles.roadmapItem} {...fadeInUp}>
-              <div className={styles.roadmapYear}>{item.year}</div>
-              <div className={styles.roadmapTitleRow}>
-                <h3 className={styles.roadmapTitle}>{item.title}</h3>
-                <span className={`${styles.tag} ${styles.tagOutline}`}>{item.tag}</span>
-              </div>
-              <p className={styles.roadmapDescription}>{item.description}</p>
-            </motion.div>
-          ))}
+        <div className={styles.roadmapShell}>
+          <motion.div
+            className={styles.roadmapLine}
+            initial={{ scaleY: 0 }}
+            whileInView={{ scaleY: 1 }}
+            transition={{ duration: prefersReducedMotion ? 0 : 0.7, ease: 'easeOut' }}
+            viewport={viewportConfig}
+          />
+          <div className={styles.roadmapList}>
+            {items.map((item, index) => (
+              <motion.div
+                key={item.title}
+                className={styles.roadmapItem}
+                variants={variants.fadeInUp}
+                transition={{ ...baseTransition, delay: index * 0.08 }}
+              >
+                <div className={styles.roadmapYear}>{item.year}</div>
+                <div className={styles.roadmapTitleRow}>
+                  <h3 className={styles.roadmapTitle}>{item.title}</h3>
+                  <motion.span
+                    className={`${styles.tag} ${styles.tagOutline}`}
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    whileInView={{ scale: 1, opacity: 1 }}
+                    transition={{ ...baseTransition, delay: index * 0.08 + 0.05 }}
+                    viewport={viewportConfig}
+                  >
+                    {item.tag}
+                  </motion.span>
+                </div>
+                <p className={styles.roadmapDescription}>{item.description}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
@@ -495,23 +654,35 @@ export function MetricsSection() {
   ];
 
   return (
-    <section className={styles.section}>
+    <motion.section
+      className={styles.section}
+      variants={staggerContainer}
+      initial="initial"
+      whileInView="animate"
+      viewport={viewportConfig}
+    >
       <div className={styles.container}>
         <div className={styles.sectionHeader}>
           <span className={styles.eyebrow}>Métricas y social proof</span>
           <h2 className={styles.sectionTitle}>Transparencia y foco en impacto</h2>
         </div>
 
-        <div className={styles.metricsGrid}>
-          {metrics.map((metric) => (
-            <motion.div key={metric.label} className={styles.metricCard} {...hoverLift} {...fadeInUp}>
+        <motion.div className={styles.metricsGrid} variants={staggerContainer}>
+          {metrics.map((metric, index) => (
+            <motion.div
+              key={metric.label}
+              className={styles.metricCard}
+              variants={variants.scalePop}
+              transition={{ ...baseTransition, delay: index * 0.06 }}
+              whileHover={{ y: -6, boxShadow: '0 16px 46px rgba(100,75,255,0.2)' }}
+            >
               <div className={styles.metricValue}>{metric.value}</div>
               <div className={styles.metricLabel}>{metric.label}</div>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
@@ -535,16 +706,29 @@ export function CommunitySection() {
   ];
 
   return (
-    <section id="comunidad" className={styles.section}>
+    <motion.section
+      id="comunidad"
+      className={styles.section}
+      variants={staggerContainer}
+      initial="initial"
+      whileInView="animate"
+      viewport={viewportConfig}
+    >
       <div className={styles.container}>
         <div className={styles.sectionHeader}>
           <span className={styles.eyebrow}>Comunidad y LiveHelp</span>
           <h2 className={styles.sectionTitle}>Acompañamiento real, no solo teoría</h2>
         </div>
 
-        <div className={styles.communityGrid}>
-          {items.map((item) => (
-            <motion.div key={item.title} className={styles.communityCard} {...hoverLift} {...fadeInUp}>
+        <motion.div className={styles.communityGrid} variants={staggerContainer}>
+          {items.map((item, index) => (
+            <motion.div
+              key={item.title}
+              className={styles.communityCard}
+              variants={index % 2 === 0 ? variants.slideLeft : variants.slideRight}
+              transition={{ ...baseTransition, delay: index * 0.05 }}
+              whileHover={{ y: -6, scale: 1.02 }}
+            >
               <div className={styles.cardHeader}>
                 <div className={styles.cardIcon}>{item.icon}</div>
                 <h3 className={styles.cardTitle}>{item.title}</h3>
@@ -552,9 +736,9 @@ export function CommunitySection() {
               <p className={styles.cardDescription}>{item.description}</p>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
@@ -567,7 +751,14 @@ export function CompaniesSection() {
   ];
 
   return (
-    <section id="empresas" className={styles.section}>
+    <motion.section
+      id="empresas"
+      className={styles.section}
+      variants={staggerContainer}
+      initial="initial"
+      whileInView="animate"
+      viewport={viewportConfig}
+    >
       <div className={styles.container}>
         <div className={styles.sectionHeader}>
           <span className={styles.eyebrow}>Para empresas</span>
@@ -578,8 +769,13 @@ export function CompaniesSection() {
           </p>
         </div>
 
-        <div className={styles.companiesGrid}>
-          <motion.div className={styles.communityCard} {...hoverLift} {...fadeInUp}>
+        <motion.div className={styles.companiesGrid} variants={staggerContainer}>
+          <motion.div
+            className={styles.communityCard}
+            variants={variants.slideLeft}
+            transition={baseTransition}
+            whileHover={{ y: -6, rotate: -0.3, scale: 1.01 }}
+          >
             <div className={styles.cardHeader}>
               <div className={styles.cardIcon}>
                 <Building2 size={18} />
@@ -596,7 +792,12 @@ export function CompaniesSection() {
             </ul>
           </motion.div>
 
-          <motion.div className={styles.communityCard} {...hoverLift} {...fadeInUp}>
+          <motion.div
+            className={styles.communityCard}
+            variants={variants.slideRight}
+            transition={baseTransition}
+            whileHover={{ y: -6, rotate: 0.3, scale: 1.01 }}
+          >
             <div className={styles.cardHeader}>
               <div className={styles.cardIcon}>
                 <Globe size={18} />
@@ -612,9 +813,9 @@ export function CompaniesSection() {
               <li>Soporte en vivo para incidentes y hardening.</li>
             </ul>
           </motion.div>
-        </div>
+        </motion.div>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
@@ -638,23 +839,38 @@ export function TestimonialsSection() {
   ];
 
   return (
-    <section className={styles.section}>
+    <motion.section
+      className={styles.section}
+      variants={staggerContainer}
+      initial="initial"
+      whileInView="animate"
+      viewport={viewportConfig}
+    >
       <div className={styles.container}>
         <div className={styles.sectionHeader}>
           <span className={styles.eyebrow}>Testimonios y frases</span>
           <h2 className={styles.sectionTitle}>Lo que ya dicen de PLOFTEC</h2>
         </div>
 
-        <div className={styles.testimonials}>
-          {testimonials.map((item) => (
-            <motion.div key={item.by} className={styles.testimonialCard} {...hoverLift} {...fadeInUp}>
-              <p className={styles.quote}>{item.quote}</p>
-              <p className={styles.quoteBy}>{item.by}</p>
-            </motion.div>
-          ))}
-        </div>
+        <motion.div className={styles.testimonials} variants={staggerContainer}>
+          {testimonials.map((item, index) => {
+            const variant = index % 2 === 0 ? variants.rotateInLeft : variants.rotateInRight;
+            return (
+              <motion.div
+                key={item.by}
+                className={styles.testimonialCard}
+                variants={variant}
+                transition={{ ...baseTransition, delay: index * 0.06 }}
+                whileHover={{ scale: 1.02, rotate: index % 2 === 0 ? -0.4 : 0.4 }}
+              >
+                <p className={styles.quote}>{item.quote}</p>
+                <p className={styles.quoteBy}>{item.by}</p>
+              </motion.div>
+            );
+          })}
+        </motion.div>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
@@ -689,7 +905,14 @@ export function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section id="faq" className={styles.section}>
+    <motion.section
+      id="faq"
+      className={styles.section}
+      variants={staggerContainer}
+      initial="initial"
+      whileInView="animate"
+      viewport={viewportConfig}
+    >
       <div className={styles.container}>
         <div className={styles.sectionHeader}>
           <span className={styles.eyebrow}>FAQ</span>
@@ -700,7 +923,12 @@ export function FAQSection() {
           {faqs.map((faq, index) => {
             const isOpen = openIndex === index;
             return (
-              <motion.div key={faq.question} className={styles.faqItem} {...fadeInUp}>
+              <motion.div
+                key={faq.question}
+                className={styles.faqItem}
+                variants={variants.fadeInUp}
+                transition={{ ...baseTransition, delay: index * 0.04 }}
+              >
                 <button
                   className={`${styles.faqQuestion} ${isOpen ? styles.faqQuestionOpen : ''}`}
                   onClick={() => setOpenIndex(isOpen ? null : index)}
@@ -715,7 +943,7 @@ export function FAQSection() {
           })}
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
