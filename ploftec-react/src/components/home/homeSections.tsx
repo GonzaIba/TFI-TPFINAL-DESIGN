@@ -1,6 +1,14 @@
 import Link from 'next/link';
-import { useState, useRef } from 'react';
-import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
+import { ReactNode, useRef, useState } from 'react';
+import {
+  motion,
+  useMotionTemplate,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+  type MotionProps,
+  type Transition,
+} from 'framer-motion';
 import {
   ArrowUpRight,
   Lock,
@@ -19,23 +27,160 @@ import {
 } from 'lucide-react';
 import styles from './homeLanding.module.css';
 
-const viewportConfig = { once: true, amount: 0.28 };
+const viewportConfig = { once: false, amount: 0.4 };
 const baseTransition = { duration: 0.7, ease: 'easeOut' };
 
 const variants = {
-  fadeInUp: { initial: { opacity: 0, y: 30 }, animate: { opacity: 1, y: 0 } },
-  slideLeft: { initial: { opacity: 0, x: -40 }, animate: { opacity: 1, x: 0 } },
-  slideRight: { initial: { opacity: 0, x: 40 }, animate: { opacity: 1, x: 0 } },
-  scalePop: { initial: { opacity: 0, scale: 0.9 }, animate: { opacity: 1, scale: 1 } },
-  rotateInLeft: { initial: { opacity: 0, y: 26, rotate: -2 }, animate: { opacity: 1, y: 0, rotate: 0 } },
-  rotateInRight: { initial: { opacity: 0, y: 26, rotate: 2 }, animate: { opacity: 1, y: 0, rotate: 0 } },
-  skewUp: { initial: { opacity: 0, y: 28, skewY: -1.5 }, animate: { opacity: 1, y: 0, skewY: 0 } },
+  fadeInUp: {
+    initial: { opacity: 0.55, y: 30, filter: 'brightness(0.68) saturate(0.9)' },
+    animate: { opacity: 1, y: 0, filter: 'brightness(1) saturate(1)' },
+  },
+  slideLeft: {
+    initial: { opacity: 0.55, x: -40, filter: 'brightness(0.68) saturate(0.9)' },
+    animate: { opacity: 1, x: 0, filter: 'brightness(1) saturate(1)' },
+  },
+  slideRight: {
+    initial: { opacity: 0.55, x: 40, filter: 'brightness(0.68) saturate(0.9)' },
+    animate: { opacity: 1, x: 0, filter: 'brightness(1) saturate(1)' },
+  },
+  scalePop: {
+    initial: { opacity: 0.5, scale: 0.9, filter: 'brightness(0.65) saturate(0.88)' },
+    animate: { opacity: 1, scale: 1, filter: 'brightness(1) saturate(1)' },
+  },
+  rotateInLeft: {
+    initial: { opacity: 0.55, y: 26, rotate: -2, filter: 'brightness(0.68) saturate(0.9)' },
+    animate: { opacity: 1, y: 0, rotate: 0, filter: 'brightness(1) saturate(1)' },
+  },
+  rotateInRight: {
+    initial: { opacity: 0.55, y: 26, rotate: 2, filter: 'brightness(0.68) saturate(0.9)' },
+    animate: { opacity: 1, y: 0, rotate: 0, filter: 'brightness(1) saturate(1)' },
+  },
+  skewUp: {
+    initial: { opacity: 0.55, y: 28, skewY: -1.5, filter: 'brightness(0.68) saturate(0.9)' },
+    animate: { opacity: 1, y: 0, skewY: 0, filter: 'brightness(1) saturate(1)' },
+  },
 };
 
 const staggerContainer = {
   initial: {},
   animate: { transition: { staggerChildren: 0.12 } },
 };
+
+const cardVariants = {
+  slideLeft: {
+    initial: { x: -40 },
+    animate: { x: 0 },
+  },
+  slideRight: {
+    initial: { x: 40 },
+    animate: { x: 0 },
+  },
+  skewUp: {
+    initial: { y: 28, skewY: -1.5 },
+    animate: { y: 0, skewY: 0 },
+  },
+  scalePop: {
+    initial: { scale: 0.9 },
+    animate: { scale: 1 },
+  },
+};
+
+function useCardIllumination(prefersReducedMotion: boolean) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ['center 92%', 'center 8%'],
+  });
+
+  if (prefersReducedMotion) {
+    return { ref, style: { opacity: 1, filter: 'none' } };
+  }
+
+  const focusOpacity = useTransform(scrollYProgress, [0, 0.25, 0.5, 0.75, 1], [0.6, 0.88, 1, 0.88, 0.6]);
+  const focusBrightness = useTransform(scrollYProgress, [0, 0.25, 0.5, 0.75, 1], [0.95, 1.08, 1.2, 1.08, 0.95]);
+  const focusSaturation = useTransform(scrollYProgress, [0, 0.25, 0.5, 0.75, 1], [0.98, 1.1, 1.2, 1.1, 0.98]);
+
+  return {
+    ref,
+    style: {
+      opacity: focusOpacity,
+      filter: useMotionTemplate`brightness(${focusBrightness}) saturate(${focusSaturation})`,
+    },
+  };
+}
+
+type IlluminatedCardProps = {
+  children: ReactNode;
+  variant: (typeof cardVariants)[keyof typeof cardVariants];
+  transition?: Transition;
+  whileHover?: MotionProps['whileHover'];
+  className?: string;
+  prefersReducedMotion: boolean;
+};
+
+type IlluminatedBlockProps = {
+  children: ReactNode;
+  className: string;
+  variant?: MotionProps['variants'];
+  transition?: Transition;
+  whileHover?: MotionProps['whileHover'];
+  prefersReducedMotion: boolean;
+  viewportAmount?: number;
+};
+
+function IlluminatedCard({
+  children,
+  variant,
+  transition,
+  whileHover,
+  className,
+  prefersReducedMotion,
+}: IlluminatedCardProps) {
+  const { ref, style } = useCardIllumination(prefersReducedMotion);
+
+  return (
+    <motion.div
+      ref={ref}
+      className={className ? `${styles.card} ${className}` : styles.card}
+      initial={variant.initial}
+      whileInView={variant.animate}
+      viewport={{ amount: 0.72, margin: '-10% 0% -10% 0%', once: false }}
+      transition={transition ?? baseTransition}
+      whileHover={whileHover}
+      style={style}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function IlluminatedBlock({
+  children,
+  className,
+  variant,
+  transition,
+  whileHover,
+  prefersReducedMotion,
+  viewportAmount,
+}: IlluminatedBlockProps) {
+  const { ref, style } = useCardIllumination(prefersReducedMotion);
+
+  return (
+    <motion.div
+      ref={ref}
+      className={className}
+      variants={variant}
+      initial={variant ? 'initial' : undefined}
+      whileInView={variant ? 'animate' : undefined}
+      viewport={{ amount: viewportAmount ?? 0.72, margin: '-10% 0% -10% 0%', once: false }}
+      transition={transition ?? baseTransition}
+      whileHover={whileHover}
+      style={style}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 type NavProps = { isScrolled: boolean; activeSection: string; onNavClick: (id: string) => void };
 
@@ -151,7 +296,7 @@ export function HeroSection() {
       variants={staggerContainer}
       initial="initial"
       whileInView="animate"
-      viewport={viewportConfig}
+      viewport={{ ...viewportConfig, amount: 0.12 }}
       ref={heroRef}
     >
       <div className={styles.container}>
@@ -227,7 +372,7 @@ export function HeroSection() {
                 <span className={styles.tag}>Beta</span>
               </div>
               <p className={styles.glassTitle}>
-                LiveHelp + Foro + Academia en un único panel, pensado para equipos y autodidactas.
+                LiveHelp + Foro + Academia en un ǧnico panel, pensado para equipos y autodidactas.
               </p>
               <motion.div className={styles.miniStats} variants={staggerContainer}>
                 {miniStats.map((stat, i) => (
@@ -264,24 +409,28 @@ export function HeroSection() {
                 Combina Jitsi seguro, pairing guiado, templates de diagnóstico y checklists.
               </p>
               <div className={styles.miniStats}>
-                <motion.div
+                <IlluminatedBlock
                   className={styles.miniStat}
-                  variants={variants.slideLeft}
+                  variant={variants.slideLeft}
                   transition={baseTransition}
+                  prefersReducedMotion={prefersReducedMotion}
+                  viewportAmount={0.55}
                 >
                   <span className={styles.miniLabel}>Acompañamientos</span>
                   <span className={styles.miniValue}>+280</span>
                   <span className={styles.miniAccent}>Pruebas con analistas</span>
-                </motion.div>
-                <motion.div
+                </IlluminatedBlock>
+                <IlluminatedBlock
                   className={styles.miniStat}
-                  variants={variants.slideRight}
+                  variant={variants.slideRight}
                   transition={baseTransition}
+                  prefersReducedMotion={prefersReducedMotion}
+                  viewportAmount={0.55}
                 >
                   <span className={styles.miniLabel}>Playbooks</span>
                   <span className={styles.miniValue}>18</span>
                   <span className={styles.miniAccent}>IR, hardening, appsec</span>
-                </motion.div>
+                </IlluminatedBlock>
               </div>
             </motion.div>
           </motion.div>
@@ -441,15 +590,14 @@ export function AudienceSection() {
           {audience.map((item, index) => {
             const variant =
               index === 0
-                ? variants.slideLeft
+                ? cardVariants.slideLeft
                 : index === audience.length - 1
-                ? variants.slideRight
-                : variants.skewUp;
+                ? cardVariants.slideRight
+                : cardVariants.skewUp;
             return (
-              <motion.div
+              <IlluminatedCard
                 key={item.title}
-                className={styles.card}
-                variants={variant}
+                variant={variant}
                 transition={{
                   ...baseTransition,
                   delay: prefersReducedMotion ? 0 : index * 0.05,
@@ -458,6 +606,7 @@ export function AudienceSection() {
                   damping: 18,
                 }}
                 whileHover={{ y: -6, scale: prefersReducedMotion ? 1 : 1.02, rotate: 0.2 }}
+                prefersReducedMotion={prefersReducedMotion}
               >
                 <div className={styles.cardHeader}>
                   <div className={styles.cardIcon}>{item.icon}</div>
@@ -469,7 +618,7 @@ export function AudienceSection() {
                     <li key={bullet}>{bullet}</li>
                   ))}
                 </ul>
-              </motion.div>
+              </IlluminatedCard>
             );
           })}
         </motion.div>
@@ -479,6 +628,7 @@ export function AudienceSection() {
 }
 
 export function PillarsSection() {
+  const prefersReducedMotion = useReducedMotion();
   const pillars = [
     {
       title: 'Foro técnico',
@@ -518,14 +668,20 @@ export function PillarsSection() {
         <motion.div className={styles.pillarsGrid} variants={staggerContainer}>
           {pillars.map((pillar, index) => {
             const variant =
-              index === 0 ? variants.slideLeft : index === 2 ? variants.slideRight : variants.scalePop;
+              index === 0
+                ? cardVariants.slideLeft
+                : index === 2
+                ? cardVariants.slideRight
+                : cardVariants.scalePop;
             return (
-              <motion.div
+              <IlluminatedCard
                 key={pillar.title}
-                className={styles.card}
-                variants={variant}
+                variant={variant}
                 transition={{ ...baseTransition, delay: index * 0.05 }}
-                whileHover={{ y: -6, rotate: (index - 1) * 0.5, scale: 1.02 }}
+                whileHover={
+                  prefersReducedMotion ? undefined : { y: -6, rotate: (index - 1) * 0.5, scale: 1.02 }
+                }
+                prefersReducedMotion={prefersReducedMotion}
               >
                 <div className={styles.cardHeader}>
                   <div className={styles.cardIcon}>{pillar.icon}</div>
@@ -537,7 +693,7 @@ export function PillarsSection() {
                     <li key={bullet}>{bullet}</li>
                   ))}
                 </ul>
-              </motion.div>
+              </IlluminatedCard>
             );
           })}
         </motion.div>
@@ -608,9 +764,9 @@ export function RoadmapSection() {
         <div className={styles.roadmapShell}>
           <motion.div
             className={styles.roadmapLine}
-            initial={{ scaleY: 0 }}
-            whileInView={{ scaleY: 1 }}
-            transition={{ duration: prefersReducedMotion ? 0 : 0.7, ease: 'easeOut' }}
+            initial={{ scaleY: 0, opacity: 0 }}
+            whileInView={{ scaleY: 1, opacity: 1 }}
+            transition={{ duration: prefersReducedMotion ? 0 : 1, ease: 'easeOut' }}
             viewport={viewportConfig}
           />
           <div className={styles.roadmapList}>
