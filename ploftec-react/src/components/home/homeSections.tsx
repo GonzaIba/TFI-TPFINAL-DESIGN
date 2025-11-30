@@ -431,8 +431,8 @@ export function HeroSection() {
             transition={{ duration: 0 }}
           >
             <div className={styles.heroBadgeRow}>
-              <span className={styles.heroBadge}>PLOFTEC · Seguridad 24/7</span>
-              <span className={styles.heroBadgeGhost}>Aprender haciendo, sin humo</span>
+              <span className={styles.heroBadge}>Seguridad 24/7</span>
+              <span className={styles.heroBadgeGhost}>Aprender haciendo</span>
             </div>
 
             <motion.h1
@@ -467,7 +467,7 @@ export function HeroSection() {
                   transition={{ ...baseTransition, delay: 0.12 }}
                 >
                   Comunidad técnica, ayuda en vivo y una academia que nace desde el mundo real. Uní
-                  foros, sesiones 1:1 y rutas guiadas para crecer en Blue/Red Team sin perder tiempo.
+                  foros, sesiones, y rutas guiadas para crecer sin perder tiempo.
                 </motion.p>
 
                 <motion.div
@@ -495,7 +495,7 @@ export function HeroSection() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   transition={{ ...baseTransition, delay: 0.32 }}
                 >
-                  Proyecto de tesis · Plataforma real en construcción 2026–2028 · Comunidad abierta
+                  Proyecto de tesis · Plataforma real en construcción 2026-2028 · Comunidad abierta
                 </motion.p>
 
                 <motion.div
@@ -539,7 +539,7 @@ export function HeroSection() {
                   <span className={styles.tag}>Beta</span>
                 </div>
                 <p className={styles.glassTitle}>
-                  LiveHelp + Foro + Academia en un ǧnico panel, pensado para equipos y autodidactas.
+                  LiveHelp + Foro + Academia en un único panel, pensado para equipos y autodidactas.
                 </p>
                 <motion.div className={styles.miniStats} variants={staggerContainer}>
                   {miniStats.map((stat, i) => (
@@ -665,7 +665,7 @@ export function SplitSection() {
           >
             <span className={`${styles.chip} ${styles.comingSoon}`}>
               <Lock size={14} />
-              Coming soon
+              Próximamente...
             </span>
             <h3 className={styles.splitTitle}>Academia PLOFTEC</h3>
             <p className={styles.splitDescription}>
@@ -677,7 +677,7 @@ export function SplitSection() {
                 <li key={point}>{point}</li>
               ))}
             </ul>
-            <div className={styles.timelineNote}>2026–2028 · lanzamientos escalonados</div>
+            <div className={styles.timelineNote}>2026-2028 · lanzamientos escalonados</div>
           </motion.div>
 
           <motion.div
@@ -888,7 +888,7 @@ export function RoadmapSection() {
     },
     {
       year: '2026 Q1',
-      title: 'LiveHelp Beta (Jitsi seguro)',
+      title: 'LiveHelp Beta',
       description: 'Acompañamientos 1:1 y 1:N con checklists, agendas y seguimiento.',
       tag: 'En marcha',
     },
