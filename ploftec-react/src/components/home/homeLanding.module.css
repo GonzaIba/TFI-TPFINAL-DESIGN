@@ -1003,6 +1003,28 @@
   font-size: 13px;
 }
 
+.typingCaret {
+  display: inline-block;
+  width: 8px;
+  height: 1.1em;
+  margin-left: 4px;
+  background: #ffffff;
+  animation: caretBlink 1s steps(1, end) infinite;
+  vertical-align: text-bottom;
+  border-radius: 2px;
+}
+
+@keyframes caretBlink {
+  0%,
+  55% {
+    opacity: 1;
+  }
+  56%,
+  100% {
+    opacity: 0;
+  }
+}
+
 @media (max-width: 1080px) {
   .heroGrid {
     grid-template-columns: 1fr;
