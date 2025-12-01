@@ -212,7 +212,6 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
     }
 
     if (normalizedPath === '/forum') {
-      router.push(tabConfig[0].route);
       setActiveTab(0);
       return;
     }
