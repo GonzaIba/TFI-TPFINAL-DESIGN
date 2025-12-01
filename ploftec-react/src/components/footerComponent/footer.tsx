@@ -84,10 +84,10 @@ const Footer: React.FC = () => {
 
                   <div className={styles.footerWidget}>
                     <div className={styles.footerWidgetHeading}>
-                      <h3>Useful Links</h3>
+                      <h3>Links</h3>
                     </div>
                     <ul className={styles.footerUl}>
-                      <li><a href="#">Home</a></li>
+                      <li><a href="/">Home</a></li>
                       <li><a href="#">About</a></li>
                       <li><a href="#">Services</a></li>
                       <li><a href="#">Portfolio</a></li>
@@ -102,10 +102,10 @@ const Footer: React.FC = () => {
 
                   <div className={styles.footerWidget}>
                     <div className={styles.footerWidgetHeading}>
-                      <h3>Subscribe</h3>
+                      <h3>Subscribete</h3>
                     </div>
                     <div className={`${styles.footerText} mb-25`}>
-                      <p>Don’t miss to subscribe to our new feeds, kindly fill the form below.</p>
+                      <p>¡No te pierdas de todos nuestros servicios que ofrecemos!</p>
                     </div>
                     <div className={styles.subscribeForm}>
                       <form action="#">
@@ -131,7 +131,7 @@ const Footer: React.FC = () => {
             </div>
             <div className={styles.footerMenu}>
               <ul className={styles.footerUl}>
-                <li><a href="#publications">Home</a></li>
+                <li><a href="/">Home</a></li>
                 <li><a href="#tyc">Términos</a></li>
                 <li><a href="#privacy">Privacidad</a></li>
                 <li><a href="#politics">Política</a></li>

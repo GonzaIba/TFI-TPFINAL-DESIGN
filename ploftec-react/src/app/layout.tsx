@@ -32,6 +32,9 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "PLOFTEC",
   description: "La mejor plataforma educativa + foro",
+  icons: {
+    icon: '/PLOFTEC-ICON.ico',
+  },
 };
 
 export default function RootLayout({

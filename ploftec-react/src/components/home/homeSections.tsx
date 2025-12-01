@@ -667,7 +667,7 @@ export function SplitSection() {
               <Lock size={14} />
               Próximamente...
             </span>
-            <h3 className={styles.splitTitle}>Academia PLOFTEC</h3>
+            <h3 className={styles.splitTitle}>Academia</h3>
             <p className={styles.splitDescription}>
               Rutas de aprendizaje con proyectos reales, laboratorios guiados y desafíos prácticos
               orientados a 2026–2028.
@@ -686,7 +686,7 @@ export function SplitSection() {
             transition={prefersReducedMotion ? { duration: 0 } : { ...baseTransition, delay: 0.08 }}
           >
             <span className={styles.chip}>Activo</span>
-            <h3 className={styles.splitTitle}>Foro PLOFTEC</h3>
+            <h3 className={styles.splitTitle}>Foro</h3>
             <p className={styles.splitDescription}>
               Comunidad, reputación, etiquetas vivas y sesiones de ayuda en minutos. Una base sólida
               para aprender y colaborar.
