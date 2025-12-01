@@ -395,6 +395,7 @@
   padding: 20px;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(4px);
+  transition: transform 120ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
 .glassCardSecondary {
@@ -404,6 +405,7 @@
   border-radius: 18px;
   padding: 18px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+  transition: transform 120ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
 .glassHeader {
@@ -561,6 +563,12 @@
   padding: 22px;
   overflow: hidden;
   box-shadow: 0 14px 44px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.24s ease,
+    border-color 0.24s ease,
+    background 0.24s ease;
 }
 
 .activeCard {
@@ -572,6 +580,24 @@
 .lockedCard {
   border-style: dashed;
   background: linear-gradient(135deg, rgba(218, 0, 99, 0.12), rgba(255, 255, 255, 0.02));
+}
+
+.splitCard:hover {
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 22px 58px rgba(100, 75, 255, 0.22), 0 10px 26px rgba(0, 0, 0, 0.45);
+  border-color: rgba(100, 75, 255, 0.55);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(100, 75, 255, 0.06));
+}
+
+.splitCard:hover .chip {
+  border-color: rgba(100, 75, 255, 0.5);
+  box-shadow: 0 6px 18px rgba(100, 75, 255, 0.25);
+}
+
+.splitCard:hover .splitTitle,
+.splitCard:hover .splitDescription,
+.splitCard:hover .splitList li {
+  color: #f5f4ff;
 }
 
 .chip {
@@ -632,6 +658,63 @@
   box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.04);
 }
 
+.forumNeonButton {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(120deg, var(--primary), #7c63ff 50%, var(--secondary));
+  box-shadow:
+    0 18px 38px rgba(100, 75, 255, 0.35),
+    0 0 24px rgba(218, 0, 99, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.forumNeonButton::after {
+  content: '';
+  position: absolute;
+  inset: -30%;
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0));
+  transform: translateX(-120%) rotate(8deg);
+  animation: neonSheen 4s linear infinite;
+  pointer-events: none;
+}
+
+.forumNeonButton:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow:
+    0 22px 48px rgba(100, 75, 255, 0.45),
+    0 0 32px rgba(218, 0, 99, 0.32);
+}
+
+.forumNeonButton:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 3px;
+}
+
+@keyframes neonSheen {
+  0% {
+    transform: translateX(-120%) rotate(8deg);
+  }
+  100% {
+    transform: translateX(220%) rotate(8deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .splitCard,
+  .splitCard:hover {
+    transition: transform 0.05s linear, box-shadow 0.1s linear, border-color 0.1s linear, background 0.1s linear;
+  }
+
+  .forumNeonButton::after {
+    animation: none;
+    opacity: 0;
+  }
+
+  .forumNeonButton:hover {
+    transform: translateY(-1px);
+  }
+}
+
 .splitFooter {
   display: flex;
   align-items: center;
@@ -661,7 +744,7 @@
   border-radius: 18px;
   padding: 18px;
   box-shadow: 0 12px 36px rgba(0, 0, 0, 0.32);
-  transition: transform 0.2s ease, box-shadow 0.25s ease, border 0.25s ease;
+  transition: transform 120ms ease, box-shadow 160ms ease, border 160ms ease;
 }
 
 .card:hover {

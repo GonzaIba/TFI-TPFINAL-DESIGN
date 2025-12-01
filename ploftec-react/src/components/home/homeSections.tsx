@@ -697,7 +697,10 @@ export function SplitSection() {
               ))}
             </ul>
             <div className={styles.splitFooter}>
-              <Link href="/forum" className={`${styles.button} ${styles.primaryButton}`}>
+              <Link
+                href="/forum"
+                className={`${styles.button} ${styles.primaryButton} ${styles.forumNeonButton}`}
+              >
                 Ir al foro
               </Link>
               <span className={styles.sectionSubtitle}>
