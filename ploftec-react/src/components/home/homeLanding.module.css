@@ -1,13 +1,3 @@
-:global(html) {
-  scroll-behavior: smooth;
-}
-
-:global(body) {
-  background: #05040d;
-  color: #e6e6f4;
-  display: block;
-}
-
 .page {
   --primary: #644bff;
   --secondary: #da0063;

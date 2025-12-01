@@ -63,12 +63,13 @@ html, body {
   /* tampoco hace falta font-family acá, lo pone next/font vía className */
 }
 
-body {
-  background: var(--background) !important;
-  color: var(--foreground);
+html {
+  scroll-behavior: smooth;
+}
 
-  justify-content: center;
-  align-items: center;
+body {
+  background: #05040d;
+  color: #e6e6f4;
   min-height: 100vh;
-  display: flex;
+  display: block;
 }

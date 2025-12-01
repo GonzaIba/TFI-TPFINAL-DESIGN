@@ -31,7 +31,7 @@ import {
 import styles from './homeLanding.module.css';
 
 const viewportConfig = { once: false, amount: 0.4 };
-const baseTransition = { duration: 0.7, ease: 'easeOut' };
+const baseTransition: Transition = { duration: 0.7, ease: 'easeOut' };
 
 const variants = {
   fadeInUp: {
@@ -262,7 +262,7 @@ type NavProps = { isScrolled: boolean; activeSection: string; onNavClick: (id: s
 
 export function HeaderNav({ isScrolled, activeSection, onNavClick }: NavProps) {
   const [open, setOpen] = useState(false);
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = useReducedMotion() ?? false;
 
   const links = [
     { label: 'Foro', href: 'foro' },
@@ -335,7 +335,7 @@ export function HeaderNav({ isScrolled, activeSection, onNavClick }: NavProps) {
 }
 
 export function HeroSection() {
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = useReducedMotion() ?? false;
   const heroRef = useRef<HTMLDivElement | null>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const orbY = useTransform(scrollYProgress, [0, 1], [0, prefersReducedMotion ? 0 : -30]);
@@ -625,7 +625,7 @@ export function HeroSection() {
 }
 
 export function SplitSection() {
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = useReducedMotion() ?? false;
   const forumPoints = [
     'Respuestas expertas y reputación visible.',
     'Etiquetas, filtros y LiveHelp directo desde cada post.',
@@ -715,7 +715,7 @@ export function SplitSection() {
 }
 
 export function AudienceSection() {
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = useReducedMotion() ?? false;
   const audience = [
     {
       title: 'Estudiantes y juniors',
@@ -806,7 +806,7 @@ export function AudienceSection() {
 }
 
 export function PillarsSection() {
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = useReducedMotion() ?? false;
   const pillars = [
     {
       title: 'Foro técnico',
@@ -881,7 +881,7 @@ export function PillarsSection() {
 }
 
 export function RoadmapSection() {
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = useReducedMotion() ?? false;
   const items = [
     {
       year: '2025',
