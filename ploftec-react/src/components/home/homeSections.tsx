@@ -11,6 +11,7 @@ import {
   useTransform,
   type MotionProps,
   type Transition,
+  type Variants,
 } from 'framer-motion';
 import {
   ArrowUpRight,
@@ -340,7 +341,7 @@ const navIntroVariants = {
     y: 0,
     transition: { duration: 0.64, ease: 'easeOut' },
   },
-};
+} satisfies Variants;
 
 export function HeaderNav({ isScrolled, activeSection, onNavClick, onIntroComplete }: NavProps) {
   const [open, setOpen] = useState(false);
@@ -1307,7 +1308,7 @@ export function CompaniesSection() {
 
 
 export function TestimonialsSection() {
-  const prefersReducedMotion = useReducedMotion();
+  const prefersReducedMotion = useReducedMotion() ?? false;
   const [activeIndex, setActiveIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
@@ -1388,9 +1389,9 @@ export function TestimonialsSection() {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  const motionTransition = prefersReducedMotion
+  const motionTransition: Transition = prefersReducedMotion
     ? baseTransition
-    : { duration: 0.82, ease: [0.22, 0.8, 0.26, 1] };
+    : { duration: 0.82, ease: [0.22, 0.8, 0.26, 1] as const };
 
   const autoplayDelay = isMobile ? 6800 : 5800;
   const autoplayActive = !prefersReducedMotion && !isHovered && (!isMobile || hasInteracted);
