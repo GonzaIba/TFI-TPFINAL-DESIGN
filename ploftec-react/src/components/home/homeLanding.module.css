@@ -1500,3 +1500,52 @@
     font-size: 15px;
   }
 }
+
+.splitCard,
+.card,
+.metricCard,
+.communityCard,
+.companiesGrid .communityCard,
+.testimonialCard,
+.heroVisual,
+.heroContent {
+  will-change: transform, opacity;
+}
+
+@media (max-width: 720px) {
+  .page {
+    background: #05060f;
+    background-image: none;
+  }
+
+  .page::before,
+  .page::after,
+  .floatingOrb {
+    display: none;
+  }
+
+  .glassCard,
+  .glassCardSecondary,
+  .testimonialCard,
+  .carouselButton {
+    backdrop-filter: none;
+  }
+
+  .glassCard,
+  .glassCardSecondary,
+  .testimonialCard,
+  .metricCard,
+  .communityCard,
+  .splitCard,
+  .card {
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.45);
+  }
+
+  .headerScrolled {
+    backdrop-filter: none;
+  }
+
+  .nav {
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.38);
+  }
+}
