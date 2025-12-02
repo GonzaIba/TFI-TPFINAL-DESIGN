@@ -1274,9 +1274,29 @@
 
 .faqAnswer {
   color: var(--muted);
-  margin-top: 8px;
+  margin: 0;
   line-height: 1.5;
   font-size: 14px;
+}
+
+.faqAnswerWrapper {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    max-height 0.24s ease,
+    opacity 0.22s ease,
+    transform 0.24s ease;
+}
+
+.faqAnswerOpen {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.faqAnswerInner {
+  padding-top: 8px;
 }
 
 .footer {

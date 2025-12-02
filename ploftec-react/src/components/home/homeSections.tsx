@@ -187,6 +187,61 @@ function IlluminatedBlock({
   );
 }
 
+type FAQItemProps = {
+  faq: { question: string; answer: string };
+  isOpen: boolean;
+  onToggle: () => void;
+};
+
+function FAQItem({ faq, isOpen, onToggle }: FAQItemProps) {
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const [contentHeight, setContentHeight] = useState(0);
+
+  useEffect(() => {
+    const measure = () => {
+      if (contentRef.current) {
+        setContentHeight(contentRef.current.scrollHeight);
+      }
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
+
+  useEffect(() => {
+    if (isOpen && contentRef.current) {
+      setContentHeight(contentRef.current.scrollHeight);
+    }
+  }, [isOpen]);
+
+  return (
+    <motion.div
+      key={faq.question}
+      className={styles.faqItem}
+      variants={variants.fadeInUp}
+      transition={baseTransition}
+    >
+      <button
+        className={`${styles.faqQuestion} ${isOpen ? styles.faqQuestionOpen : ''}`}
+        onClick={onToggle}
+        aria-expanded={isOpen}
+      >
+        <span>{faq.question}</span>
+        <ChevronDown className={styles.faqIcon} />
+      </button>
+      <div
+        className={`${styles.faqAnswerWrapper} ${isOpen ? styles.faqAnswerOpen : ''}`}
+        style={{ maxHeight: isOpen ? `${contentHeight}px` : '0px' }}
+        aria-hidden={!isOpen}
+      >
+        <div ref={contentRef} className={styles.faqAnswerInner}>
+          <p className={styles.faqAnswer}>{faq.answer}</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 function useTypingEffect(text: string, enabled: boolean, prefersReducedMotion: boolean) {
   const [display, setDisplay] = useState(prefersReducedMotion || !enabled ? text : '');
   const [done, setDone] = useState(prefersReducedMotion || !enabled);
@@ -1574,22 +1629,7 @@ export function FAQSection() {
           {faqs.map((faq, index) => {
             const isOpen = openIndex === index;
             return (
-              <motion.div
-                key={faq.question}
-                className={styles.faqItem}
-                variants={variants.fadeInUp}
-                transition={{ ...baseTransition, delay: index * 0.04 }}
-              >
-                <button
-                  className={`${styles.faqQuestion} ${isOpen ? styles.faqQuestionOpen : ''}`}
-                  onClick={() => setOpenIndex(isOpen ? null : index)}
-                  aria-expanded={isOpen}
-                >
-                  <span>{faq.question}</span>
-                  <ChevronDown className={styles.faqIcon} />
-                </button>
-                {isOpen && <p className={styles.faqAnswer}>{faq.answer}</p>}
-              </motion.div>
+              <FAQItem key={faq.question} faq={faq} isOpen={isOpen} onToggle={() => setOpenIndex(isOpen ? null : index)} />
             );
           })}
         </div>
