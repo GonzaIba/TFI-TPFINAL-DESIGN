@@ -1005,9 +1005,13 @@
   border-color: rgba(100, 75, 255, 0.45);
   box-shadow: 0 20px 55px rgba(100, 75, 255, 0.26), 0 0 28px rgba(218, 0, 99, 0.2);
   background: linear-gradient(150deg, rgba(100, 75, 255, 0.16), rgba(218, 0, 99, 0.08));
+  user-select: text;
+  cursor: text;
 }
 
 .testimonialCardSide {
+  user-select: none;
+  cursor: pointer;
 }
 
 .testimonialCardSide::after {
@@ -1021,6 +1025,8 @@
 
 .testimonialCardFar {
   position: relative;
+  user-select: none;
+  cursor: pointer;
 }
 
 .testimonialCardFar::after {
@@ -1034,6 +1040,8 @@
 
 .testimonialCardMuted {
   border-color: rgba(255, 255, 255, 0.1);
+  user-select: none;
+  cursor: pointer;
 }
 
 .testimonialTop {
@@ -1150,9 +1158,9 @@
   position: relative;
   z-index: 2;
   padding: 10px 14px;
-  border-radius: 18px;
+  /* border-radius: 18px;
   background: rgba(6, 6, 14, 0.45);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px); */
 }
 
 .carouselButton {
@@ -1366,10 +1374,6 @@
     display: flex;
   }
 
-  .testimonials {
-    min-height: 340px;
-  }
-
   .testimonialSlide {
     width: min(480px, 92vw);
   }
@@ -1405,10 +1409,6 @@
 
   .testimonialsShell {
     padding: 2px 0 18px;
-  }
-
-  .testimonials {
-    min-height: 320px;
   }
 
   .testimonialSlide {

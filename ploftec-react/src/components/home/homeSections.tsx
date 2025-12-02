@@ -1166,6 +1166,7 @@ export function TestimonialsSection() {
     return window.matchMedia('(max-width: 720px)').matches;
   });
   const touchStartX = useRef<number | null>(null);
+  const autoplayRef = useRef<number | null>(null);
 
   const testimonials = useMemo(
     () => [
@@ -1244,14 +1245,25 @@ export function TestimonialsSection() {
   const autoplayDelay = isMobile ? 6800 : 5800;
   const autoplayActive = !prefersReducedMotion && !isHovered && (!isMobile || hasInteracted);
 
-  useEffect(() => {
+  const clearAutoplay = () => {
+    if (autoplayRef.current !== null) {
+      window.clearTimeout(autoplayRef.current);
+      autoplayRef.current = null;
+    }
+  };
+
+  const scheduleAutoplay = () => {
+    clearAutoplay();
     if (!autoplayActive) return;
-    const interval = window.setInterval(() => {
+    autoplayRef.current = window.setTimeout(() => {
       setActiveIndex((prev) => (prev + 1) % totalTestimonials);
     }, autoplayDelay);
+  };
 
-    return () => clearInterval(interval);
-  }, [autoplayActive, autoplayDelay, totalTestimonials]);
+  useEffect(() => {
+    scheduleAutoplay();
+    return clearAutoplay;
+  }, [autoplayActive, autoplayDelay, totalTestimonials, activeIndex]);
 
   const getRelativeOffset = (index: number) => {
     const raw = (index - activeIndex + totalTestimonials) % totalTestimonials;
@@ -1347,16 +1359,19 @@ export function TestimonialsSection() {
 
   const handlePrev = () => {
     setHasInteracted(true);
+    clearAutoplay();
     setActiveIndex((prev) => (prev - 1 + totalTestimonials) % totalTestimonials);
   };
 
   const handleNext = () => {
     setHasInteracted(true);
+    clearAutoplay();
     setActiveIndex((prev) => (prev + 1) % totalTestimonials);
   };
 
   const handleDot = (index: number) => {
     setHasInteracted(true);
+    clearAutoplay();
     setActiveIndex(index);
   };
 
