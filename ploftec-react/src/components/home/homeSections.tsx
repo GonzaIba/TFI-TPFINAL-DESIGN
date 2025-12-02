@@ -1470,34 +1470,20 @@ export function TestimonialsSection() {
             })}
           </div>
 
-          <div className={styles.carouselControls}>
-            <div
-              className={styles.carouselButtons}
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
+          <div
+            className={styles.carouselControls}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+          >
+            <button
+              type="button"
+              className={styles.carouselButton}
+              onClick={handlePrev}
+              aria-label="Ver testimonio anterior"
             >
-              <button
-                type="button"
-                className={styles.carouselButton}
-                onClick={handlePrev}
-                aria-label="Ver testimonio anterior"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <button
-                type="button"
-                className={styles.carouselButton}
-                onClick={handleNext}
-                aria-label="Ver siguiente testimonio"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-            <div
-              className={styles.carouselDots}
-              onMouseEnter={() => setIsHovered(true)}
-              onMouseLeave={() => setIsHovered(false)}
-            >
+              <ChevronLeft size={16} />
+            </button>
+            <div className={styles.carouselDots}>
               {testimonials.map((_, index) => (
                 <button
                   key={`dot-${index}`}
@@ -1510,6 +1496,14 @@ export function TestimonialsSection() {
                 />
               ))}
             </div>
+            <button
+              type="button"
+              className={styles.carouselButton}
+              onClick={handleNext}
+              aria-label="Ver siguiente testimonio"
+            >
+              <ChevronRight size={16} />
+            </button>
           </div>
         </div>
       </div>
