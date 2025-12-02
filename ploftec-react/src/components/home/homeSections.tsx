@@ -1391,7 +1391,7 @@ export function TestimonialsSection() {
 
   const motionTransition: Transition = prefersReducedMotion
     ? baseTransition
-    : { duration: 0.82, ease: [0.22, 0.8, 0.26, 1] as const };
+    : { duration: isMobile ? 0.45 : 0.65, ease: [0.22, 0.8, 0.26, 1] as const };
 
   const autoplayDelay = isMobile ? 6800 : 5800;
   const autoplayActive = !prefersReducedMotion && !isHovered && (!isMobile || hasInteracted);
@@ -1426,21 +1426,19 @@ export function TestimonialsSection() {
       if (offset === 0) {
         return {
           x: '-50%',
-          scale: 1.03,
+          scale: 1.02,
           opacity: 1,
           zIndex: 6,
           state: 'active' as const,
-          filter: 'brightness(1.08) saturate(1.06) blur(0px)',
         };
       }
       if (Math.abs(offset) === 1) {
         return {
-          x: offset > 0 ? '125%' : '-225%',
+          x: offset > 0 ? '120%' : '-220%',
           scale: 0.94,
-          opacity: 0.32,
+          opacity: 0.26,
           zIndex: 2,
-          state: 'far' as const,
-          filter: 'brightness(0.88) saturate(0.86) blur(1.8px)',
+          state: 'side' as const,
         };
       }
       return {
@@ -1449,7 +1447,6 @@ export function TestimonialsSection() {
         opacity: 0,
         zIndex: 0,
         state: 'off' as const,
-        filter: 'brightness(0.8) saturate(0.82) blur(2.4px)',
       };
     }
 
@@ -1460,7 +1457,6 @@ export function TestimonialsSection() {
         opacity: 1,
         zIndex: 9,
         state: 'active' as const,
-        filter: 'brightness(1.12) saturate(1.1) blur(0px)',
       };
     if (offset === 1)
       return {
@@ -1469,7 +1465,6 @@ export function TestimonialsSection() {
         opacity: 0.8,
         zIndex: 5,
         state: 'side' as const,
-        filter: 'brightness(0.94) saturate(0.9) blur(1.1px)',
       };
     if (offset === -1)
       return {
@@ -1478,7 +1473,6 @@ export function TestimonialsSection() {
         opacity: 0.8,
         zIndex: 5,
         state: 'side' as const,
-        filter: 'brightness(0.94) saturate(0.9) blur(1.1px)',
       };
     if (offset === 2)
       return {
@@ -1487,7 +1481,6 @@ export function TestimonialsSection() {
         opacity: 0.34,
         zIndex: 2,
         state: 'far' as const,
-        filter: 'brightness(0.82) saturate(0.84) blur(1.8px)',
       };
     if (offset === -2)
       return {
@@ -1496,7 +1489,6 @@ export function TestimonialsSection() {
         opacity: 0.34,
         zIndex: 2,
         state: 'far' as const,
-        filter: 'brightness(0.82) saturate(0.84) blur(1.8px)',
       };
     return {
       x: '-50%',
@@ -1504,7 +1496,6 @@ export function TestimonialsSection() {
       opacity: 0,
       zIndex: 0,
       state: 'off' as const,
-      filter: 'brightness(0.8) saturate(0.82) blur(2.4px)',
     };
   };
 
@@ -1587,28 +1578,16 @@ export function TestimonialsSection() {
                     x: slot.x,
                     scale: slot.scale,
                     opacity: slot.opacity,
-                    filter: prefersReducedMotion ? 'none' : slot.filter,
                   }}
                   transition={motionTransition}
                   style={{
                     zIndex: slot.zIndex,
                     pointerEvents: slot.opacity > 0.12 ? 'auto' : 'none',
+                    willChange: 'transform, opacity',
                   }}
                   onClick={() => handleDot(index)}
                 >
-                  <IlluminatedCard
-                    variant={cardVariants.scalePop}
-                    prefersReducedMotion={prefersReducedMotion}
-                    transition={{ ...baseTransition, duration: 0.65 }}
-                    whileHover={
-                      prefersReducedMotion
-                        ? undefined
-                        : {
-                            scale: slot.state === 'active' ? 1.03 : 1.005,
-                            rotate: slot.state === 'active' ? 0.15 : 0,
-                            y: slot.state === 'active' ? -3 : -1,
-                          }
-                    }
+                  <motion.div
                     className={`${styles.testimonialCard} ${
                       slot.state === 'active'
                         ? styles.testimonialCardActive
@@ -1618,6 +1597,16 @@ export function TestimonialsSection() {
                             ? styles.testimonialCardFar
                             : styles.testimonialCardMuted
                     }`}
+                    whileHover={
+                      prefersReducedMotion
+                        ? undefined
+                        : {
+                            scale: slot.state === 'active' ? 1.02 : 1.005,
+                            y: slot.state === 'active' ? -3 : -1,
+                          }
+                    }
+                    transition={{ ...baseTransition, duration: 0.45 }}
+                    style={{ willChange: prefersReducedMotion ? undefined : 'transform' }}
                   >
                     <div className={styles.testimonialTop}>
                       <div>
@@ -1630,7 +1619,7 @@ export function TestimonialsSection() {
                     <p className={styles.testimonialOrg}>{testimonial.organization}</p>
                     <p className={styles.testimonialQuote}>{testimonial.quote}</p>
                     <p className={styles.testimonialImpact}>{testimonial.impact}</p>
-                  </IlluminatedCard>
+                  </motion.div>
                 </motion.div>
               );
             })}
