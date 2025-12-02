@@ -27,6 +27,8 @@ import {
   Code,
   Globe,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import styles from './homeLanding.module.css';
 
@@ -312,13 +314,13 @@ export function HeaderNav({ isScrolled, activeSection, onNavClick }: NavProps) {
               />
             </button>
           ))}
-          <Link
+          {/* <Link
             href="/forum"
             className={`${styles.navLink} ${styles.navCta}`}
             onClick={() => setOpen(false)}
           >
             Entrar al foro
-          </Link>
+          </Link> */}
         </nav>
 
         <button
@@ -1153,24 +1155,232 @@ export function CompaniesSection() {
   );
 }
 
+
 export function TestimonialsSection() {
-  const testimonials = [
-    {
-      quote:
-        '“LiveHelp me salvó en un incidente real. En 15 minutos tenía un plan claro y un playbook listo.”',
-      by: 'Analista Blue Team · Empresa fintech',
-    },
-    {
-      quote:
-        '“El foro es práctico: respuestas claras, snippets y feedback de gente que está en proyectos reales.”',
-      by: 'Desarrollador AppSec',
-    },
-    {
-      quote:
-        '“Como instructora puedo testear labs con la comunidad antes de lanzar cohortes completas.”',
-      by: 'Instructora Red Team',
-    },
-  ];
+  const prefersReducedMotion = useReducedMotion();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const [hasInteracted, setHasInteracted] = useState(false);
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(max-width: 720px)').matches;
+  });
+  const touchStartX = useRef<number | null>(null);
+
+  const testimonials = useMemo(
+    () => [
+      {
+        name: 'Sofia Villalobos',
+        title: 'Analista Blue Team - Fintech de pagos',
+        role: 'Turno de respuesta y hunting en SOC 24/7',
+        organization: 'Banco Rio Sur (fintech regional ficticia)',
+        focus: 'Foro tecnico + LiveHelp',
+        quote: 'Resolvimos un beacon raro en 18 minutos con el foro y un playbook de LiveHelp.',
+        impact: 'Mitigamos sin escalar al vendor y documentamos el runbook en el mismo sprint.',
+      },
+      {
+        name: 'Martin Quiroga',
+        title: 'AppSec Lead - Plataforma SaaS B2B',
+        role: 'Cuida pipelines en NovaCloud (plataforma ficticia)',
+        organization: 'NovaCloud SaaS (empresa B2B ficticia)',
+        focus: 'AppSec / Codigo seguro',
+        quote: 'Subo snippets criticos y en minutos alguien devuelve un parche replicable con pruebas.',
+        impact: 'Reducimos el SLA de revisiones de 3 dias a una tarde con recetas de la comunidad.',
+      },
+      {
+        name: 'Paula Rios',
+        title: 'Instructora Red Team - Academia',
+        role: 'Disena labs ofensivos para SecOps Latam Consulting (ficticia)',
+        organization: 'SecOps Latam Consulting (consultora ficticia)',
+        focus: 'Labs y academia',
+        quote: 'Testeo labs con la comunidad antes de lanzarlos y recibo feedback accionable en horas.',
+        impact: 'Una cohorte piloto subio 18% en completitud con metricas compartidas y el foro.',
+      },
+      {
+        name: 'Gabriel Mendez',
+        title: 'Coordinador de carrera de ciberseguridad',
+        role: 'Dirige la malla en Universidad Andina de Innovacion (ficticia)',
+        organization: 'Universidad Andina de Innovacion (institucion ficticia)',
+        focus: 'Cohortes y comunidad',
+        quote: 'LiveHelp y los foros me dan planes de clase en 10 minutos y casos reales para alumnos.',
+        impact: 'Puedo medir avance por modulo y reforzar temas flojos antes del examen final.',
+      },
+      {
+        name: 'Elena Duarte',
+        title: 'CISO - Empresa B2B industrial',
+        role: 'Lidera seguridad en OmniStack Industrial (ficticia)',
+        organization: 'OmniStack Industrial (empresa B2B ficticia)',
+        focus: 'Empresas / lideres',
+        quote: 'El dashboard para empresas muestra adoption score y upskilling real, no promesas.',
+        impact: 'Priorizamos IAM y deteccion con datos; cerramos brechas en semanas en vez de trimestres.',
+      },
+      {
+        name: 'Luis Calderon',
+        title: 'Coordinador SecOps - Pagos digitales',
+        role: 'Responde incidentes en Andes Digital Pay (ficticia)',
+        organization: 'Andes Digital Pay (empresa de pagos ficticia)',
+        focus: 'LiveHelp / Incidentes',
+        quote: 'En un lateral movement, PLOFTEC nos dio checklist claro para contener en 20 minutos.',
+        impact: 'Reducimos ruido de alertas y dejamos runbooks alineados con la comunidad para el proximo turno.',
+      },
+    ],
+    []
+  );
+  const totalTestimonials = testimonials.length;
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const mediaQuery = window.matchMedia('(max-width: 720px)');
+    const handleChange = () => setIsMobile(mediaQuery.matches);
+    handleChange();
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+
+  const motionTransition = prefersReducedMotion
+    ? baseTransition
+    : { duration: 0.82, ease: [0.22, 0.8, 0.26, 1] };
+
+  const autoplayDelay = isMobile ? 6800 : 5800;
+  const autoplayActive = !prefersReducedMotion && !isHovered && (!isMobile || hasInteracted);
+
+  useEffect(() => {
+    if (!autoplayActive) return;
+    const interval = window.setInterval(() => {
+      setActiveIndex((prev) => (prev + 1) % totalTestimonials);
+    }, autoplayDelay);
+
+    return () => clearInterval(interval);
+  }, [autoplayActive, autoplayDelay, totalTestimonials]);
+
+  const getRelativeOffset = (index: number) => {
+    const raw = (index - activeIndex + totalTestimonials) % totalTestimonials;
+    return raw > totalTestimonials / 2 ? raw - totalTestimonials : raw;
+  };
+
+  const getSlot = (offset: number) => {
+    if (isMobile) {
+      if (offset === 0) {
+        return {
+          x: '-50%',
+          scale: 1.03,
+          opacity: 1,
+          zIndex: 6,
+          state: 'active' as const,
+          filter: 'brightness(1.08) saturate(1.06) blur(0px)',
+        };
+      }
+      if (Math.abs(offset) === 1) {
+        return {
+          x: offset > 0 ? '125%' : '-225%',
+          scale: 0.94,
+          opacity: 0.32,
+          zIndex: 2,
+          state: 'far' as const,
+          filter: 'brightness(0.88) saturate(0.86) blur(1.8px)',
+        };
+      }
+      return {
+        x: '-50%',
+        scale: 0.86,
+        opacity: 0,
+        zIndex: 0,
+        state: 'off' as const,
+        filter: 'brightness(0.8) saturate(0.82) blur(2.4px)',
+      };
+    }
+
+    if (offset === 0)
+      return {
+        x: '-50%',
+        scale: 1.08,
+        opacity: 1,
+        zIndex: 9,
+        state: 'active' as const,
+        filter: 'brightness(1.12) saturate(1.1) blur(0px)',
+      };
+    if (offset === 1)
+      return {
+        x: '42%',
+        scale: 0.94,
+        opacity: 0.8,
+        zIndex: 5,
+        state: 'side' as const,
+        filter: 'brightness(0.94) saturate(0.9) blur(1.1px)',
+      };
+    if (offset === -1)
+      return {
+        x: '-142%',
+        scale: 0.94,
+        opacity: 0.8,
+        zIndex: 5,
+        state: 'side' as const,
+        filter: 'brightness(0.94) saturate(0.9) blur(1.1px)',
+      };
+    if (offset === 2)
+      return {
+        x: '210%',
+        scale: 0.86,
+        opacity: 0.34,
+        zIndex: 2,
+        state: 'far' as const,
+        filter: 'brightness(0.82) saturate(0.84) blur(1.8px)',
+      };
+    if (offset === -2)
+      return {
+        x: '-302%',
+        scale: 0.86,
+        opacity: 0.34,
+        zIndex: 2,
+        state: 'far' as const,
+        filter: 'brightness(0.82) saturate(0.84) blur(1.8px)',
+      };
+    return {
+      x: '-50%',
+      scale: 0.82,
+      opacity: 0,
+      zIndex: 0,
+      state: 'off' as const,
+      filter: 'brightness(0.8) saturate(0.82) blur(2.4px)',
+    };
+  };
+
+  const handlePrev = () => {
+    setHasInteracted(true);
+    setActiveIndex((prev) => (prev - 1 + totalTestimonials) % totalTestimonials);
+  };
+
+  const handleNext = () => {
+    setHasInteracted(true);
+    setActiveIndex((prev) => (prev + 1) % totalTestimonials);
+  };
+
+  const handleDot = (index: number) => {
+    setHasInteracted(true);
+    setActiveIndex(index);
+  };
+
+  const handleTouchStart = (event: React.TouchEvent) => {
+    touchStartX.current = event.touches[0].clientX;
+    setHasInteracted(true);
+    setIsHovered(true);
+  };
+
+  const handleTouchEnd = (event: React.TouchEvent) => {
+    const startX = touchStartX.current;
+    if (startX !== null) {
+      const delta = event.changedTouches[0].clientX - startX;
+      if (Math.abs(delta) > 36) {
+        if (delta > 0) {
+          handlePrev();
+        } else {
+          handleNext();
+        }
+      }
+    }
+    setIsHovered(false);
+    touchStartX.current = null;
+  };
 
   return (
     <motion.section
@@ -1184,30 +1394,128 @@ export function TestimonialsSection() {
         <div className={styles.sectionHeader}>
           <span className={styles.eyebrow}>Testimonios y frases</span>
           <h2 className={styles.sectionTitle}>Lo que ya dicen de PLOFTEC</h2>
+          <p className={styles.sectionSubtitle}>
+            Testimonios ilustrativos basados en perfiles reales; organizaciones y nombres ficticios.
+          </p>
         </div>
 
-        <motion.div className={styles.testimonials} variants={staggerContainer}>
-          {testimonials.map((item, index) => {
-            const variant = index % 2 === 0 ? variants.rotateInLeft : variants.rotateInRight;
-            return (
-              <motion.div
-                key={item.by}
-                className={styles.testimonialCard}
-                variants={variant}
-                transition={{ ...baseTransition, delay: index * 0.06 }}
-                whileHover={{ scale: 1.02, rotate: index % 2 === 0 ? -0.4 : 0.4 }}
+        <div
+          className={styles.testimonialsShell}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className={styles.testimonialHalo} aria-hidden />
+          <div className={styles.testimonials}>
+              {testimonials.map((testimonial, index) => {
+              const offset = getRelativeOffset(index);
+              const slot = getSlot(offset);
+
+              return (
+                <motion.div
+                  key={testimonial.name}
+                  className={styles.testimonialSlide}
+                  initial={{ opacity: 0, y: 26, scale: 0.96 }}
+                  animate={{
+                    x: slot.x,
+                    scale: slot.scale,
+                    opacity: slot.opacity,
+                    filter: prefersReducedMotion ? 'none' : slot.filter,
+                  }}
+                  transition={motionTransition}
+                  style={{
+                    zIndex: slot.zIndex,
+                    pointerEvents: slot.opacity > 0.12 ? 'auto' : 'none',
+                  }}
+                  onClick={() => handleDot(index)}
+                >
+                  <IlluminatedCard
+                    variant={cardVariants.scalePop}
+                    prefersReducedMotion={prefersReducedMotion}
+                    transition={{ ...baseTransition, duration: 0.65 }}
+                    whileHover={
+                      prefersReducedMotion
+                        ? undefined
+                        : {
+                            scale: slot.state === 'active' ? 1.03 : 1.005,
+                            rotate: slot.state === 'active' ? 0.15 : 0,
+                            y: slot.state === 'active' ? -3 : -1,
+                          }
+                    }
+                    className={`${styles.testimonialCard} ${
+                      slot.state === 'active'
+                        ? styles.testimonialCardActive
+                        : slot.state === 'side'
+                          ? styles.testimonialCardSide
+                          : slot.state === 'far'
+                            ? styles.testimonialCardFar
+                            : styles.testimonialCardMuted
+                    }`}
+                  >
+                    <div className={styles.testimonialTop}>
+                      <div>
+                        <p className={styles.testimonialName}>{testimonial.name}</p>
+                        <p className={styles.testimonialMeta}>{testimonial.title}</p>
+                        <p className={styles.testimonialRole}>{testimonial.role}</p>
+                      </div>
+                      <span className={styles.testimonialBadge}>{testimonial.focus}</span>
+                    </div>
+                    <p className={styles.testimonialOrg}>{testimonial.organization}</p>
+                    <p className={styles.testimonialQuote}>{testimonial.quote}</p>
+                    <p className={styles.testimonialImpact}>{testimonial.impact}</p>
+                  </IlluminatedCard>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          <div className={styles.carouselControls}>
+            <div
+              className={styles.carouselButtons}
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+            >
+              <button
+                type="button"
+                className={styles.carouselButton}
+                onClick={handlePrev}
+                aria-label="Ver testimonio anterior"
               >
-                <p className={styles.quote}>{item.quote}</p>
-                <p className={styles.quoteBy}>{item.by}</p>
-              </motion.div>
-            );
-          })}
-        </motion.div>
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                type="button"
+                className={styles.carouselButton}
+                onClick={handleNext}
+                aria-label="Ver siguiente testimonio"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+            <div
+              className={styles.carouselDots}
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
+            >
+              {testimonials.map((_, index) => (
+                <button
+                  key={`dot-${index}`}
+                  type="button"
+                  className={`${styles.carouselDot} ${
+                    index === activeIndex ? styles.carouselDotActive : ''
+                  }`}
+                  aria-label={`Ir al testimonio ${index + 1}`}
+                  onClick={() => handleDot(index)}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </motion.section>
   );
 }
-
 export function FAQSection() {
   const faqs: Array<{ question: string; answer: string }> = [
     {
