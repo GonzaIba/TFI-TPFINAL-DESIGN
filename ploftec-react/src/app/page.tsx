@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import styles from '@/components/home/homeLanding.module.css';
 import {
   HeaderNav,
@@ -24,6 +24,7 @@ export default function Home() {
   );
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('foro');
+  const [navReady, setNavReady] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 12);
@@ -59,15 +60,20 @@ export default function Home() {
     window.scrollTo({ top, behavior: 'smooth' });
   };
 
+  const handleNavIntroComplete = useCallback(() => {
+    setNavReady(true);
+  }, []);
+
   return (
     <div className={styles.page}>
       <HeaderNav
         isScrolled={isScrolled}
         activeSection={activeSection}
         onNavClick={handleNavClick}
+        onIntroComplete={handleNavIntroComplete}
       />
       <main className={styles.main}>
-        <HeroSection />
+        <HeroSection navReady={navReady} />
         <SplitSection />
         <AudienceSection />
         <PillarsSection />

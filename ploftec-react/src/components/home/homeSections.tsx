@@ -90,6 +90,8 @@ const cardVariants = {
   },
 };
 
+type TypingMode = 'hold' | 'type' | 'static';
+
 function useCardIllumination(prefersReducedMotion: boolean) {
   const ref = useRef<HTMLDivElement | null>(null);
   const { scrollYProgress } = useScroll({
@@ -242,15 +244,24 @@ function FAQItem({ faq, isOpen, onToggle }: FAQItemProps) {
   );
 }
 
-function useTypingEffect(text: string, enabled: boolean, prefersReducedMotion: boolean) {
-  const [display, setDisplay] = useState(prefersReducedMotion || !enabled ? text : '');
-  const [done, setDone] = useState(prefersReducedMotion || !enabled);
-  const [typing, setTyping] = useState(enabled && !prefersReducedMotion);
+function useTypingEffect(text: string, mode: TypingMode, prefersReducedMotion: boolean) {
+  const [display, setDisplay] = useState(
+    prefersReducedMotion || mode === 'static' ? text : ''
+  );
+  const [done, setDone] = useState(prefersReducedMotion || mode === 'static');
+  const [typing, setTyping] = useState(mode === 'type' && !prefersReducedMotion);
 
   useEffect(() => {
-    if (!enabled || prefersReducedMotion) {
+    if (prefersReducedMotion || mode === 'static') {
       setDisplay(text);
       setDone(true);
+      setTyping(false);
+      return;
+    }
+
+    if (mode !== 'type') {
+      setDisplay('');
+      setDone(false);
       setTyping(false);
       return;
     }
@@ -284,7 +295,7 @@ function useTypingEffect(text: string, enabled: boolean, prefersReducedMotion: b
       cancelled = true;
       clearTimeout(initialTimer);
     };
-  }, [enabled, prefersReducedMotion, text]);
+  }, [mode, prefersReducedMotion, text]);
 
   return { display, done, typing };
 }
@@ -315,10 +326,26 @@ function AnimatedNumber({ value, start, prefix = '', suffix = '', duration = 0.8
   );
 }
 
-type NavProps = { isScrolled: boolean; activeSection: string; onNavClick: (id: string) => void };
+type NavProps = {
+  isScrolled: boolean;
+  activeSection: string;
+  onNavClick: (id: string) => void;
+  onIntroComplete?: () => void;
+};
 
-export function HeaderNav({ isScrolled, activeSection, onNavClick }: NavProps) {
+const navIntroVariants = {
+  hidden: { opacity: 0, y: -8 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.64, ease: 'easeOut' },
+  },
+};
+
+export function HeaderNav({ isScrolled, activeSection, onNavClick, onIntroComplete }: NavProps) {
   const [open, setOpen] = useState(false);
+  const navControls = useAnimationControls();
+  const [navIntroDone, setNavIntroDone] = useState(false);
   const prefersReducedMotion = useReducedMotion() ?? false;
 
   const links = [
@@ -335,8 +362,36 @@ export function HeaderNav({ isScrolled, activeSection, onNavClick }: NavProps) {
     onNavClick(id);
   };
 
+  useEffect(() => {
+    if (navIntroDone) return;
+    let cancelled = false;
+
+    if (prefersReducedMotion) {
+      navControls.set('visible');
+      setNavIntroDone(true);
+      onIntroComplete?.();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    navControls.start('visible').then(() => {
+      if (cancelled || navIntroDone) return;
+      setNavIntroDone(true);
+      onIntroComplete?.();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [navControls, navIntroDone, onIntroComplete, prefersReducedMotion]);
+
   return (
-    <header className={`${styles.header} ${isScrolled ? styles.headerScrolled : ''}`}>
+    <motion.header
+      className={`${styles.header} ${isScrolled ? styles.headerScrolled : ''}`}
+      initial="hidden"
+      animate={navControls}
+      variants={navIntroVariants}
+    >
       <div className={`${styles.container} ${styles.headerInner}`}>
         <Link href="/" className={styles.logo} aria-label="Inicio PLOFTEC">
           <span className={styles.logoMark}>P</span>
@@ -387,50 +442,73 @@ export function HeaderNav({ isScrolled, activeSection, onNavClick }: NavProps) {
           <span />
         </button>
       </div>
-    </header>
+    </motion.header>
   );
 }
 
-export function HeroSection() {
+export function HeroSection({ navReady = false }: { navReady?: boolean }) {
   const prefersReducedMotion = useReducedMotion() ?? false;
   const heroRef = useRef<HTMLDivElement | null>(null);
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] });
   const orbY = useTransform(scrollYProgress, [0, 1], [0, prefersReducedMotion ? 0 : -30]);
   const orbX = useTransform(scrollYProgress, [0, 1], [0, prefersReducedMotion ? 0 : 20]);
-  const [shouldType, setShouldType] = useState(false);
   const ctaControls = useAnimationControls();
   const [caretVisible, setCaretVisible] = useState(false);
+  const [typingMode, setTypingMode] = useState<TypingMode>('hold');
+  const [restVisible, setRestVisible] = useState(false);
   const heroTitle = 'La plataforma donde la ciberseguridad se aprende haciendo.';
   const { display: typedTitle, done: typingDone, typing } = useTypingEffect(
     heroTitle,
-    shouldType,
+    typingMode,
     prefersReducedMotion
   );
-  const heroReady = typingDone || !shouldType;
-  const showRest = prefersReducedMotion || heroReady;
+  const headlineVisible = typingMode !== 'hold';
+  const restReady = prefersReducedMotion || restVisible;
 
   useEffect(() => {
+    if (!navReady) return;
     if (prefersReducedMotion) {
-      setShouldType(false);
+      setTypingMode('static');
+      setRestVisible(true);
       return;
     }
-    const atTop = typeof window !== 'undefined' ? window.scrollY < 20 : true;
-    setShouldType(atTop);
-  }, [prefersReducedMotion]);
+
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      if (!cancelled) setTypingMode('type');
+    }, 380);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [navReady, prefersReducedMotion]);
 
   useEffect(() => {
-    if (!heroReady || prefersReducedMotion) {
+    if (typingMode === 'static' && navReady) {
+      if (restVisible) return;
+      const timer = setTimeout(() => setRestVisible(true), 200);
+      return () => clearTimeout(timer);
+    }
+
+    if (typingMode === 'type' && typingDone) {
+      setRestVisible(true);
+    }
+  }, [navReady, typingDone, typingMode]);
+
+  useEffect(() => {
+    if (!restReady || prefersReducedMotion) {
       ctaControls.set({ scale: 1 });
       return;
     }
     const timer = setTimeout(() => {
       ctaControls.start({ scale: [1, 1.04, 1], transition: { duration: 0.5, ease: 'easeInOut' } });
-    }, 1100);
+    }, 900);
     return () => clearTimeout(timer);
-  }, [ctaControls, heroReady, prefersReducedMotion]);
+  }, [ctaControls, restReady, prefersReducedMotion]);
 
   useEffect(() => {
-    if (!shouldType || prefersReducedMotion) {
+    if (typingMode !== 'type' || prefersReducedMotion) {
       setCaretVisible(false);
       return;
     }
@@ -443,7 +521,7 @@ export function HeroSection() {
       const timer = setTimeout(() => setCaretVisible(false), 3600);
       return () => clearTimeout(timer);
     }
-  }, [shouldType, typing, typingDone, prefersReducedMotion]);
+  }, [typingMode, typing, typingDone, prefersReducedMotion]);
 
   const highlights = [
     {
@@ -487,18 +565,25 @@ export function HeroSection() {
             animate={{ opacity: 1, x: 0, filter: 'none' }}
             transition={{ duration: 0 }}
           >
-            <div className={styles.heroBadgeRow}>
+            <motion.div
+              className={styles.heroBadgeRow}
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: restReady ? 1 : 0, y: restReady ? 0 : -6 }}
+              transition={{ ...baseTransition, delay: restReady ? 0.12 : 0 }}
+              style={{ visibility: restReady ? 'visible' : 'hidden' }}
+            >
               <span className={styles.heroBadge}>Seguridad 24/7</span>
               <span className={styles.heroBadgeGhost}>Aprender haciendo</span>
-            </div>
+            </motion.div>
 
             <motion.h1
               className={styles.heroTitle}
-              initial={{ opacity: 1, x: 0 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: headlineVisible ? 1 : 0, y: headlineVisible ? 0 : 8 }}
+              transition={{ duration: 0.48, ease: 'easeOut' }}
+              style={{ visibility: headlineVisible ? 'visible' : 'hidden', minHeight: '2.6em' }}
             >
-              {shouldType ? (
+              {typingMode === 'type' ? (
                 <>
                   <span>
                     {typedTitle.slice(0, heroTitle.length - 'se aprende haciendo.'.length)}
@@ -508,20 +593,22 @@ export function HeroSection() {
                   </span>
                   {(typing || caretVisible) && <span className={styles.typingCaret} />}
                 </>
-              ) : (
+              ) : typingMode === 'static' ? (
                 <>
                   La plataforma donde la ciberseguridad{' '}
                   <span className={styles.gradientText}>se aprende haciendo.</span>
                 </>
+              ) : (
+                <>&nbsp;</>
               )}
             </motion.h1>
-            {showRest && (
-              <>
+            
                 <motion.p
                   className={styles.heroSubtitle}
                   initial={{ opacity: 0, y: 14, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ ...baseTransition, delay: 0.12 }}
+                  animate={{ opacity: restReady ? 1 : 0, y: restReady ? 0 : 14, scale: restReady ? 1 : 0.98 }}
+                  transition={{ ...baseTransition, delay: restReady ? 0.12 : 0 }}
+                  style={{ visibility: restReady ? 'visible' : 'hidden' }}
                 >
                   Comunidad técnica, ayuda en vivo y una academia que nace desde el mundo real. Uní
                   foros, sesiones, y rutas guiadas para crecer sin perder tiempo.
@@ -530,8 +617,9 @@ export function HeroSection() {
                 <motion.div
                   className={styles.heroCtas}
                   initial={{ opacity: 0, y: 16, scale: 0.98 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ ...baseTransition, delay: 0.24 }}
+                  animate={{ opacity: restReady ? 1 : 0, y: restReady ? 0 : 16, scale: restReady ? 1 : 0.98 }}
+                  transition={{ ...baseTransition, delay: restReady ? 0.24 : 0 }}
+                  style={{ visibility: restReady ? 'visible' : 'hidden' }}
                 >
                   <motion.div animate={ctaControls}>
                     <Link href="/forum" className={`${styles.button} ${styles.primaryButton}`}>
@@ -549,8 +637,9 @@ export function HeroSection() {
                 <motion.p
                   className={styles.trustNote}
                   initial={{ opacity: 0, y: 10, scale: 0.99 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ ...baseTransition, delay: 0.32 }}
+                  animate={{ opacity: restReady ? 1 : 0, y: restReady ? 0 : 10, scale: restReady ? 1 : 0.99 }}
+                  transition={{ ...baseTransition, delay: restReady ? 0.32 : 0 }}
+                  style={{ visibility: restReady ? 'visible' : 'hidden' }}
                 >
                   Proyecto de tesis · Plataforma real en construcción 2026-2028 · Comunidad abierta
                 </motion.p>
@@ -559,16 +648,18 @@ export function HeroSection() {
                   className={styles.heroHighlights}
                   variants={staggerContainer}
                   initial="initial"
-                  animate="animate"
-                  transition={{ ...baseTransition, delay: 0.4 }}
+                  animate={restReady ? 'animate' : 'initial'}
+                  transition={{ ...baseTransition, delay: restReady ? 0.4 : 0 }}
+                  style={{ visibility: restReady ? 'visible' : 'hidden' }}
                 >
                   {highlights.map((item, index) => (
                     <motion.div
                       key={item.title}
                       className={styles.highlightCard}
                       variants={index % 2 === 0 ? variants.slideLeft : variants.slideRight}
-                      transition={{ ...baseTransition, delay: index * 0.04 }}
+                      transition={{ ...baseTransition, delay: restReady ? index * 0.04 : 0 }}
                       whileHover={{ y: -6, scale: prefersReducedMotion ? 1 : 1.01 }}
+                      animate={restReady ? 'animate' : 'initial'}
                     >
                       <div className={styles.iconCircle}>{item.icon}</div>
                       <div>
@@ -578,18 +669,17 @@ export function HeroSection() {
                     </motion.div>
                   ))}
                 </motion.div>
-              </>
-            )}
           </motion.div>
 
-          {showRest && (
-            <motion.div
-              className={styles.heroVisual}
-              variants={variants.slideRight}
-              initial="initial"
-              animate="animate"
-              transition={{ ...baseTransition, delay: 0.3 }}
-            >
+          
+          <motion.div
+            className={styles.heroVisual}
+            variants={variants.slideRight}
+            initial={{ opacity: 0, y: 16, scale: 0.99 }}
+            animate={restReady ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 16, scale: 0.99 }}
+            transition={{ ...baseTransition, delay: restReady ? 0.3 : 0 }}
+            style={{ visibility: restReady ? 'visible' : 'hidden' }}
+          >
               <motion.div className={styles.glassCard} whileHover={{ y: -6, scale: 1.01 }}>
                 <div className={styles.glassHeader}>
                   <span className={styles.glassLabel}>Radar en vivo</span>
@@ -598,13 +688,18 @@ export function HeroSection() {
                 <p className={styles.glassTitle}>
                   LiveHelp + Foro + Academia en un único panel, pensado para equipos y autodidactas.
                 </p>
-                <motion.div className={styles.miniStats} variants={staggerContainer}>
+                <motion.div
+                  className={styles.miniStats}
+                  variants={staggerContainer}
+                  initial="initial"
+                  animate={restReady ? 'animate' : 'initial'}
+                >
                   {miniStats.map((stat, i) => (
                     <motion.div
                       key={stat.label}
                       className={styles.miniStat}
                       variants={variants.scalePop}
-                      transition={{ ...baseTransition, delay: i * 0.05 }}
+                      transition={{ ...baseTransition, delay: restReady ? i * 0.05 : 0 }}
                     >
                       <span className={styles.miniLabel}>{stat.label}</span>
                       <span className={styles.miniValue}>{stat.value}</span>
@@ -621,13 +716,14 @@ export function HeroSection() {
                 </div>
               </motion.div>
 
-              <motion.div
-                className={styles.glassCardSecondary}
-                whileHover={{ y: -6, scale: 1.01 }}
-                initial={{ opacity: 0, y: 16, scale: 0.99 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ ...baseTransition, delay: 0.38 }}
-              >
+            <motion.div
+              className={styles.glassCardSecondary}
+              whileHover={{ y: -6, scale: 1.01 }}
+              initial={{ opacity: 0, y: 16, scale: 0.99 }}
+              animate={{ opacity: restReady ? 1 : 0, y: restReady ? 0 : 16, scale: restReady ? 1 : 0.99 }}
+              transition={{ ...baseTransition, delay: restReady ? 0.38 : 0 }}
+              style={{ visibility: restReady ? 'visible' : 'hidden' }}
+            >
                 <div className={styles.glassHeader}>
                   <span className={styles.glassLabel}>LiveHelp</span>
                   <span className={`${styles.tag} ${styles.tagOutline}`}>En curso</span>
@@ -645,7 +741,7 @@ export function HeroSection() {
                   >
                     <span className={styles.miniLabel}>Acompañamientos</span>
                     <span className={styles.miniValue}>
-                      <AnimatedNumber value={280} start={showRest} prefix="+" />
+                      <AnimatedNumber value={280} start={restReady} prefix="+" />
                     </span>
                     <span className={styles.miniAccent}>Pruebas con analistas</span>
                   </IlluminatedBlock>
@@ -658,14 +754,13 @@ export function HeroSection() {
                   >
                     <span className={styles.miniLabel}>Playbooks</span>
                     <span className={styles.miniValue}>
-                      <AnimatedNumber value={18} start={showRest} />
+                      <AnimatedNumber value={18} start={restReady} />
                     </span>
                     <span className={styles.miniAccent}>IR, hardening, appsec</span>
                   </IlluminatedBlock>
                 </div>
               </motion.div>
-            </motion.div>
-          )}
+          </motion.div>
         </div>
       </div>
 
@@ -1666,7 +1761,7 @@ export function FooterSection() {
             </a>
           </div>
           <p className={styles.footerNote}>
-            Proyecto de tesis · Plataforma real en construcción 2026–2028 · Todos los derechos
+            Proyecto de tesis · Plataforma real en construcción 2026-2028 · Todos los derechos
             reservados.
           </p>
         </div>
