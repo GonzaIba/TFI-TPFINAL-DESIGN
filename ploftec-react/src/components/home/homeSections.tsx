@@ -1687,10 +1687,10 @@ export function FAQSection() {
       answer:
         'Para estudiantes, analistas, devs, instructores y empresas que necesiten upskilling real en seguridad.',
     },
-    {
-      question: '¿Proyecto de tesis o producto real?',
-      answer: 'Ambos: nace como tesis pero se construye como producto listo para producción 2026–2028.',
-    },
+    // {
+    //   question: '¿Proyecto de tesis o producto real?',
+    //   answer: 'Ambos: nace como tesis pero se construye como producto listo para producción 2026–2028.',
+    // },
   ];
 
   const [openIndex, setOpenIndex] = useState<number | null>(0);
