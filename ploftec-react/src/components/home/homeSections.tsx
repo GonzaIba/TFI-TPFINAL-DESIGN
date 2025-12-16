@@ -642,7 +642,7 @@ export function HeroSection({ navReady = false }: { navReady?: boolean }) {
                   transition={{ ...baseTransition, delay: restReady ? 0.32 : 0 }}
                   style={{ visibility: restReady ? 'visible' : 'hidden' }}
                 >
-                  Proyecto de tesis · Plataforma real en construcción 2026-2028 · Comunidad abierta
+                  Proyecto de tesis · Comunidad abierta
                 </motion.p>
 
                 <motion.div
@@ -1751,7 +1751,7 @@ export function FooterSection() {
             </a>
           </div>
           <p className={styles.footerNote}>
-            Proyecto de tesis · Plataforma real en construcción 2026-2028 · Todos los derechos
+            Proyecto de tesis · Todos los derechos
             reservados.
           </p>
         </div>

@@ -95,6 +95,12 @@ nav .logo {
   flex: 1;
 }
 
+nav .logo .logo-link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
 nav .logo h3 {
   font-size: 42px;           /* ajustá a gusto */
   font-weight: 900;
@@ -125,6 +131,8 @@ nav .logo h3 {
   text-shadow:
     0 0.5px 0 rgba(255,255,255,0.12),  /* borde superior tenue */
     0 3px 12px rgba(255, 58, 58, 0.25);/* glow rojizo */
+  cursor: pointer;
+  display: inline-block;
 }
 
 

@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useState, useCallback, useLayoutEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { getUserDetails, logout } from '@/lib/services/auth/authenticationService';
 import { usuariosForoService } from '@/lib/services/forum/usuariosForoService';
 import { obtenerIniciales } from '@/lib/helpers/forumHelper';
@@ -357,7 +358,9 @@ export default function ForumLayout({ children }: { children: React.ReactNode })
             <i className="fas fa-bars"></i>
           </label>
           <div className="logo">
-            <h3>PLOFTEC</h3>
+            <Link href="/" className="logo-link" aria-label="Ir al inicio">
+              <h3>PLOFTEC</h3>
+            </Link>
           </div>
           <div className="align-items-lg-start searchContainer">
             <Input
